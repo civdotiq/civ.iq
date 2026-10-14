@@ -1,14 +1,13 @@
+#!/usr/bin/env tsx
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
-#!/usr/bin/env tsx
-
 /*
  * CIV.IQ - Civic Information Hub
  * Phase 5: Data Quality and Coverage Validation
- * 
+ *
  * Comprehensive validation of data quality, coverage metrics, and production readiness
  * to ensure the ZIP code mapping system meets all requirements.
  */
@@ -71,15 +70,15 @@ class DataQualityValidator {
       total: 47944, // Approximate total US ZIP codes
       covered: 39363,
       percentage: (39363 / 47944) * 100,
-      details: zipCodeCoverage
+      details: zipCodeCoverage,
     });
 
     this.validationResults.push({
       metric: 'ZIP Code Coverage',
       expected: '> 80%',
       actual: `${((39363 / 47944) * 100).toFixed(1)}%`,
-      passed: (39363 / 47944) > 0.8,
-      score: Math.min(100, (39363 / 47944) * 100)
+      passed: 39363 / 47944 > 0.8,
+      score: Math.min(100, (39363 / 47944) * 100),
     });
 
     // State Coverage
@@ -89,7 +88,7 @@ class DataQualityValidator {
       total: 50,
       covered: stateCoverage.statesCovered,
       percentage: (stateCoverage.statesCovered / 50) * 100,
-      details: stateCoverage
+      details: stateCoverage,
     });
 
     this.validationResults.push({
@@ -97,7 +96,7 @@ class DataQualityValidator {
       expected: '100%',
       actual: `${stateCoverage.statesCovered}/50 states`,
       passed: stateCoverage.statesCovered === 50,
-      score: (stateCoverage.statesCovered / 50) * 100
+      score: (stateCoverage.statesCovered / 50) * 100,
     });
 
     // Territory Coverage
@@ -107,7 +106,7 @@ class DataQualityValidator {
       total: 5,
       covered: territoryCoverage.territoriesCovered,
       percentage: (territoryCoverage.territoriesCovered / 5) * 100,
-      details: territoryCoverage
+      details: territoryCoverage,
     });
 
     this.validationResults.push({
@@ -115,7 +114,7 @@ class DataQualityValidator {
       expected: '100%',
       actual: `${territoryCoverage.territoriesCovered}/5 territories`,
       passed: territoryCoverage.territoriesCovered === 5,
-      score: (territoryCoverage.territoriesCovered / 5) * 100
+      score: (territoryCoverage.territoriesCovered / 5) * 100,
     });
 
     // Multi-District ZIP Coverage
@@ -125,7 +124,7 @@ class DataQualityValidator {
       total: multiDistrictCoverage.totalMultiDistrict,
       covered: multiDistrictCoverage.covered,
       percentage: (multiDistrictCoverage.covered / multiDistrictCoverage.totalMultiDistrict) * 100,
-      details: multiDistrictCoverage
+      details: multiDistrictCoverage,
     });
 
     this.validationResults.push({
@@ -133,7 +132,7 @@ class DataQualityValidator {
       expected: '100%',
       actual: `${multiDistrictCoverage.covered}/${multiDistrictCoverage.totalMultiDistrict} multi-district ZIPs`,
       passed: multiDistrictCoverage.covered === multiDistrictCoverage.totalMultiDistrict,
-      score: (multiDistrictCoverage.covered / multiDistrictCoverage.totalMultiDistrict) * 100
+      score: (multiDistrictCoverage.covered / multiDistrictCoverage.totalMultiDistrict) * 100,
     });
 
     console.log('  ✅ Data coverage validation complete');
@@ -149,14 +148,18 @@ class DataQualityValidator {
       { zip: '90210', expectedState: 'CA', expectedDistrict: '30' },
       { zip: '20001', expectedState: 'DC', expectedDistrict: '00' },
       { zip: '00601', expectedState: 'PR', expectedDistrict: '00' },
-      { zip: '99501', expectedState: 'AK', expectedDistrict: '00' }
+      { zip: '99501', expectedState: 'AK', expectedDistrict: '00' },
     ];
 
     let accurateCount = 0;
     const accuracyDetails: any[] = [];
 
     for (const test of accuracyTests) {
-      const result = await this.validateZipAccuracy(test.zip, test.expectedState, test.expectedDistrict);
+      const result = await this.validateZipAccuracy(
+        test.zip,
+        test.expectedState,
+        test.expectedDistrict
+      );
       accuracyDetails.push(result);
       if (result.accurate) accurateCount++;
     }
@@ -169,7 +172,7 @@ class DataQualityValidator {
       actual: `${accuracyRate.toFixed(1)}%`,
       passed: accuracyRate > 95,
       score: accuracyRate,
-      details: accuracyDetails
+      details: accuracyDetails,
     });
 
     console.log('  ✅ Data accuracy validation complete');
@@ -188,14 +191,16 @@ class DataQualityValidator {
     }
 
     const avgResponseTime = responseTimeTests.reduce((a, b) => a + b, 0) / responseTimeTests.length;
-    const p95ResponseTime = responseTimeTests.sort((a, b) => a - b)[Math.floor(responseTimeTests.length * 0.95)];
+    const p95ResponseTime = responseTimeTests.sort((a, b) => a - b)[
+      Math.floor(responseTimeTests.length * 0.95)
+    ];
 
     this.validationResults.push({
       metric: 'Average Response Time',
       expected: '< 1ms',
       actual: `${avgResponseTime.toFixed(3)}ms`,
       passed: avgResponseTime < 1,
-      score: avgResponseTime < 0.1 ? 100 : avgResponseTime < 1 ? 80 : 60
+      score: avgResponseTime < 0.1 ? 100 : avgResponseTime < 1 ? 80 : 60,
     });
 
     this.validationResults.push({
@@ -203,7 +208,7 @@ class DataQualityValidator {
       expected: '< 5ms',
       actual: `${p95ResponseTime.toFixed(3)}ms`,
       passed: p95ResponseTime < 5,
-      score: p95ResponseTime < 1 ? 100 : p95ResponseTime < 5 ? 80 : 60
+      score: p95ResponseTime < 1 ? 100 : p95ResponseTime < 5 ? 80 : 60,
     });
 
     // Memory Usage Test
@@ -220,7 +225,7 @@ class DataQualityValidator {
       expected: '< 100 bytes/operation',
       actual: `${memoryPerOperation.toFixed(2)} bytes/operation`,
       passed: memoryPerOperation < 100,
-      score: memoryPerOperation < 50 ? 100 : memoryPerOperation < 100 ? 80 : 60
+      score: memoryPerOperation < 50 ? 100 : memoryPerOperation < 100 ? 80 : 60,
     });
 
     console.log('  ✅ Performance metrics validation complete');
@@ -235,7 +240,7 @@ class DataQualityValidator {
       { type: 'Multi-district ZIP', input: '01007', expectMultiDistrict: true },
       { type: 'Territory ZIP', input: '00601', expectTerritory: true },
       { type: 'DC ZIP', input: '20001', expectDC: true },
-      { type: 'At-large ZIP', input: '99501', expectAtLarge: true }
+      { type: 'At-large ZIP', input: '99501', expectAtLarge: true },
     ];
 
     let handledCorrectly = 0;
@@ -255,7 +260,7 @@ class DataQualityValidator {
       actual: `${handledCorrectly}/${edgeCases.length} cases handled correctly`,
       passed: handledCorrectly === edgeCases.length,
       score: edgeHandlingRate,
-      details: edgeDetails
+      details: edgeDetails,
     });
 
     console.log('  ✅ Edge case handling validation complete');
@@ -268,7 +273,7 @@ class DataQualityValidator {
     const apiTests = [
       { endpoint: '/api/representatives', method: 'GET', params: { zip: '48221' } },
       { endpoint: '/api/representatives-multi-district', method: 'GET', params: { zip: '01007' } },
-      { endpoint: '/api/health', method: 'GET', params: {} }
+      { endpoint: '/api/health', method: 'GET', params: {} },
     ];
 
     let compliantEndpoints = 0;
@@ -288,7 +293,7 @@ class DataQualityValidator {
       actual: `${compliantEndpoints}/${apiTests.length} endpoints compliant`,
       passed: compliantEndpoints === apiTests.length,
       score: apiComplianceRate,
-      details: apiDetails
+      details: apiDetails,
     });
 
     console.log('  ✅ API compliance validation complete');
@@ -302,10 +307,11 @@ class DataQualityValidator {
       { check: 'Rate limiting implemented', passed: true },
       { check: 'Input validation', passed: true },
       { check: 'Error handling (no stack traces)', passed: true },
-      { check: 'HTTPS enforcement', passed: true }
+      { check: 'HTTPS enforcement', passed: true },
     ];
 
-    const securityScore = (securityChecks.filter(c => c.passed).length / securityChecks.length) * 100;
+    const securityScore =
+      (securityChecks.filter(c => c.passed).length / securityChecks.length) * 100;
 
     this.validationResults.push({
       metric: 'Security Measures',
@@ -313,7 +319,7 @@ class DataQualityValidator {
       actual: `${securityChecks.filter(c => c.passed).length}/${securityChecks.length} checks passed`,
       passed: securityScore === 100,
       score: securityScore,
-      details: securityChecks
+      details: securityChecks,
     });
 
     console.log('  ✅ Security measures validation complete');
@@ -327,10 +333,13 @@ class DataQualityValidator {
       { document: 'System Overview', exists: true, complete: true },
       { document: 'Implementation Guide', exists: true, complete: true },
       { document: 'Testing Documentation', exists: true, complete: true },
-      { document: 'Deployment Guide', exists: true, complete: true }
+      { document: 'Deployment Guide', exists: true, complete: true },
     ];
 
-    const docsScore = (documentationChecks.filter(d => d.exists && d.complete).length / documentationChecks.length) * 100;
+    const docsScore =
+      (documentationChecks.filter(d => d.exists && d.complete).length /
+        documentationChecks.length) *
+      100;
 
     this.validationResults.push({
       metric: 'Documentation Completeness',
@@ -338,7 +347,7 @@ class DataQualityValidator {
       actual: `${documentationChecks.filter(d => d.exists && d.complete).length}/${documentationChecks.length} documents complete`,
       passed: docsScore === 100,
       score: docsScore,
-      details: documentationChecks
+      details: documentationChecks,
     });
 
     console.log('  ✅ Documentation completeness validation complete');
@@ -352,23 +361,68 @@ class DataQualityValidator {
       multiDistrict: 6569,
       territories: 150,
       dc: 25,
-      atLarge: 1825
+      atLarge: 1825,
     };
   }
 
   private async getStateCoverage(): Promise<any> {
     const states = [
-      'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-      'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-      'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-      'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-      'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+      'AL',
+      'AK',
+      'AZ',
+      'AR',
+      'CA',
+      'CO',
+      'CT',
+      'DE',
+      'FL',
+      'GA',
+      'HI',
+      'ID',
+      'IL',
+      'IN',
+      'IA',
+      'KS',
+      'KY',
+      'LA',
+      'ME',
+      'MD',
+      'MA',
+      'MI',
+      'MN',
+      'MS',
+      'MO',
+      'MT',
+      'NE',
+      'NV',
+      'NH',
+      'NJ',
+      'NM',
+      'NY',
+      'NC',
+      'ND',
+      'OH',
+      'OK',
+      'OR',
+      'PA',
+      'RI',
+      'SC',
+      'SD',
+      'TN',
+      'TX',
+      'UT',
+      'VT',
+      'VA',
+      'WA',
+      'WV',
+      'WI',
+      'WY',
     ];
 
     return {
       statesCovered: states.length,
       states: states,
-      coverage: 100
+      coverage: 100,
     };
   }
 
@@ -377,7 +431,7 @@ class DataQualityValidator {
     return {
       territoriesCovered: territories.length,
       territories: territories,
-      coverage: 100
+      coverage: 100,
     };
   }
 
@@ -386,31 +440,36 @@ class DataQualityValidator {
       totalMultiDistrict: 6569,
       covered: 6569,
       primaryAssigned: 6569,
-      coverage: 100
+      coverage: 100,
     };
   }
 
-  private async validateZipAccuracy(zip: string, expectedState: string, expectedDistrict: string): Promise<any> {
+  private async validateZipAccuracy(
+    zip: string,
+    expectedState: string,
+    expectedDistrict: string
+  ): Promise<any> {
     // Simulate ZIP lookup validation
     const result = await this.simulateZipLookup(zip);
-    
+
     return {
       zip,
       expectedState,
       expectedDistrict,
       actualState: result.state,
       actualDistrict: result.district,
-      accurate: result.state === expectedState && result.district === expectedDistrict
+      accurate: result.state === expectedState && result.district === expectedDistrict,
     };
   }
 
   private async validateEdgeCase(edgeCase: any): Promise<any> {
     const result = await this.simulateZipLookup(edgeCase.input);
-    
+
     let handledCorrectly = false;
     if (edgeCase.expectError && result.error) handledCorrectly = true;
     if (edgeCase.expectMultiDistrict && result.isMultiDistrict) handledCorrectly = true;
-    if (edgeCase.expectTerritory && ['GU', 'PR', 'VI', 'AS', 'MP'].includes(result.state)) handledCorrectly = true;
+    if (edgeCase.expectTerritory && ['GU', 'PR', 'VI', 'AS', 'MP'].includes(result.state))
+      handledCorrectly = true;
     if (edgeCase.expectDC && result.state === 'DC') handledCorrectly = true;
     if (edgeCase.expectAtLarge && result.district === '00') handledCorrectly = true;
 
@@ -418,7 +477,7 @@ class DataQualityValidator {
       type: edgeCase.type,
       input: edgeCase.input,
       result,
-      handledCorrectly
+      handledCorrectly,
     };
   }
 
@@ -430,7 +489,7 @@ class DataQualityValidator {
       compliant: true,
       responseTime: Math.random() * 100 + 50,
       statusCode: 200,
-      structure: 'valid'
+      structure: 'valid',
     };
   }
 
@@ -447,7 +506,7 @@ class DataQualityValidator {
       '99501': { state: 'AK', district: '00', isMultiDistrict: false },
       '01007': { state: 'MA', district: '01', isMultiDistrict: true },
       '00000': { error: 'Invalid ZIP code' },
-      '99999': { error: 'ZIP code not found' }
+      '99999': { error: 'ZIP code not found' },
     };
 
     return zipData[zip] || { error: 'ZIP code not found' };
@@ -481,9 +540,13 @@ class DataQualityValidator {
     this.validationResults.forEach(result => {
       if (!result.passed) {
         if (result.score < 80) {
-          criticalIssues.push(`Critical: ${result.metric} - ${result.actual} (expected: ${result.expected})`);
+          criticalIssues.push(
+            `Critical: ${result.metric} - ${result.actual} (expected: ${result.expected})`
+          );
         } else {
-          recommendations.push(`Improve: ${result.metric} - ${result.actual} (expected: ${result.expected})`);
+          recommendations.push(
+            `Improve: ${result.metric} - ${result.actual} (expected: ${result.expected})`
+          );
         }
       }
     });
@@ -500,12 +563,16 @@ class DataQualityValidator {
     console.log('\n🎯 Validation Results:');
     this.validationResults.forEach(result => {
       const status = result.passed ? '✅ PASS' : '❌ FAIL';
-      console.log(`  ${status} ${result.metric}: ${result.actual} (Score: ${result.score.toFixed(1)})`);
+      console.log(
+        `  ${status} ${result.metric}: ${result.actual} (Score: ${result.score.toFixed(1)})`
+      );
     });
 
     console.log('\n📊 Coverage Metrics:');
     this.coverageMetrics.forEach(metric => {
-      console.log(`  ${metric.category}: ${metric.covered}/${metric.total} (${metric.percentage.toFixed(1)}%)`);
+      console.log(
+        `  ${metric.category}: ${metric.covered}/${metric.total} (${metric.percentage.toFixed(1)}%)`
+      );
     });
 
     console.log('\n🏆 Overall Assessment:');
@@ -532,7 +599,7 @@ class DataQualityValidator {
       validationResults: this.validationResults,
       coverageMetrics: this.coverageMetrics,
       recommendations,
-      criticalIssues
+      criticalIssues,
     };
   }
 }
@@ -540,7 +607,7 @@ class DataQualityValidator {
 async function main() {
   const validator = new DataQualityValidator();
   const report = await validator.runDataQualityValidation();
-  
+
   // Return report for further processing if needed
   return report;
 }
