@@ -14,7 +14,6 @@
  * Pattern: vote-finance-analyzer.ts
  */
 
-import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
@@ -24,7 +23,6 @@ import {
 } from '@/features/representatives/services/congress.service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
-import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
 import { forEachFilingForCommittees } from '@/lib/data-sources/lda-corpus/load-filings';
 import { reportedFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
@@ -47,6 +45,7 @@ import {
   SourceCollector,
   peerComparisonUnavailable,
 } from './shared';
+import { fetchMemberBillVotes, type RawBillVote } from './member-bill-votes';
 import type {
   InfluenceChainInsight,
   InfluenceChain,
@@ -257,16 +256,7 @@ interface ContributionMatch {
   isExactMatch: boolean;
 }
 
-interface RawVote {
-  billType: string;
-  billNumber: string;
-  billCongress: number;
-  billTitle: string;
-  billPolicyArea?: string;
-  billSubjects?: string[];
-  position: string;
-  date: string;
-}
+type RawVote = RawBillVote;
 
 interface ClassifiedVote extends RawVote {
   billId: string;
@@ -852,43 +842,8 @@ async function fetchAndClassifyVotes(
   }
 }
 
-async function fetchVotes(bioguideId: string, chamber: 'House' | 'Senate'): Promise<RawVote[]> {
-  try {
-    // One fetch across the whole Congress (session undefined). Asking for
-    // sessions 1 and 2 separately used to count every vote twice.
-    const rawVotes =
-      chamber === 'House'
-        ? await batchVotingService.getHouseMemberVotes(
-            bioguideId,
-            getCurrentCongressNumber(),
-            undefined,
-            MAX_VOTES
-          )
-        : await batchVotingService.getSenateMemberVotes(
-            bioguideId,
-            getCurrentCongressNumber(),
-            undefined,
-            MAX_VOTES
-          );
-    return rawVotes
-      .filter(v => v.bill && v.position)
-      .map(v => ({
-        billType: v.bill?.type ?? '',
-        billNumber: String(v.bill?.number ?? ''),
-        billCongress: v.bill?.congress ?? 0,
-        billTitle: v.bill?.title ?? '',
-        billPolicyArea: v.bill?.policyArea,
-        billSubjects: v.bill?.subjects,
-        position: v.position,
-        date: v.date,
-      }));
-  } catch (error) {
-    logger.warn('[InfluenceChain] Vote fetch failed', {
-      bioguideId,
-      error: (error as Error).message,
-    });
-    return [];
-  }
+function fetchVotes(bioguideId: string, chamber: 'House' | 'Senate'): Promise<RawVote[]> {
+  return fetchMemberBillVotes(bioguideId, chamber, MAX_VOTES, '[InfluenceChain]');
 }
 
 // ── Step 7: Assemble Chains ─────────────────────────────────────────

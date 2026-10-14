@@ -15,7 +15,6 @@
  * Pattern: CivicAlignmentAnalyzer (src/features/legislation/services/ai/civic-alignment-analyzer.ts)
  */
 
-import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import logger from '@/lib/logging/simple-logger';
 import { voteFinanceCacheKey } from '@/lib/intelligence/insight-cache-keys';
 import { getRedisCache } from '@/lib/cache/redis-client';
@@ -24,7 +23,6 @@ import { getEnhancedRepresentative } from '@/features/representatives/services/c
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { aggregateByIndustrySector, IndustrySector } from '@/lib/fec/industry-taxonomy';
-import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import {
   correlation,
   peerComparison,
@@ -46,6 +44,7 @@ import {
   SENATE_UPSTREAM_BLOCKED_REASON,
   peerComparisonUnavailable,
 } from './shared';
+import { fetchMemberBillVotes, type RawBillVote } from './member-bill-votes';
 import type { VoteFinanceInsight, IndustryCorrelation, PeerComparison } from '../types';
 
 /**
@@ -372,53 +371,10 @@ async function fetchData(bioguideId: string, timer?: PhaseTimer): Promise<FetchR
   };
 }
 
-interface RawVote {
-  billType: string;
-  billNumber: string;
-  billCongress: number;
-  billTitle: string;
-  billPolicyArea?: string;
-  billSubjects?: string[];
-  position: string;
-  date: string;
-}
+type RawVote = RawBillVote;
 
-async function fetchVotes(bioguideId: string, chamber: 'House' | 'Senate'): Promise<RawVote[]> {
-  try {
-    // One fetch across the whole Congress (session undefined). Fetching
-    // sessions 1 and 2 separately used to return the same newest votes twice,
-    // because the services ignored the session, so every count was doubled.
-    const rawVotes =
-      chamber === 'House'
-        ? await batchVotingService.getHouseMemberVotes(
-            bioguideId,
-            getCurrentCongressNumber(),
-            undefined,
-            MAX_VOTES
-          )
-        : await batchVotingService.getSenateMemberVotes(
-            bioguideId,
-            getCurrentCongressNumber(),
-            undefined,
-            MAX_VOTES
-          );
-
-    return rawVotes
-      .filter(v => v.bill && v.position)
-      .map(v => ({
-        billType: v.bill?.type ?? '',
-        billNumber: String(v.bill?.number ?? ''),
-        billCongress: v.bill?.congress ?? 0,
-        billTitle: v.bill?.title ?? '',
-        billPolicyArea: v.bill?.policyArea,
-        billSubjects: v.bill?.subjects,
-        position: v.position,
-        date: v.date,
-      }));
-  } catch (error) {
-    logger.warn('[VoteFinance] Vote fetch failed', { bioguideId, error: (error as Error).message });
-    return [];
-  }
+function fetchVotes(bioguideId: string, chamber: 'House' | 'Senate'): Promise<RawVote[]> {
+  return fetchMemberBillVotes(bioguideId, chamber, MAX_VOTES, '[VoteFinance]');
 }
 
 async function fetchContributions(fecId: string) {

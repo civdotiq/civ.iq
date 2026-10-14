@@ -351,7 +351,7 @@ export async function getSenateCorpusRollCalls(
   // Newest first across sessions: later session wins, then higher number.
   // A given session keeps only that session's rolls.
   const flat = Object.entries(menu.sessions)
-    .filter(([s]) => session === undefined || parseInt(s, 10) === session)
+    .filter(([s]) => session === undefined || Number.parseInt(s, 10) === session)
     .flatMap(([session, entries]) =>
       entries.map(e => ({ session: parseInt(session, 10), entry: e }))
     )
