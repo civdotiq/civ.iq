@@ -7,7 +7,7 @@
 /*
  * CIV.IQ - Civic Information Hub
  * Phase 5: User Acceptance Testing Scenarios
- * 
+ *
  * Real-world user scenarios to validate that the system meets user needs
  * and provides a positive experience across all use cases.
  */
@@ -51,64 +51,67 @@ class UserAcceptanceTester {
     {
       id: 'UAT-001',
       title: 'Citizen Looking Up Their Representative',
-      description: 'A citizen wants to find their congressional representative to contact them about an issue',
+      description:
+        'A citizen wants to find their congressional representative to contact them about an issue',
       userType: 'citizen',
       steps: [
         {
           action: 'Enter ZIP code',
           input: '48221',
           expectedResponse: 'Shows single district with representative information',
-          timing: '< 2 seconds'
+          timing: '< 2 seconds',
         },
         {
           action: 'View representative details',
           expectedResponse: 'Displays name, party, contact information, and district',
-          timing: '< 1 second'
+          timing: '< 1 second',
         },
         {
           action: 'Access contact information',
           expectedResponse: 'Shows phone, website, and office address',
-          timing: 'Immediate'
-        }
+          timing: 'Immediate',
+        },
       ],
-      expectedOutcome: 'User successfully finds their representative with complete contact information',
+      expectedOutcome:
+        'User successfully finds their representative with complete contact information',
       acceptanceCriteria: [
         'ZIP code lookup completes in under 2 seconds',
         'Representative information is complete and accurate',
         'Contact information is clearly displayed',
-        'No errors or confusing messages'
-      ]
+        'No errors or confusing messages',
+      ],
     },
     {
       id: 'UAT-002',
       title: 'Citizen in Multi-District ZIP Code',
-      description: 'A citizen in a ZIP code that spans multiple districts needs to understand their representation',
+      description:
+        'A citizen in a ZIP code that spans multiple districts needs to understand their representation',
       userType: 'citizen',
       steps: [
         {
           action: 'Enter multi-district ZIP code',
           input: '01007',
           expectedResponse: 'Shows multi-district indicator with primary district highlighted',
-          timing: '< 2 seconds'
+          timing: '< 2 seconds',
         },
         {
           action: 'View multi-district explanation',
           expectedResponse: 'Clear explanation of why ZIP spans multiple districts',
-          timing: 'Immediate'
+          timing: 'Immediate',
         },
         {
           action: 'Select specific district',
           expectedResponse: 'Shows representative for selected district',
-          timing: '< 1 second'
-        }
+          timing: '< 1 second',
+        },
       ],
       expectedOutcome: 'User understands multi-district situation and finds correct representative',
       acceptanceCriteria: [
         'Multi-district situation is clearly explained',
         'Primary district is appropriately highlighted',
         'User can select alternative districts if needed',
-        'No confusion about which representative to contact'
-      ]
+        'No confusion about which representative to contact',
+      ],
     },
     {
       id: 'UAT-003',
@@ -120,26 +123,26 @@ class UserAcceptanceTester {
           action: 'Search multiple ZIP codes',
           input: '10001,10002,10003',
           expectedResponse: 'Shows results for all ZIP codes with district information',
-          timing: '< 3 seconds'
+          timing: '< 3 seconds',
         },
         {
           action: 'Compare districts',
           expectedResponse: 'Displays district comparison with demographics',
-          timing: '< 2 seconds'
+          timing: '< 2 seconds',
         },
         {
           action: 'Export data',
           expectedResponse: 'Provides downloadable data in structured format',
-          timing: '< 1 second'
-        }
+          timing: '< 1 second',
+        },
       ],
       expectedOutcome: 'Researcher obtains comprehensive district data for analysis',
       acceptanceCriteria: [
         'Bulk ZIP code lookup works efficiently',
         'District comparison tools are functional',
         'Data export options are available',
-        'Data accuracy is verifiable'
-      ]
+        'Data accuracy is verifiable',
+      ],
     },
     {
       id: 'UAT-004',
@@ -151,59 +154,60 @@ class UserAcceptanceTester {
           action: 'Look up territory ZIP code',
           input: '00601',
           expectedResponse: 'Shows non-voting delegate information with clear explanation',
-          timing: '< 2 seconds'
+          timing: '< 2 seconds',
         },
         {
           action: 'Access detailed information',
           expectedResponse: 'Provides context about territorial representation',
-          timing: 'Immediate'
+          timing: 'Immediate',
         },
         {
           action: 'Compare with state representation',
           input: '48221',
           expectedResponse: 'Shows difference between voting and non-voting representation',
-          timing: '< 2 seconds'
-        }
+          timing: '< 2 seconds',
+        },
       ],
       expectedOutcome: 'Journalist understands nuances of territorial representation',
       acceptanceCriteria: [
         'Territory representation is accurately explained',
         'Differences from state representation are clear',
         'Educational resources are available',
-        'Information is fact-checked and sourced'
-      ]
+        'Information is fact-checked and sourced',
+      ],
     },
     {
       id: 'UAT-005',
       title: 'Educator Teaching About Government',
-      description: 'An educator using the system to teach students about congressional representation',
+      description:
+        'An educator using the system to teach students about congressional representation',
       userType: 'educator',
       steps: [
         {
           action: 'Demonstrate ZIP code lookup',
           input: '20001',
           expectedResponse: 'Shows D.C. representation with educational context',
-          timing: '< 2 seconds'
+          timing: '< 2 seconds',
         },
         {
           action: 'Explain at-large districts',
           input: '99501',
           expectedResponse: 'Provides clear explanation of at-large representation',
-          timing: '< 2 seconds'
+          timing: '< 2 seconds',
         },
         {
           action: 'Show district boundaries',
           expectedResponse: 'Displays map with district boundaries',
-          timing: '< 3 seconds'
-        }
+          timing: '< 3 seconds',
+        },
       ],
       expectedOutcome: 'Students understand different types of congressional representation',
       acceptanceCriteria: [
         'Information is educational and accessible',
         'Complex concepts are explained simply',
         'Visual aids enhance understanding',
-        'Content is appropriate for learning'
-      ]
+        'Content is appropriate for learning',
+      ],
     },
     {
       id: 'UAT-006',
@@ -215,28 +219,28 @@ class UserAcceptanceTester {
           action: 'Make API request',
           input: 'GET /api/representatives?zip=48221',
           expectedResponse: 'Returns structured JSON with representative data',
-          timing: '< 500ms'
+          timing: '< 500ms',
         },
         {
           action: 'Handle multi-district response',
           input: 'GET /api/representatives-multi-district?zip=01007',
           expectedResponse: 'Returns array of districts with primary marked',
-          timing: '< 500ms'
+          timing: '< 500ms',
         },
         {
           action: 'Handle error cases',
           input: 'GET /api/representatives?zip=00000',
           expectedResponse: 'Returns structured error response',
-          timing: '< 500ms'
-        }
+          timing: '< 500ms',
+        },
       ],
       expectedOutcome: 'Developer successfully integrates API with proper error handling',
       acceptanceCriteria: [
         'API responses are consistent and well-documented',
         'Error handling is comprehensive',
         'Response times meet SLA requirements',
-        'Data structure is logical and predictable'
-      ]
+        'Data structure is logical and predictable',
+      ],
     },
     {
       id: 'UAT-007',
@@ -248,23 +252,23 @@ class UserAcceptanceTester {
           action: 'Enter invalid ZIP code',
           input: '00000',
           expectedResponse: 'Shows helpful error message with suggestions',
-          timing: '< 1 second'
+          timing: '< 1 second',
         },
         {
           action: 'Try corrected ZIP code',
           input: '48221',
           expectedResponse: 'Shows correct representative information',
-          timing: '< 2 seconds'
-        }
+          timing: '< 2 seconds',
+        },
       ],
       expectedOutcome: 'User receives helpful guidance when errors occur',
       acceptanceCriteria: [
         'Error messages are clear and helpful',
         'Suggestions for correction are provided',
         'User can easily recover from errors',
-        'No system crashes or unhelpful messages'
-      ]
-    }
+        'No system crashes or unhelpful messages',
+      ],
+    },
   ];
 
   private results: UATResult[] = [];
@@ -285,12 +289,12 @@ class UserAcceptanceTester {
 
       const status = result.passed ? '✅ PASSED' : '❌ FAILED';
       console.log(`\n${status} - ${scenario.title}`);
-      
+
       if (result.issues.length > 0) {
         console.log('Issues found:');
         result.issues.forEach(issue => console.log(`  ❌ ${issue}`));
       }
-      
+
       if (result.recommendations.length > 0) {
         console.log('Recommendations:');
         result.recommendations.forEach(rec => console.log(`  💡 ${rec}`));
@@ -307,7 +311,7 @@ class UserAcceptanceTester {
       stepResults: [],
       overallFeedback: '',
       issues: [],
-      recommendations: []
+      recommendations: [],
     };
 
     for (const step of scenario.steps) {
@@ -322,7 +326,7 @@ class UserAcceptanceTester {
       const status = stepResult.passed ? '✅' : '❌';
       const timing = stepResult.timing ? `(${stepResult.timing.toFixed(0)}ms)` : '';
       console.log(`  ${status} ${step.action} ${timing}`);
-      
+
       if (stepResult.notes) {
         console.log(`    📝 ${stepResult.notes}`);
       }
@@ -343,7 +347,7 @@ class UserAcceptanceTester {
 
   private async runStep(step: UserStep): Promise<StepResult> {
     const startTime = performance.now();
-    
+
     try {
       // Simulate the step execution
       const response = await this.simulateUserAction(step);
@@ -354,7 +358,7 @@ class UserAcceptanceTester {
         passed: this.validateStepResponse(step, response),
         actualResponse: response,
         timing,
-        notes: this.generateStepNotes(step, response, timing)
+        notes: this.generateStepNotes(step, response, timing),
       };
     } catch (error) {
       return {
@@ -362,7 +366,7 @@ class UserAcceptanceTester {
         passed: false,
         actualResponse: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         timing: performance.now() - startTime,
-        notes: 'Step failed due to error'
+        notes: 'Step failed due to error',
       };
     }
   }
@@ -377,15 +381,15 @@ class UserAcceptanceTester {
     if (action.includes('Enter ZIP code') || action.includes('Look up')) {
       return this.simulateZipLookup(input || '');
     }
-    
+
     if (action.includes('View') || action.includes('Access')) {
       return this.simulateViewAction(input || '');
     }
-    
+
     if (action.includes('API request')) {
       return this.simulateAPIRequest(input || '');
     }
-    
+
     if (action.includes('Export') || action.includes('Download')) {
       return this.simulateDataExport();
     }
@@ -480,15 +484,20 @@ class UserAcceptanceTester {
     return notes.join('; ');
   }
 
-  private validateAcceptanceCriteria(scenario: UserScenario, result: UATResult): {
+  private validateAcceptanceCriteria(
+    scenario: UserScenario,
+    result: UATResult
+  ): {
     allPassed: boolean;
     failedCriteria: string[];
   } {
     const failedCriteria: string[] = [];
 
     // Check timing requirements
-    const avgTiming = result.stepResults.reduce((sum, r) => sum + (r.timing || 0), 0) / result.stepResults.length;
-    if (avgTiming > 2000) { // 2 seconds
+    const avgTiming =
+      result.stepResults.reduce((sum, r) => sum + (r.timing || 0), 0) / result.stepResults.length;
+    if (avgTiming > 2000) {
+      // 2 seconds
       failedCriteria.push('Average response time exceeds 2 seconds');
     }
 
@@ -499,27 +508,29 @@ class UserAcceptanceTester {
     }
 
     // Check completeness of responses
-    const incompleteResponses = result.stepResults.filter(r => !r.actualResponse || r.actualResponse.length < 10);
+    const incompleteResponses = result.stepResults.filter(
+      r => !r.actualResponse || r.actualResponse.length < 10
+    );
     if (incompleteResponses.length > 0) {
       failedCriteria.push('Some responses were incomplete or missing');
     }
 
     return {
       allPassed: failedCriteria.length === 0,
-      failedCriteria
+      failedCriteria,
     };
   }
 
   private generateOverallFeedback(result: UATResult): string {
     const { scenario, passed, stepResults } = result;
-    
+
     if (passed) {
       return `✅ Scenario completed successfully. ${scenario.userType} user needs met.`;
     }
 
     const failedSteps = stepResults.filter(r => !r.passed).length;
     const totalSteps = stepResults.length;
-    
+
     return `❌ Scenario failed. ${failedSteps}/${totalSteps} steps failed. ${scenario.userType} user experience needs improvement.`;
   }
 
@@ -555,19 +566,22 @@ class UserAcceptanceTester {
 
     console.log(`\n👥 User Type Results:`);
     userTypes.forEach((stats, userType) => {
-      const percentage = (stats.passed / stats.total * 100).toFixed(1);
+      const percentage = ((stats.passed / stats.total) * 100).toFixed(1);
       console.log(`  ${userType}: ${stats.passed}/${stats.total} (${percentage}%)`);
     });
 
     // Performance analysis
     const allStepResults = this.results.flatMap(r => r.stepResults);
-    const avgResponseTime = allStepResults.reduce((sum, r) => sum + (r.timing || 0), 0) / allStepResults.length;
+    const avgResponseTime =
+      allStepResults.reduce((sum, r) => sum + (r.timing || 0), 0) / allStepResults.length;
     const maxResponseTime = Math.max(...allStepResults.map(r => r.timing || 0));
 
     console.log(`\n⚡ Performance Analysis:`);
     console.log(`  Average Response Time: ${avgResponseTime.toFixed(0)}ms`);
     console.log(`  Maximum Response Time: ${maxResponseTime.toFixed(0)}ms`);
-    console.log(`  Performance Grade: ${avgResponseTime < 500 ? 'Excellent' : avgResponseTime < 1000 ? 'Good' : 'Needs Improvement'}`);
+    console.log(
+      `  Performance Grade: ${avgResponseTime < 500 ? 'Excellent' : avgResponseTime < 1000 ? 'Good' : 'Needs Improvement'}`
+    );
 
     // Issue analysis
     const allIssues = this.results.flatMap(r => r.issues);
@@ -577,7 +591,7 @@ class UserAcceptanceTester {
       allIssues.forEach(issue => {
         issueCounts.set(issue, (issueCounts.get(issue) || 0) + 1);
       });
-      
+
       issueCounts.forEach((count, issue) => {
         console.log(`  ${issue}: ${count} occurrences`);
       });

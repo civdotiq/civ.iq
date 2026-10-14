@@ -7,7 +7,7 @@
 /*
  * CIV.IQ - Civic Information Hub
  * Phase 5: End-to-End Testing Suite
- * 
+ *
  * Comprehensive testing of all ZIP code types to ensure complete coverage
  * and proper handling of edge cases in production scenarios.
  */
@@ -48,9 +48,9 @@ class EndToEndTester {
       expectedBehavior: {
         shouldFind: true,
         expectedState: 'MI',
-        expectedDistrictCount: 1
+        expectedDistrictCount: 1,
       },
-      description: 'Detroit, MI - Standard single district ZIP'
+      description: 'Detroit, MI - Standard single district ZIP',
     },
     {
       zipCode: '90210',
@@ -58,9 +58,9 @@ class EndToEndTester {
       expectedBehavior: {
         shouldFind: true,
         expectedState: 'CA',
-        expectedDistrictCount: 1
+        expectedDistrictCount: 1,
       },
-      description: 'Beverly Hills, CA - Famous ZIP code'
+      description: 'Beverly Hills, CA - Famous ZIP code',
     },
     {
       zipCode: '10001',
@@ -68,11 +68,11 @@ class EndToEndTester {
       expectedBehavior: {
         shouldFind: true,
         expectedState: 'NY',
-        expectedDistrictCount: 1
+        expectedDistrictCount: 1,
       },
-      description: 'Manhattan, NY - Dense urban area'
+      description: 'Manhattan, NY - Dense urban area',
     },
-    
+
     // Multi-district ZIP codes
     {
       zipCode: '01007',
@@ -81,9 +81,9 @@ class EndToEndTester {
         shouldFind: true,
         expectedState: 'MA',
         expectedDistrictCount: 2,
-        specialHandling: 'Primary district identification'
+        specialHandling: 'Primary district identification',
       },
-      description: 'Massachusetts - Multi-district ZIP'
+      description: 'Massachusetts - Multi-district ZIP',
     },
     {
       zipCode: '20910',
@@ -92,11 +92,11 @@ class EndToEndTester {
         shouldFind: true,
         expectedState: 'MD',
         expectedDistrictCount: 2,
-        specialHandling: 'Primary district identification'
+        specialHandling: 'Primary district identification',
       },
-      description: 'Maryland - Multi-district ZIP'
+      description: 'Maryland - Multi-district ZIP',
     },
-    
+
     // Territory ZIP codes
     {
       zipCode: '00601',
@@ -105,9 +105,9 @@ class EndToEndTester {
         shouldFind: true,
         expectedState: 'PR',
         expectedDistrictCount: 1,
-        specialHandling: 'Non-voting delegate'
+        specialHandling: 'Non-voting delegate',
       },
-      description: 'Puerto Rico - Territory with non-voting delegate'
+      description: 'Puerto Rico - Territory with non-voting delegate',
     },
     {
       zipCode: '96910',
@@ -116,9 +116,9 @@ class EndToEndTester {
         shouldFind: true,
         expectedState: 'GU',
         expectedDistrictCount: 1,
-        specialHandling: 'Non-voting delegate'
+        specialHandling: 'Non-voting delegate',
       },
-      description: 'Guam - Territory with non-voting delegate'
+      description: 'Guam - Territory with non-voting delegate',
     },
     {
       zipCode: '00801',
@@ -127,11 +127,11 @@ class EndToEndTester {
         shouldFind: true,
         expectedState: 'VI',
         expectedDistrictCount: 1,
-        specialHandling: 'Non-voting delegate'
+        specialHandling: 'Non-voting delegate',
       },
-      description: 'U.S. Virgin Islands - Territory'
+      description: 'U.S. Virgin Islands - Territory',
     },
-    
+
     // District of Columbia
     {
       zipCode: '20001',
@@ -140,9 +140,9 @@ class EndToEndTester {
         shouldFind: true,
         expectedState: 'DC',
         expectedDistrictCount: 1,
-        specialHandling: 'Non-voting delegate'
+        specialHandling: 'Non-voting delegate',
       },
-      description: 'Washington D.C. - Non-voting delegate'
+      description: 'Washington D.C. - Non-voting delegate',
     },
     {
       zipCode: '20500',
@@ -151,11 +151,11 @@ class EndToEndTester {
         shouldFind: true,
         expectedState: 'DC',
         expectedDistrictCount: 1,
-        specialHandling: 'Non-voting delegate'
+        specialHandling: 'Non-voting delegate',
       },
-      description: 'White House ZIP code'
+      description: 'White House ZIP code',
     },
-    
+
     // At-large districts
     {
       zipCode: '99501',
@@ -164,9 +164,9 @@ class EndToEndTester {
         shouldFind: true,
         expectedState: 'AK',
         expectedDistrictCount: 1,
-        specialHandling: 'At-large representative'
+        specialHandling: 'At-large representative',
       },
-      description: 'Alaska - At-large district'
+      description: 'Alaska - At-large district',
     },
     {
       zipCode: '82001',
@@ -175,9 +175,9 @@ class EndToEndTester {
         shouldFind: true,
         expectedState: 'WY',
         expectedDistrictCount: 1,
-        specialHandling: 'At-large representative'
+        specialHandling: 'At-large representative',
       },
-      description: 'Wyoming - At-large district'
+      description: 'Wyoming - At-large district',
     },
     {
       zipCode: '05401',
@@ -186,9 +186,9 @@ class EndToEndTester {
         shouldFind: true,
         expectedState: 'VT',
         expectedDistrictCount: 1,
-        specialHandling: 'At-large representative'
+        specialHandling: 'At-large representative',
       },
-      description: 'Vermont - At-large district'
+      description: 'Vermont - At-large district',
     },
     {
       zipCode: '19901',
@@ -197,30 +197,30 @@ class EndToEndTester {
         shouldFind: true,
         expectedState: 'DE',
         expectedDistrictCount: 1,
-        specialHandling: 'At-large representative'
+        specialHandling: 'At-large representative',
       },
-      description: 'Delaware - At-large district'
+      description: 'Delaware - At-large district',
     },
-    
+
     // Edge cases
     {
       zipCode: '00000',
       category: 'edge-case',
       expectedBehavior: {
         shouldFind: false,
-        specialHandling: 'Invalid ZIP code handling'
+        specialHandling: 'Invalid ZIP code handling',
       },
-      description: 'Invalid ZIP code - should be handled gracefully'
+      description: 'Invalid ZIP code - should be handled gracefully',
     },
     {
       zipCode: '99999',
       category: 'edge-case',
       expectedBehavior: {
         shouldFind: false,
-        specialHandling: 'Non-existent ZIP code handling'
+        specialHandling: 'Non-existent ZIP code handling',
       },
-      description: 'Non-existent ZIP code - should be handled gracefully'
-    }
+      description: 'Non-existent ZIP code - should be handled gracefully',
+    },
   ];
 
   private results: E2ETestResult[] = [];
@@ -257,15 +257,15 @@ class EndToEndTester {
 
       const status = result.passed ? '✅ PASS' : '❌ FAIL';
       const timing = `${result.actualResults.responseTime.toFixed(2)}ms`;
-      
+
       console.log(`  ${status} ${testCase.zipCode} - ${testCase.description} (${timing})`);
-      
+
       if (!result.passed) {
         result.errors.forEach(error => {
           console.log(`    ❌ ${error}`);
         });
       }
-      
+
       if (result.warnings.length > 0) {
         result.warnings.forEach(warning => {
           console.log(`    ⚠️  ${warning}`);
@@ -284,38 +284,39 @@ class EndToEndTester {
         districtCount: 0,
         isMultiDistrict: false,
         hasWarnings: false,
-        responseTime: 0
+        responseTime: 0,
       },
       errors: [],
-      warnings: []
+      warnings: [],
     };
 
     try {
       // Simulate the actual ZIP lookup logic
       const lookupResult = await this.simulateLookup(testCase.zipCode);
-      
+
       result.actualResults = {
         found: lookupResult.found,
         state: lookupResult.state,
         districtCount: lookupResult.districtCount,
         isMultiDistrict: lookupResult.isMultiDistrict,
         hasWarnings: lookupResult.warnings.length > 0,
-        responseTime: performance.now() - startTime
+        responseTime: performance.now() - startTime,
       };
 
       // Validate against expected behavior
       result.passed = this.validateTestResult(testCase, result.actualResults);
-      
+
       // Collect warnings
       result.warnings = lookupResult.warnings;
-      
+
       // Check for errors
       if (!result.passed) {
         result.errors = this.generateErrors(testCase, result.actualResults);
       }
-
     } catch (error) {
-      result.errors.push(`Exception during test: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      result.errors.push(
+        `Exception during test: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
       result.actualResults.responseTime = performance.now() - startTime;
     }
 
@@ -334,24 +335,24 @@ class EndToEndTester {
 
     // Simulate different lookup outcomes based on ZIP code
     const warnings: string[] = [];
-    
+
     // Invalid ZIP codes
     if (zipCode === '00000' || zipCode === '99999') {
       return {
         found: false,
         districtCount: 0,
         isMultiDistrict: false,
-        warnings: ['ZIP code not found in database']
+        warnings: ['ZIP code not found in database'],
       };
     }
 
     // Standard ZIP codes
     const zipData = this.getSimulatedZipData(zipCode);
-    
+
     if (zipData.isMultiDistrict) {
       warnings.push('This ZIP code spans multiple congressional districts');
     }
-    
+
     if (['DC', 'GU', 'PR', 'VI', 'AS', 'MP'].includes(zipData.state)) {
       warnings.push('This area has non-voting representation in Congress');
     }
@@ -361,7 +362,7 @@ class EndToEndTester {
       state: zipData.state,
       districtCount: zipData.districtCount,
       isMultiDistrict: zipData.isMultiDistrict,
-      warnings
+      warnings,
     };
   }
 
@@ -371,7 +372,10 @@ class EndToEndTester {
     isMultiDistrict: boolean;
   } {
     // Simulate data based on known ZIP codes
-    const zipMapping: Record<string, { state: string; districtCount: number; isMultiDistrict: boolean }> = {
+    const zipMapping: Record<
+      string,
+      { state: string; districtCount: number; isMultiDistrict: boolean }
+    > = {
       '48221': { state: 'MI', districtCount: 1, isMultiDistrict: false },
       '90210': { state: 'CA', districtCount: 1, isMultiDistrict: false },
       '10001': { state: 'NY', districtCount: 1, isMultiDistrict: false },
@@ -385,20 +389,23 @@ class EndToEndTester {
       '99501': { state: 'AK', districtCount: 1, isMultiDistrict: false },
       '82001': { state: 'WY', districtCount: 1, isMultiDistrict: false },
       '05401': { state: 'VT', districtCount: 1, isMultiDistrict: false },
-      '19901': { state: 'DE', districtCount: 1, isMultiDistrict: false }
+      '19901': { state: 'DE', districtCount: 1, isMultiDistrict: false },
     };
 
     return zipMapping[zipCode] || { state: 'XX', districtCount: 0, isMultiDistrict: false };
   }
 
-  private validateTestResult(testCase: E2ETestCase, actualResults: E2ETestResult['actualResults']): boolean {
+  private validateTestResult(
+    testCase: E2ETestCase,
+    actualResults: E2ETestResult['actualResults']
+  ): boolean {
     const { expectedBehavior } = testCase;
-    
+
     // Check if should find
     if (expectedBehavior.shouldFind && !actualResults.found) {
       return false;
     }
-    
+
     if (!expectedBehavior.shouldFind && actualResults.found) {
       return false;
     }
@@ -409,14 +416,20 @@ class EndToEndTester {
     }
 
     // Check district count
-    if (expectedBehavior.expectedDistrictCount && actualResults.districtCount !== expectedBehavior.expectedDistrictCount) {
+    if (
+      expectedBehavior.expectedDistrictCount &&
+      actualResults.districtCount !== expectedBehavior.expectedDistrictCount
+    ) {
       return false;
     }
 
     return true;
   }
 
-  private generateErrors(testCase: E2ETestCase, actualResults: E2ETestResult['actualResults']): string[] {
+  private generateErrors(
+    testCase: E2ETestCase,
+    actualResults: E2ETestResult['actualResults']
+  ): string[] {
     const errors: string[] = [];
     const { expectedBehavior } = testCase;
 
@@ -429,11 +442,18 @@ class EndToEndTester {
     }
 
     if (expectedBehavior.expectedState && actualResults.state !== expectedBehavior.expectedState) {
-      errors.push(`Expected state ${expectedBehavior.expectedState} but got ${actualResults.state}`);
+      errors.push(
+        `Expected state ${expectedBehavior.expectedState} but got ${actualResults.state}`
+      );
     }
 
-    if (expectedBehavior.expectedDistrictCount && actualResults.districtCount !== expectedBehavior.expectedDistrictCount) {
-      errors.push(`Expected ${expectedBehavior.expectedDistrictCount} districts but got ${actualResults.districtCount}`);
+    if (
+      expectedBehavior.expectedDistrictCount &&
+      actualResults.districtCount !== expectedBehavior.expectedDistrictCount
+    ) {
+      errors.push(
+        `Expected ${expectedBehavior.expectedDistrictCount} districts but got ${actualResults.districtCount}`
+      );
     }
 
     return errors;
@@ -471,18 +491,21 @@ class EndToEndTester {
 
     console.log(`\n📈 Category Results:`);
     categories.forEach((stats, category) => {
-      const percentage = (stats.passed / stats.total * 100).toFixed(1);
+      const percentage = ((stats.passed / stats.total) * 100).toFixed(1);
       console.log(`  ${category}: ${stats.passed}/${stats.total} (${percentage}%)`);
     });
 
     // Performance metrics
-    const avgResponseTime = this.results.reduce((sum, r) => sum + r.actualResults.responseTime, 0) / this.results.length;
+    const avgResponseTime =
+      this.results.reduce((sum, r) => sum + r.actualResults.responseTime, 0) / this.results.length;
     const maxResponseTime = Math.max(...this.results.map(r => r.actualResults.responseTime));
     const minResponseTime = Math.min(...this.results.map(r => r.actualResults.responseTime));
 
     console.log(`\n⚡ Performance Metrics:`);
     console.log(`  Average Response Time: ${avgResponseTime.toFixed(2)}ms`);
-    console.log(`  Response Time Range: ${minResponseTime.toFixed(2)}ms - ${maxResponseTime.toFixed(2)}ms`);
+    console.log(
+      `  Response Time Range: ${minResponseTime.toFixed(2)}ms - ${maxResponseTime.toFixed(2)}ms`
+    );
 
     // Error analysis
     const allErrors = this.results.flatMap(r => r.errors);
@@ -492,7 +515,7 @@ class EndToEndTester {
       allErrors.forEach(error => {
         errorCounts.set(error, (errorCounts.get(error) || 0) + 1);
       });
-      
+
       errorCounts.forEach((count, error) => {
         console.log(`  ${error}: ${count} occurrences`);
       });
@@ -506,7 +529,7 @@ class EndToEndTester {
       allWarnings.forEach(warning => {
         warningCounts.set(warning, (warningCounts.get(warning) || 0) + 1);
       });
-      
+
       warningCounts.forEach((count, warning) => {
         console.log(`  ${warning}: ${count} occurrences`);
       });
