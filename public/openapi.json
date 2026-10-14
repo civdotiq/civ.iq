@@ -758,6 +758,53 @@
         }
       }
     },
+    "/intelligence/representative/{bioguideId}/temporal": {
+      "get": {
+        "summary": "Temporal voting analysis",
+        "description": "Party-line voting alignment per calendar quarter of the current Congress, computed from every roll call in the chamber. Flags quarters that move more than 10 percentage points from the trailing 4-quarter average, and compares overall alignment with other members of the same party in the chamber. Requires at least 4 quarters of votes; independents and members of an incomplete roll-call corpus return 404.",
+        "operationId": "getTemporalAnalysis",
+        "tags": ["Intelligence"],
+        "parameters": [
+          {
+            "name": "bioguideId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Bioguide ID",
+            "example": "P000197"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Temporal voting insight",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemporalVoteInsightResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/ApiNotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ApiServiceUnavailable"
+          }
+        }
+      }
+    },
     "/intelligence/address/money-report": {
       "get": {
         "summary": "Money report by ZIP code",
@@ -3289,6 +3336,128 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/IntelligenceMetadata"
+          }
+        ]
+      },
+      "TemporalVoteInsightResponse": {
+        "description": "Quarterly party-alignment insight",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/IntelligenceMetadata"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "bioguideId": {
+                "type": "string"
+              },
+              "quarters": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "quarter": {
+                      "type": "string",
+                      "example": "2025-Q1"
+                    },
+                    "alignmentScore": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Share of Yea/Nay votes cast with the party majority"
+                    },
+                    "voteCount": {
+                      "type": "integer"
+                    },
+                    "rollingAverage": {
+                      "type": "number",
+                      "nullable": true,
+                      "description": "Average of the 4 prior quarters; null for the first 4"
+                    }
+                  }
+                }
+              },
+              "shifts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "quarter": {
+                      "type": "string"
+                    },
+                    "magnitude": {
+                      "type": "number",
+                      "description": "Percentage points from the trailing average"
+                    },
+                    "direction": {
+                      "type": "string",
+                      "enum": ["increase", "decrease"]
+                    },
+                    "context": {
+                      "type": "object",
+                      "properties": {
+                        "newCommittees": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "largeContributions": {
+                          "type": "integer"
+                        },
+                        "electionProximity": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "overallTrend": {
+                "type": "string",
+                "enum": ["stable", "increasing", "decreasing", "volatile"]
+              },
+              "peerComparison": {
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "value": {
+                    "type": "number"
+                  },
+                  "peerAverage": {
+                    "type": "number"
+                  },
+                  "peerCount": {
+                    "type": "integer"
+                  },
+                  "peerGroupLabel": {
+                    "type": "string",
+                    "example": "other House Democrats"
+                  },
+                  "percentileRank": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "peerComparisonUnavailableReason": {
+                "type": "string"
+              },
+              "narrative": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["complete"]
+              }
+            },
+            "required": [
+              "bioguideId",
+              "quarters",
+              "shifts",
+              "overallTrend",
+              "peerComparison",
+              "narrative"
+            ]
           }
         ]
       },
