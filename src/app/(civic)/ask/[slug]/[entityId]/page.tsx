@@ -40,6 +40,7 @@ import {
 import { resolvePolicyAreaSlug } from '@/lib/services/policy-area-search.service';
 import { displaySector } from '@/lib/mesh/sector-display';
 import { FAQPageSchema } from '@/components/seo/JsonLd';
+import { commonName } from '@/features/representatives/utils/common-name';
 import { QuestionLayout } from '@/components/questions/QuestionLayout';
 import { RelatedQuestions } from '@/components/questions/RelatedQuestions';
 import { CampaignContributionsAnswer } from '@/components/questions/CampaignContributionsAnswer';
@@ -501,9 +502,10 @@ export default async function QuestionPage({ params }: PageProps) {
   const rep = await getCachedRepresentative(entityId.toUpperCase());
   if (!rep) notFound();
 
-  const entity = { name: rep.name, party: rep.party, state: rep.state };
+  const name = commonName(rep);
+  const entity = { name, party: rep.party, state: rep.state };
   const question = fillPattern(template.questionPattern, entity);
-  const relatedQuestions = computeRelatedQuestions(slug, entityId, rep.name);
+  const relatedQuestions = computeRelatedQuestions(slug, entityId, name);
   const id = entityId.toUpperCase();
 
   // Fetch template-specific data via direct service calls (no self-fetch).
@@ -530,7 +532,7 @@ export default async function QuestionPage({ params }: PageProps) {
       notFound();
   }
 
-  const faqAnswer = buildFaqAnswer(slug, rep.name, {
+  const faqAnswer = buildFaqAnswer(slug, name, {
     campaign,
     voting,
     billsSponsored,
@@ -547,7 +549,11 @@ export default async function QuestionPage({ params }: PageProps) {
         />
       )}
       {slug === 'voting-record' && voting && (
-        <VotingRecordAnswer votes={voting.votes} bills={voting.bills} />
+        <VotingRecordAnswer
+          votes={voting.votes}
+          bills={voting.bills}
+          fullRecord={{ href: `/representative/${id}/votes`, name }}
+        />
       )}
       {slug === 'bills-sponsored' && billsSponsored && (
         <BillsSponsoredAnswer
@@ -588,7 +594,7 @@ export default async function QuestionPage({ params }: PageProps) {
     const tenureCaption = earliestTerm ? `In office since ${earliestTerm}` : undefined;
     const repEntity: AskEntity = {
       type: 'representative',
-      name: rep.name,
+      name,
       bioguideId: id,
       party: partyVariant(rep.party),
       chamber: rep.chamber,

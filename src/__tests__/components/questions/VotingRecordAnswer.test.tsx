@@ -42,13 +42,28 @@ function makeVote(overrides: Partial<Vote> = {}): Vote {
   };
 }
 
+const FULL_RECORD = { href: '/representative/P000197/votes', name: 'Nancy Pelosi' };
+
 describe('VotingRecordAnswer', () => {
+  it('links to the full voting record page, with the name in the link text', () => {
+    render(<VotingRecordAnswer votes={null} bills={null} fullRecord={FULL_RECORD} />);
+
+    const link = screen.getByRole('link', { name: /Nancy Pelosi's full voting record/ });
+    expect(link).toHaveAttribute('href', '/representative/P000197/votes');
+  });
+
   it('qualifies "Missed" stat label as sample-scoped, not session-total', () => {
     const votes = Array.from({ length: 20 }, (_, i) =>
       makeVote({ voteId: `h2026-${i}`, position: i === 0 ? 'Not Voting' : 'Yea' })
     );
 
-    render(<VotingRecordAnswer votes={{ votes, totalResults: 20 }} bills={null} />);
+    render(
+      <VotingRecordAnswer
+        votes={{ votes, totalResults: 20 }}
+        bills={null}
+        fullRecord={FULL_RECORD}
+      />
+    );
 
     // The unqualified "Missed vote rate" label implies session-wide stats —
     // a 0.0% on a 20-vote sample would lie about members who missed dozens.
@@ -62,7 +77,13 @@ describe('VotingRecordAnswer', () => {
   it('renders no session-total "Total votes" stat derived from the sample', () => {
     const votes = Array.from({ length: 20 }, (_, i) => makeVote({ voteId: `h2026-${i}` }));
 
-    render(<VotingRecordAnswer votes={{ votes, totalResults: 20 }} bills={null} />);
+    render(
+      <VotingRecordAnswer
+        votes={{ votes, totalResults: 20 }}
+        bills={null}
+        fullRecord={FULL_RECORD}
+      />
+    );
 
     // Unqualified "Total votes: 20" would misrepresent session activity.
     expect(screen.queryByText(/^total votes$/i)).not.toBeInTheDocument();
@@ -84,7 +105,13 @@ describe('VotingRecordAnswer', () => {
       }),
     ];
 
-    render(<VotingRecordAnswer votes={{ votes, totalResults: 2 }} bills={null} />);
+    render(
+      <VotingRecordAnswer
+        votes={{ votes, totalResults: 2 }}
+        bills={null}
+        fullRecord={FULL_RECORD}
+      />
+    );
 
     expect(screen.getByText(/RED Tape Act \(On motion to recommit\)/)).toBeInTheDocument();
     expect(screen.getByText(/RED Tape Act \(On passage\)/)).toBeInTheDocument();
@@ -99,7 +126,13 @@ describe('VotingRecordAnswer', () => {
       }),
     ];
 
-    render(<VotingRecordAnswer votes={{ votes, totalResults: 1 }} bills={null} />);
+    render(
+      <VotingRecordAnswer
+        votes={{ votes, totalResults: 1 }}
+        bills={null}
+        fullRecord={FULL_RECORD}
+      />
+    );
 
     // The bare title renders without the "(On passage)" suffix when unique.
     const link = screen.getByRole('link', { name: /clean water act amendments/i });
@@ -115,7 +148,13 @@ describe('VotingRecordAnswer', () => {
       }),
     ];
 
-    render(<VotingRecordAnswer votes={{ votes, totalResults: 1 }} bills={null} />);
+    render(
+      <VotingRecordAnswer
+        votes={{ votes, totalResults: 1 }}
+        bills={null}
+        fullRecord={FULL_RECORD}
+      />
+    );
 
     const link = screen.getByRole('link', { name: /HUD Data Privacy Act/ });
     expect(link).toHaveAttribute('href', '/bill/119-hr-8814');
@@ -125,6 +164,7 @@ describe('VotingRecordAnswer', () => {
     render(
       <VotingRecordAnswer
         votes={null}
+        fullRecord={FULL_RECORD}
         bills={{
           sponsored: [
             {
@@ -150,6 +190,7 @@ describe('VotingRecordAnswer', () => {
     render(
       <VotingRecordAnswer
         votes={null}
+        fullRecord={FULL_RECORD}
         bills={{
           sponsored: [],
           cosponsored: [],
@@ -169,6 +210,7 @@ describe('VotingRecordAnswer', () => {
     render(
       <VotingRecordAnswer
         votes={null}
+        fullRecord={FULL_RECORD}
         bills={{
           sponsored: [],
           cosponsored: [],

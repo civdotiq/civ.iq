@@ -12,6 +12,7 @@ import { resolvePolicyAreaSlug } from '@/lib/services/policy-area-search.service
 import { fetchTopicBillsData } from '@/lib/questions/template-data-fetchers';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
+import { commonName } from '@/features/representatives/utils/common-name';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -52,7 +53,7 @@ export async function generateMetadata({
     } else {
       const rep = await getCachedRepresentative(entityId.toUpperCase());
       if (!rep) return { title: 'Representative not found' };
-      const entity = { name: rep.name, party: rep.party, state: rep.state };
+      const entity = { name: commonName(rep), party: rep.party, state: rep.state };
       title = fillPattern(template.questionPattern, entity);
       description = fillPattern(template.descriptionPattern, entity);
     }
@@ -104,7 +105,7 @@ export default async function AskLayout({ children, params }: LayoutProps) {
     entityName = 'Representative';
     try {
       const rep = await getCachedRepresentative(entityId.toUpperCase());
-      if (rep) entityName = rep.name;
+      if (rep) entityName = commonName(rep);
     } catch {
       // Breadcrumb falls back to generic label
     }

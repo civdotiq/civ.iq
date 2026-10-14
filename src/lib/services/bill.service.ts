@@ -301,6 +301,87 @@ async function fetchBillText(
   }
 }
 
+interface CongressTitle {
+  title: string;
+  titleType: string;
+  billTextVersionCode?: string;
+}
+
+/**
+ * Bill text stages, latest first. A short title can change as a bill moves
+ * (or be stripped, as the Senate did to H.R. 1 in the 119th), so the most
+ * advanced stage that still carries one wins.
+ */
+const TITLE_STAGE_ORDER = ['ENR', 'EAS', 'EAH', 'ES', 'EH', 'PCS', 'PCH', 'RS', 'RH', 'IS', 'IH'];
+
+function titleStageRank(t: CongressTitle): number {
+  if (/as enacted/i.test(t.titleType)) return -1;
+  const i = TITLE_STAGE_ORDER.indexOf(t.billTextVersionCode ?? '');
+  return i === -1 ? TITLE_STAGE_ORDER.length : i;
+}
+
+/**
+ * The names people actually search a bill by, from Congress.gov's /titles list.
+ * `popularTitle` is the Library of Congress "Popular Titles" entry (e.g. "One
+ * Big Beautiful Bill Act" for 119 H.R. 1, whose official title is reconciliation
+ * boilerplate). `shortTitle` is the latest-stage short title for the whole
+ * bill — titles "for portions of this bill" name a single title within it.
+ */
+export function pickBillTitles(titles: CongressTitle[]): {
+  popularTitle?: string;
+  shortTitle?: string;
+} {
+  const popularTitle = titles.find(t => /^popular title/i.test(t.titleType))?.title.trim();
+  const shortTitle = titles
+    .filter(t => /^short title/i.test(t.titleType) && !/portions/i.test(t.titleType))
+    .sort((a, b) => titleStageRank(a) - titleStageRank(b))[0]
+    ?.title.trim();
+  return {
+    ...(popularTitle ? { popularTitle } : {}),
+    ...(shortTitle ? { shortTitle } : {}),
+  };
+}
+
+/** Congress.gov sub-endpoints can stall for minutes; a missing title only costs the nicer page title. */
+const TITLES_TIMEOUT_MS = 8000;
+
+async function fetchBillTitles(
+  congress: string,
+  type: string,
+  number: string
+): Promise<CongressTitle[]> {
+  try {
+    const response = await fetch(
+      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/titles?format=json&limit=250`,
+      {
+        headers: {
+          'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+          Accept: 'application/json',
+          'X-API-Key': process.env.CONGRESS_API_KEY || '',
+        },
+        signal: AbortSignal.timeout(TITLES_TIMEOUT_MS),
+      }
+    );
+    const monitor = monitorExternalApi('congress', 'bill-titles', response.url);
+    if (!response.ok) {
+      monitor.end(false, response.status);
+      logger.warn('Failed to fetch bill titles', {
+        status: response.status,
+        congress,
+        type,
+        number,
+      });
+      return [];
+    }
+    const data: { titles?: CongressTitle[] } = await response.json();
+    monitor.end(true, 200);
+    return data.titles ?? [];
+  } catch (error) {
+    logger.error('Error fetching bill titles', error as Error, { congress, type, number });
+    return [];
+  }
+}
+
 /**
  * Fetch a list sub-resource of a bill (committees, relatedbills, summaries).
  * The bill detail response only carries `{ count, url }` pointers for these,
@@ -750,7 +831,8 @@ export async function lookupBill(billId: string): Promise<BillLookup> {
   // v3: de-duplicated roll calls + vote session
   // v4: committees, related bills, summaries from their sub-endpoints
   // v6: official roll-call question/result (House + Senate) — bump drops stale entries
-  const cacheKey = `bill-v6-${type}-${number}-${congress}`;
+  // v7: popular and short titles from the /titles sub-endpoint
+  const cacheKey = `bill-v7-${type}-${number}-${congress}`;
 
   const result = await cachedFetch<Bill | BillMiss>(
     cacheKey,
@@ -807,6 +889,7 @@ export async function lookupBill(billId: string): Promise<BillLookup> {
           committees,
           relatedBills,
           summaries,
+          titles,
         ] = await Promise.all([
           fetchBillCosponsors(c, type, n),
           fetchBillDetails(c, type, n),
@@ -815,8 +898,10 @@ export async function lookupBill(billId: string): Promise<BillLookup> {
           fetchBillList<CongressCommittee>(c, type, n, 'committees', 'committees'),
           fetchBillList<CongressRelatedBill>(c, type, n, 'relatedbills', 'relatedBills'),
           fetchBillList<CongressSummary>(c, type, n, 'summaries', 'summaries'),
+          fetchBillTitles(c, type, n),
         ]);
         const summary = latestSummary(summaries);
+        const { popularTitle, shortTitle } = pickBillTitles(titles);
 
         const result: Bill = {
           // Lowercase type so the id is the true canonical slug (119-hr-8814);
@@ -825,7 +910,8 @@ export async function lookupBill(billId: string): Promise<BillLookup> {
           id: `${bill.congress}-${bill.type.toLowerCase()}-${bill.number}`,
           number: formatBillNumber(bill.type, bill.number),
           title: bill.title || formatBillNumber(bill.type, bill.number),
-          shortTitle: bill.shortTitle,
+          shortTitle: shortTitle ?? bill.shortTitle,
+          ...(popularTitle ? { popularTitle } : {}),
           congress: bill.congress.toString(),
           session: bill.congress.toString(),
           type: bill.type.toLowerCase() as Bill['type'],

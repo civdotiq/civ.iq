@@ -11,6 +11,8 @@ export interface Bill {
   number: string; // "H.R. 1234", "S. 567"
   title: string;
   shortTitle?: string;
+  /** Library of Congress popular title, e.g. "One Big Beautiful Bill Act" */
+  popularTitle?: string;
   congress: string; // "119"
   session: string; // "1" or "2"
   type: 'hr' | 's' | 'hjres' | 'sjres' | 'hconres' | 'sconres' | 'hres' | 'sres';
@@ -216,6 +218,17 @@ export interface BillListResponse {
 }
 
 // Utility functions
+
+/**
+ * The name people know a bill by — its popular title, else its short title —
+ * or undefined when Congress.gov lists only the official title.
+ */
+export function getBillCommonTitle(
+  bill: Pick<Bill, 'popularTitle' | 'shortTitle'>
+): string | undefined {
+  return bill.popularTitle || bill.shortTitle || undefined;
+}
+
 export function getBillDisplayStatus(status: BillStatus): string {
   const statusMap: Record<BillStatus, string> = {
     introduced: 'Introduced',

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Bill } from '@/types/bill';
-import { getBillVoteHref } from '@/types/bill';
+import { getBillCommonTitle, getBillVoteHref } from '@/types/bill';
 import { RepLink } from '@/components/shared/links/EntityLinks';
 import { CqButton, CqChip, CqDisclaimer, CqLabel, CqSourceTag, CqStat } from '@/components/cq';
 import {
@@ -121,7 +121,7 @@ export function BillDetail({ bill }: BillDetailProps) {
               wordBreak: 'break-word',
             }}
           >
-            {bill.title}
+            {getBillCommonTitle(bill) ?? bill.title}
           </h1>
           <p
             style={{
