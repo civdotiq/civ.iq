@@ -32,6 +32,13 @@ import {
 
 const ROOT = join(__dirname, '..');
 const USER_AGENT = 'civiq-agent-doc-link-check/1.0';
+// Vercel Bot Protection challenges non-browser clients on page routes. A firewall
+// bypass rule skips the challenge when this header carries the shared token.
+const BYPASS_TOKEN = process.env.FIREWALL_BYPASS_TOKEN;
+const REQUEST_HEADERS: Record<string, string> = {
+  'User-Agent': USER_AGENT,
+  ...(BYPASS_TOKEN ? { 'x-civiq-bypass': BYPASS_TOKEN } : {}),
+};
 const TIMEOUT_MS = 60_000;
 const CONCURRENCY = 3;
 
@@ -197,7 +204,7 @@ function extractFromMcpManifest(): string[] {
 
 async function extractFromAskPage(base: string): Promise<string[]> {
   const res = await fetch(`${base}/ask`, {
-    headers: { 'User-Agent': USER_AGENT },
+    headers: REQUEST_HEADERS,
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   const html = await res.text();
@@ -217,7 +224,7 @@ async function check(
 ): Promise<{ status: number | string; note: string }> {
   try {
     const res = await fetch(`${base}${path}`, {
-      headers: { 'User-Agent': USER_AGENT },
+      headers: REQUEST_HEADERS,
       redirect: 'follow',
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
