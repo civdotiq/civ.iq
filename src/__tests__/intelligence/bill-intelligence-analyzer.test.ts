@@ -53,13 +53,23 @@ jest.mock('@/lib/data/bioguide-fec-mapping', () => ({
   getFECIdFromBioguide: (...args: unknown[]) => mockGetFECIdFromBioguide(...args),
 }));
 
+const mockGetContributionsByEmployer = jest.fn();
+const mockGetContributionsByOccupation = jest.fn();
 const mockGetSampleContributions = jest.fn();
 const mockGetFinancialSummary = jest.fn();
 jest.mock('@/lib/fec/fec-api-service', () => ({
   fecApiService: {
+    getContributionsByEmployer: (...args: unknown[]) => mockGetContributionsByEmployer(...args),
+    getContributionsByOccupation: (...args: unknown[]) => mockGetContributionsByOccupation(...args),
     getSampleContributions: (...args: unknown[]) => mockGetSampleContributions(...args),
     getFinancialSummary: (...args: unknown[]) => mockGetFinancialSummary(...args),
   },
+}));
+
+const mockGetTopIndustrySectorsFromAggregates = jest.fn();
+jest.mock('@/lib/fec/finance-aggregator', () => ({
+  getTopIndustrySectorsFromAggregates: (...args: unknown[]) =>
+    mockGetTopIndustrySectorsFromAggregates(...args),
 }));
 
 const mockGetEnhancedRepresentative = jest.fn();
@@ -199,7 +209,25 @@ describe('analyzeBillIntelligence', () => {
     mockRedisSet.mockResolvedValue(undefined);
     mockFetchBillFromCongress.mockResolvedValue(mockBill);
     mockGetFECIdFromBioguide.mockReturnValue('H0CA12345');
-    mockGetSampleContributions.mockResolvedValue([{ amount: 5000 }]);
+    mockGetContributionsByEmployer.mockResolvedValue([{ employer: 'X', total: 1, count: 1 }]);
+    mockGetContributionsByOccupation.mockResolvedValue([]);
+    mockGetTopIndustrySectorsFromAggregates.mockReturnValue([
+      {
+        sector: 'HEALTH',
+        category: 'Hospitals',
+        amount: 50000,
+        percentage: 0,
+        contributionCount: 9,
+      },
+      {
+        sector: 'DEFENSE',
+        category: 'Aerospace',
+        amount: 20000,
+        percentage: 0,
+        contributionCount: 4,
+      },
+      { sector: 'HEALTH', category: 'Pharma', amount: 10000, percentage: 0, contributionCount: 2 },
+    ]);
     mockGetFinancialSummary.mockResolvedValue(null);
     mockGetEnhancedRepresentative.mockResolvedValue(null);
   });
@@ -252,6 +280,32 @@ describe('analyzeBillIntelligence', () => {
     expect(result!.sponsorAnalysis!.sectorDonationPercentage).toBeGreaterThanOrEqual(0);
   });
 
+  it('sums FEC employer/occupation aggregates, never the contribution sample', async () => {
+    const result = await analyzeBillIntelligence('119-hr-1');
+
+    expect(mockGetSampleContributions).not.toHaveBeenCalled();
+    expect(mockGetContributionsByEmployer).toHaveBeenCalledWith(
+      'H0CA12345',
+      expect.any(Number),
+      100
+    );
+    expect(mockGetContributionsByOccupation).toHaveBeenCalledWith(
+      'H0CA12345',
+      expect.any(Number),
+      100
+    );
+    const sponsor = result!.sponsorAnalysis!;
+    const sectors = result!.affectedSectors as string[];
+    const expected =
+      (sectors.includes('HEALTH') ? 60000 : 0) + (sectors.includes('DEFENSE') ? 20000 : 0);
+    expect(sponsor.totalDonations).toBe(80000);
+    expect(sponsor.sectorDonationAmount).toBe(expected);
+    expect(sponsor.sectorDonationPercentage).toBeCloseTo(
+      (sponsor.sectorDonationAmount / 80000) * 100,
+      5
+    );
+  });
+
   it('analyzes cosponsor funding', async () => {
     const result = await analyzeBillIntelligence('119-hr-1');
 
@@ -276,7 +330,7 @@ describe('analyzeBillIntelligence', () => {
 
     const setCalls = mockRedisSet.mock.calls;
     const insightCall = setCalls.find(
-      (call: unknown[]) => (call[0] as string) === 'insight:bill_intelligence:119-hr-1'
+      (call: unknown[]) => (call[0] as string) === 'insight:bill_intelligence:v2:119-hr-1'
     );
     expect(insightCall).toBeDefined();
     expect(insightCall![2]).toBe(7 * 24 * 60 * 60);
@@ -494,7 +548,17 @@ describe('analyzeBillIntelligence', () => {
     mockRedisSet.mockResolvedValue(undefined);
     mockFetchBillFromCongress.mockResolvedValue(mockBillWithVote);
     mockGetFECIdFromBioguide.mockReturnValue('H0CA12345');
-    mockGetSampleContributions.mockResolvedValue([{ amount: 5000 }]);
+    mockGetContributionsByEmployer.mockResolvedValue([{ employer: 'X', total: 1, count: 1 }]);
+    mockGetContributionsByOccupation.mockResolvedValue([]);
+    mockGetTopIndustrySectorsFromAggregates.mockReturnValue([
+      {
+        sector: 'HEALTH',
+        category: 'Hospitals',
+        amount: 50000,
+        percentage: 0,
+        contributionCount: 9,
+      },
+    ]);
     mockGetFinancialSummary.mockResolvedValue({ receipts: 1200000 });
     mockGetEnhancedRepresentative.mockResolvedValue({
       committees: [{ name: 'Energy and Commerce', role: 'Member' }],
