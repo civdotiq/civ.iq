@@ -66,6 +66,7 @@ const CRAWLER_SIGNATURES: ReadonlyArray<readonly [string, string]> = [
   ['bytespider', 'bytespider'],
   ['amazonbot', 'amazonbot'],
   ['meta-externalagent', 'meta-externalagent'],
+  ['meta-webindexer', 'meta-webindexer'],
   ['facebookexternalhit', 'facebookexternalhit'],
   ['twitterbot', 'twitterbot'],
   ['linkedinbot', 'linkedinbot'],
