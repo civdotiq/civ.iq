@@ -16,12 +16,12 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/developers' },
   title: 'CIV.IQ Developer Portal — Free Civic Data API, MCP Server, SDK, CLI & Bulk Data',
   description:
-    'The CIV.IQ (civdotiq.org) developer portal: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. Open source (Apache-2.0).',
+    'The CIV.IQ (civdotiq.org) developer portal: free REST API (36 documented endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. Open source (Apache-2.0).',
   openGraph: {
     images: SITE_OG_IMAGES,
     title: 'CIV.IQ Developer Portal — Free Civic Data API, MCP Server, SDK, CLI & Bulk Data',
     description:
-      'The CIV.IQ (civdotiq.org) developer portal: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. Open source (Apache-2.0).',
+      'The CIV.IQ (civdotiq.org) developer portal: free REST API (36 documented endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. Open source (Apache-2.0).',
     type: 'website',
   },
   keywords: [
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
 const INTEGRATION_CARDS = [
   {
     title: 'REST API',
-    detail: '181 endpoints, no auth',
+    detail: '36 endpoints, no auth',
     description: 'Public JSON endpoints for representatives, bills, votes, and districts.',
     href: '/docs/api',
   },
@@ -61,7 +61,7 @@ const INTEGRATION_CARDS = [
   {
     title: 'TypeScript SDK',
     detail: '9 resource classes',
-    description: 'Typed client for all CIV.IQ endpoints. Node.js, Deno, and browser.',
+    description: 'Typed client for the CIV.IQ API. Node.js, Deno, and browser.',
     href: '#sdk',
   },
   {
@@ -204,11 +204,11 @@ export default function DevelopersPage() {
         {/* Stat cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-grid-3 mb-grid-8">
           <div className="border-2 border-black p-grid-3">
-            <div className="text-3xl font-bold">181</div>
+            <div className="text-3xl font-bold">36</div>
             <div className="text-sm text-gray-600 uppercase tracking-wider">API Endpoints</div>
           </div>
           <div className="border-2 border-black p-grid-3">
-            <div className="text-3xl font-bold">47</div>
+            <div className="text-3xl font-bold">46</div>
             <div className="text-sm text-gray-600 uppercase tracking-wider">MCP Tools</div>
           </div>
           <div className="border-2 border-black p-grid-3">
@@ -470,7 +470,7 @@ const reps = await civiq.representatives.list({ state: 'MI', chamber: 'house' })
         <section id="sdk" className="mb-grid-8">
           <h2 className="text-2xl font-bold mb-grid-2">TypeScript SDK</h2>
           <p className="text-gray-600 mb-grid-3">
-            Typed client for all CIV.IQ endpoints. Works in Node.js, Deno, and the browser.
+            Typed client for the CIV.IQ API. Works in Node.js, Deno, and the browser.
           </p>
 
           <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mb-grid-3">
@@ -734,9 +734,9 @@ npx @civiq/sdk --help`}
                 <div>
                   <h3 className="font-mono font-bold text-base">@civiq/sdk</h3>
                   <p className="text-sm text-gray-600 mt-1">
-                    Typed TypeScript client for all 181 CIV.IQ API endpoints. Covers
-                    representatives, bills, votes, committees, districts, intelligence, search,
-                    states, and the civic graph. Works in Node.js, Deno, and browsers.
+                    Typed TypeScript client for the CIV.IQ API: 33 methods. Covers representatives,
+                    bills, votes, committees, districts, intelligence, search, states, and the civic
+                    graph. Works in Node.js, Deno, and browsers.
                   </p>
                 </div>
                 <a

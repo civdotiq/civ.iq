@@ -1,7 +1,7 @@
 # Data Source Tier Classification & Maintenance Policy
 
 **Created:** 2026-04-12
-**Context:** CIV.IQ consumes 28 government data sources. With estimated maintenance of 20-80 hours/source/year, maintaining all sources at the same priority is unsustainable for a solo developer. This document classifies sources into tiers to focus effort where it matters most.
+**Context:** CIV.IQ health-checks 28 data sources (24 government, 4 open datasets); the full list of 40 is in [COVERAGE.md](./COVERAGE.md). With estimated maintenance of 20-80 hours/source/year, maintaining all sources at the same priority is unsustainable for a solo developer. This document classifies sources into tiers to focus effort where it matters most.
 
 **Core value proposition:** The cross-domain join between money (FEC), votes (Congress.gov), and lobbying (Senate LDA). Everything else is enrichment.
 

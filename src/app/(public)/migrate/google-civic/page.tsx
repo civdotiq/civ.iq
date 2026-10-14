@@ -206,7 +206,7 @@ const FAQS: FAQ[] = [
   },
   {
     q: 'Does CIV.IQ have an MCP server for AI assistants?',
-    a: 'Yes. Connect any MCP-compatible AI assistant to https://civdotiq.org/api/mcp — 16 tools for representative lookup, legislation, voting records, campaign finance, and more.',
+    a: 'Yes. Connect any MCP-compatible AI assistant to https://civdotiq.org/api/mcp — 46 tools for representative lookup, legislation, voting records, campaign finance, and more.',
   },
 ];
 
@@ -575,7 +575,7 @@ export default function GoogleCivicMigrationPage() {
               },
               {
                 title: 'AI/MCP Integration',
-                desc: '16-tool MCP server for AI assistants. Connect Claude, GPT, or any MCP client.',
+                desc: '46-tool MCP server for AI assistants. Connect Claude, GPT, or any MCP client.',
                 href: '/developers',
               },
             ].map(card => (

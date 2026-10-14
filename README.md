@@ -19,7 +19,7 @@
 
 A civic intelligence platform. Enter an address to find your federal and state representatives, with voting records, federal campaign finance, committee assignments, legislative activity, and machine-learning-powered analysis of money-in-politics patterns. Local (city/county) government: not covered. Local records lack a shared standard or central source; CIV.IQ intends to add them only once a verified public source exists.
 
-All data comes from government APIs. All analysis is statistical, with confidence scores and methodology disclosed. If data is unavailable, the interface and the response payload say so explicitly. Nothing is fabricated.
+Data comes from official government records. Most are read straight from the agency's API or bulk files; some are read through named open datasets, such as OpenStates for state legislatures and the Congress Trading Monitor for parsed STOCK Act filings. All analysis is statistical, with confidence scores and methodology disclosed. If data is unavailable, the interface and the response payload say so explicitly. Nothing is fabricated.
 
 Honest coverage matrix: [docs/COVERAGE.md](docs/COVERAGE.md). It is the canonical answer to "what does CIV.IQ actually cover?" — every other claim in this README defers to that page.
 
@@ -33,11 +33,9 @@ Honest coverage matrix: [docs/COVERAGE.md](docs/COVERAGE.md). It is the canonica
 
 **Money Report**: Address-based lookup that traces the path from campaign contributions through committee assignments to legislative outcomes for your specific representatives.
 
-**Sector Leaderboard**: Rankings of legislators by industry sector, showing which members receive the most from a given industry relative to their peers.
-
 **Regulations & Comment Periods**: Federal Register integration for proposed rules, final rules, executive orders, and open public comment periods.
 
-**State Legislatures**: All 50 states via OpenStates — legislators, bills, committees, votes, and calendars. Interactive district boundary maps for all 7,383 state legislative districts. State-level campaign finance, lobbying, and stock-trade data are **not** part of state coverage.
+**State Legislatures**: All 50 states via OpenStates — legislators, bills, committees, and calendars. Per-legislator vote history is in progress. Interactive district boundary maps for all 7,383 state legislative districts. State-level campaign finance, lobbying, and stock-trade data are **not** part of state coverage.
 
 **Local Government**: Not covered (city/county). Local records lack a shared standard or central source; CIV.IQ intends to add them only once a verified public source exists.
 
@@ -47,39 +45,39 @@ Honest coverage matrix: [docs/COVERAGE.md](docs/COVERAGE.md). It is the canonica
 
 ## Developer integrations
 
-| Integration                                            | What it provides                                                |
-| ------------------------------------------------------ | --------------------------------------------------------------- |
-| [OpenAPI spec](public/openapi.json)                    | 39 paths, 29 schemas — generate clients in any language         |
-| [@civiq/sdk](packages/sdk)                             | Zero-dependency TypeScript client (`npm install @civiq/sdk`)    |
-| [MCP server](/api/mcp)                                 | 46 tools for AI assistants (Claude, Cursor, etc.)               |
-| [Atom feeds](/api/feed/bills/latest)                   | RSS-compatible feeds for bills, members, districts, committees  |
-| [Embeddable widgets](https://civdotiq.org/open/embeds) | Drop-in HTML for legislator cards, district lookup, bill status |
-| [llms.txt](public/llms.txt)                            | AI-discoverable documentation                                   |
+| Integration                                              | What it provides                                                |
+| -------------------------------------------------------- | --------------------------------------------------------------- |
+| [OpenAPI spec](public/openapi.json)                      | 36 endpoints, 36 schemas — generate clients in any language     |
+| [@civiq/sdk](packages/sdk)                               | Zero-dependency TypeScript client (`npm install @civiq/sdk`)    |
+| [MCP server](https://civdotiq.org/api/mcp)               | 46 tools for AI assistants (Claude, Cursor, etc.)               |
+| [Atom feeds](https://civdotiq.org/api/feed/bills/latest) | RSS-compatible feeds for bills, members, districts, committees  |
+| [Embeddable widgets](https://civdotiq.org/open/embeds)   | Drop-in HTML for legislator cards, district lookup, bill status |
+| [llms.txt](public/llms.txt)                              | AI-discoverable documentation                                   |
 
 ## Data sources
 
-| Source                     | What it provides                                            |
-| -------------------------- | ----------------------------------------------------------- |
-| Congress.gov v3            | Bills, votes, members, committees, hearings                 |
-| FEC.gov                    | Campaign contributions, expenditures, PAC filings           |
-| U.S. Census Bureau         | Demographics, geocoding, economic data                      |
-| Senate.gov XML             | Senate floor votes, roll calls                              |
-| House Clerk XML            | House voting records                                        |
-| OpenStates GraphQL         | State legislators, bills, committees, votes (all 50 states) |
-| GovInfo                    | Hearing transcripts, legislative documents                  |
-| Federal Register           | Executive orders, proposed rules, comment periods           |
-| USASpending.gov v2         | Federal contracts, grants, awards by district               |
-| Senate LDA                 | Lobbying disclosure filings                                 |
-| Bureau of Labor Statistics | Employment, wages, labor force data                         |
-| SEC EDGAR                  | Financial disclosures, stock trades (STOCK Act)             |
-| Wikidata SPARQL            | State executives, judiciary, biographies                    |
-| FRED                       | Federal Reserve economic indicators                         |
-| Regulations.gov            | Public comments on proposed rules                           |
-| Census TIGER/Line          | Congressional and state district boundaries                 |
+| Source                                  | What it provides                                                                      |
+| --------------------------------------- | ------------------------------------------------------------------------------------- |
+| Congress.gov v3                         | Bills, members, committees, hearings                                                  |
+| FEC.gov                                 | Campaign contributions, expenditures, PAC filings                                     |
+| U.S. Census Bureau                      | Geocoding, demographics, district boundaries (TIGER)                                  |
+| Senate.gov XML                          | Senate floor votes, roll calls                                                        |
+| House Clerk XML                         | House voting records                                                                  |
+| GovInfo                                 | Hearing transcripts, legislative documents                                            |
+| Federal Register                        | Executive orders, proposed rules, comment periods                                     |
+| USASpending.gov v2                      | Federal contracts, grants, awards by district                                         |
+| LDA (lda.gov)                           | Lobbying disclosure filings                                                           |
+| Bureau of Labor Statistics              | Employment, wages, labor force data                                                   |
+| SEC EDGAR                               | Company filings                                                                       |
+| FRED                                    | Federal Reserve economic indicators                                                   |
+| Regulations.gov                         | Public comments on proposed rules                                                     |
+| OpenStates (open dataset)               | State legislators, bills, committees (all 50 states)                                  |
+| Congress Trading Monitor (open dataset) | STOCK Act trades for both chambers, parsed from the official House and Senate filings |
+| Wikidata (open dataset)                 | State executives, state judiciary                                                     |
 
-The table lists the primary sources. Additional federal agency datasets — CDC PLACES, CMS, Medicaid, FEMA, FBI UCR, FDIC, VA, Treasury, CFPB, NHTSA, College Scorecard, and more — power district and intelligence features, for **26 live government data sources** in total. The canonical, continuously verified list is [docs/COVERAGE.md](docs/COVERAGE.md).
+The table lists the primary sources. Other federal agency datasets (CDC PLACES, CMS, FEMA, FBI, FDIC, VA, Treasury, CFPB, NHTSA, EPA, College Scorecard, and more) power district and intelligence features. In total CIV.IQ reads **40 data sources: 29 government and 11 open datasets**. The full list and the counting rule are in [docs/COVERAGE.md](docs/COVERAGE.md#data-sources-40-29-government-11-open-datasets).
 
-No data is fabricated, scraped, or generated.
+No data is fabricated or generated. When a source is unavailable, the response says so.
 
 ## Setup
 
@@ -123,7 +121,7 @@ Verify at [localhost:3000/api/health](http://localhost:3000/api/health).
 ```
 src/
 ├── app/
-│   ├── api/                  # 181 API routes
+│   ├── api/                  # API routes (public contract: /api/v1 + openapi.json)
 │   └── (civic)/              # Pages (representatives, districts, legislation, etc.)
 ├── components/
 │   ├── intelligence/         # Insight cards, leaderboards, influence chains
@@ -152,38 +150,45 @@ Next.js 16, React 18, TypeScript (strict), Tailwind CSS, SWR, Zustand, MapLibre 
 
 ## Intelligence layer
 
-12 statistical analyzers cross-reference government data domains:
+16 statistical analyzers cross-reference the federal data domains:
 
-| Analyzer                     | What it detects                                            |
-| ---------------------------- | ---------------------------------------------------------- |
-| Finance-Jurisdiction Overlap | Donor sectors that match a member's committee jurisdiction |
-| Vote-Finance Correlation     | Voting alignment with campaign contributor industries      |
-| Temporal Vote Shifts         | Quarterly changes in party-line voting patterns            |
-| Lobbying Pipeline            | Lobbying spend → committee activity → bill output chains   |
-| PAC-to-Vote Tracing          | PAC contributions traced to recipient voting records       |
-| Stock-Committee Overlap      | STOCK Act trades in sectors a member's committee regulates |
-| Influence Chain              | Full money → committee → legislation → vote pathways       |
-| Sector Leaderboard           | Industry-by-industry legislator rankings                   |
-| Vote Prediction              | ML model (XGBoost/ONNX) for roll call vote forecasting     |
-| Bill Intelligence            | Sponsor funding sources cross-referenced with lobbying     |
-| Bill-Lobbying Similarity     | Semantic similarity between bill text and lobbied issues   |
-| Federal Register Analysis    | Regulatory intelligence from proposed and final rules      |
+| Analyzer                     | What it computes                                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------------------------------ |
+| Finance-Jurisdiction Overlap | How far a member's donor industries overlap with their committees' jurisdictions                 |
+| Vote-Finance Alignment       | Share of a member's votes cast on bills in their top donor sectors                               |
+| Party-Line Alignment         | How often a member votes with their party's majority, from real roll calls                       |
+| Temporal Vote Shifts         | Quarter-by-quarter party-line alignment, alongside committee, contribution, and election events  |
+| Chamber Baselines            | Chamber and party medians for votes cast, missed votes, and party alignment (peer baselines)     |
+| Lobbying Pipeline            | Lobbying filings aimed at a committee, grouped by issue and matched to bills                     |
+| PAC-to-Vote Tracing          | A PAC's recipients and how they voted on the PAC's issue areas                                   |
+| Stock-Committee Overlap      | STOCK Act trades in sectors a member's committees oversee                                        |
+| Stock Trade Leaderboard      | Members ranked by trade count, trade value, or late filings                                      |
+| Influence Chain              | Lobbying → contribution → committee → matching bill → vote pathways                              |
+| Influence Graph              | Influence chains extended with related regulations, enforcement actions, and court cases         |
+| Temporal Proximity           | Timing patterns, such as a contribution within 90 days of a related vote                         |
+| Bill Intelligence            | Sponsors' funding sources against a bill's policy sectors, plus bill-to-lobbying text similarity |
+| Enforcement                  | EPA and OSHA enforcement actions and CFPB complaints, by sector, state, or organization          |
+| Federal Register Extraction  | Industries, costs, and timelines extracted from rule preambles                                   |
+| Civic Brief                  | A one-page representative brief: statistics and pattern detection first, then an AI summary      |
+
+Two more analyzers are in the code but not listed because they produce no public output today: the sector leaderboard (it returns no data in production) and the regulation analyzer (nothing calls it).
 
 Every insight carries: confidence score (0–1), data-as-of timestamp, methodology description, and a disclaimer that correlation does not imply causation.
 
 ### ML pipeline
 
-- **Vote prediction**: Training data collected via `npm run collect:training-data`, model trained in Python (`scripts/train-vote-model.py`), exported to ONNX, inference in TypeScript (`src/lib/intelligence/ml/vote-predictor.ts`)
-- **Text similarity**: all-MiniLM-L6-v2 embeddings for bill-to-lobbying matching
-- **Classification**: nli-deberta-v3-xsmall for zero-shot stance detection
-- **Named entity recognition**: bert-base-NER for extracting entities from civic text
+All models are small and run server-side through HuggingFace Transformers. Setting `CIVIQ_ML_PIPELINES=off` disables them.
+
+- **Text similarity**: all-MiniLM-L6-v2 embeddings for bill-to-lobbying matching and bill sector classification
+- **Classification**: nli-deberta-v3-xsmall for zero-shot bill sector classification
+- **Named entity recognition**: distilbert-NER (ONNX) for extracting entities from Federal Register preambles
 - **Influence clusters**: Offline Python computation (`scripts/compute-influence-clusters.py`) served as JSON
 
 ### Open-source packages
 
 Three packages are extracted as standalone npm workspace packages:
 
-- **@civiq/sdk** — TypeScript API client with typed methods for all 39 endpoints, error hierarchy, custom fetch injection
+- **@civiq/sdk** — TypeScript API client with 33 typed methods across 9 resources, error hierarchy, custom fetch injection
 - **@civiq/civic-statistics** — Confidence scoring, peer comparison, correlation (Spearman/Pearson), anomaly detection, sample size enforcement
 - **@civiq/entity-resolution** — Committee alias resolution, ticker-to-industry mapping, FEC recipient deduplication
 
