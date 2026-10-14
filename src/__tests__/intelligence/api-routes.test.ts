@@ -26,6 +26,11 @@ jest.mock('@/lib/cache/redis-client', () => ({
   }),
 }));
 
+// shared.ts pulls in the AI SDK, which needs web streams jest lacks.
+jest.mock('@/lib/intelligence/analyzers/shared', () => ({
+  withTimeout: <T>(promise: Promise<T>) => promise,
+}));
+
 // Mock all analyzers to return controlled results
 const mockAnalyzeFinanceJurisdiction = jest.fn();
 const mockAnalyzeVoteFinance = jest.fn();
@@ -224,6 +229,20 @@ describe('Intelligence API Routes', () => {
         mockParams({ bioguideId: '' })
       );
       expect(res.status).toBe(400);
+    });
+
+    it('returns 503 when the analyzer times out', async () => {
+      mockAnalyzeTemporalVotes.mockRejectedValueOnce(
+        new Error('[TemporalVotes:P000197] Analyzer timed out after 50000ms')
+      );
+
+      const res = await GET(
+        mockRequest('http://localhost/') as never,
+        mockParams({ bioguideId: 'P000197' })
+      );
+      expect(res.status).toBe(503);
+      const data = await res.json();
+      expect(data.error.code).toBe('SERVICE_UNAVAILABLE');
     });
 
     it('returns 404 when analyzer returns null', async () => {

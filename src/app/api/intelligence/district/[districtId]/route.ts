@@ -88,7 +88,7 @@ export async function GET(
             .get(`insight:vote_finance:${rep.bioguideId}`)
             .catch(() => null),
           getRedisCache()
-            .get(`insight:temporal_votes:${rep.bioguideId}`)
+            .get(`insight:temporal_votes:v2:${rep.bioguideId}`)
             .catch(() => null),
         ]);
         if (vfCached) insightsAvailable++;

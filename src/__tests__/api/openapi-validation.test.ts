@@ -102,9 +102,10 @@ describe('OpenAPI Specification', () => {
       '/mcp',
     ];
 
-    // Intelligence endpoints. influence-chain, temporal and sector leaderboard
-    // 404 in production, so they are left out of the spec until they are fixed.
+    // Intelligence endpoints. influence-chain and sector leaderboard 404 in
+    // production, so they are left out of the spec until they are fixed.
     const INTELLIGENCE_PATHS = [
+      '/intelligence/representative/{bioguideId}/temporal',
       '/intelligence/representative/{bioguideId}/finance-jurisdiction',
       '/intelligence/address/money-report',
       '/intelligence/address/representatives',
@@ -163,8 +164,8 @@ describe('OpenAPI Specification', () => {
       });
     }
 
-    it('should have 36 paths total', () => {
-      expect(Object.keys(spec.paths).length).toBe(36);
+    it('should have 37 paths total', () => {
+      expect(Object.keys(spec.paths).length).toBe(37);
     });
 
     const ALLOWED_METHODS = ['get', 'post', 'delete'];
@@ -270,6 +271,7 @@ describe('OpenAPI Specification', () => {
       const schemas = spec.components.schemas;
       expect(schemas).toHaveProperty('IntelligenceMetadata');
       expect(schemas).toHaveProperty('IntelligenceInsightResponse');
+      expect(schemas).toHaveProperty('TemporalVoteInsightResponse');
       expect(schemas).toHaveProperty('MoneyReportResponse');
     });
 
