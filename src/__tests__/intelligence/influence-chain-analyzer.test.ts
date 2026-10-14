@@ -317,7 +317,7 @@ describe('analyzeInfluenceChains', () => {
     // Exact keys for same-chamber peers only, never a KEYS pattern scan
     expect(mockRedisKeys).not.toHaveBeenCalled();
     expect(mockRedisMget).toHaveBeenCalledWith(
-      makeRoster('House', 6).map(r => `influence-chain-count:v3:House:${r.bioguideId}`)
+      makeRoster('House', 6).map(r => `influence-chain-count:v4:House:${r.bioguideId}`)
     );
   });
 
@@ -328,7 +328,7 @@ describe('analyzeInfluenceChains', () => {
 
     expect(result).toBeNull();
     expect(mockRedisSet).toHaveBeenCalledWith(
-      `influence-chain-count:v3:House:${BIO_ID}`,
+      `influence-chain-count:v4:House:${BIO_ID}`,
       0,
       7 * 24 * 60 * 60
     );
@@ -363,6 +363,29 @@ describe('analyzeInfluenceChains', () => {
     }
   });
 
+  it('shows at most 3 chains per organization', async () => {
+    // One matching organization and many votes in its sector
+    mockFetchRecentFilings.mockResolvedValue(makeLobbyingFilings(1));
+    mockGetHouseMemberVotes.mockResolvedValue(makeVotes(30));
+    mockGetContributionsByEmployer.mockResolvedValue(makeEmployerRows(1));
+
+    const result = await analyzeInfluenceChains(BIO_ID);
+
+    expect(result).not.toBeNull();
+    expect(result!.totalChainsDetected).toBeGreaterThan(3);
+    expect(result!.chains).toHaveLength(3);
+  });
+
+  it('ignores employer totals under $1,000 as contribution evidence', async () => {
+    mockGetContributionsByEmployer.mockResolvedValue(
+      makeEmployerRows(3).map(row => ({ ...row, total: 115 }))
+    );
+
+    const result = await analyzeInfluenceChains(BIO_ID);
+
+    expect(result).toBeNull();
+  });
+
   it('handles timeout gracefully', async () => {
     // Simulate the representative fetch hanging forever
     mockGetEnhancedRepresentative.mockImplementation(
@@ -394,7 +417,7 @@ describe('analyzeInfluenceChains', () => {
 
     const setCalls = mockRedisSet.mock.calls;
     const insightCall = setCalls.find(
-      (call: unknown[]) => (call[0] as string) === `insight:influence_chain:v3:${BIO_ID}`
+      (call: unknown[]) => (call[0] as string) === `insight:influence_chain:v4:${BIO_ID}`
     );
 
     if (insightCall) {

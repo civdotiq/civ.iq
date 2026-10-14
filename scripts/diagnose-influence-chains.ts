@@ -104,7 +104,7 @@ async function diagnose(bioguideId: string): Promise<void> {
   );
 
   await getRedisCache()
-    .delete(`insight:influence_chain:v3:${bioguideId}`)
+    .delete(`insight:influence_chain:v4:${bioguideId}`)
     .catch(() => undefined);
 
   const started = Date.now();

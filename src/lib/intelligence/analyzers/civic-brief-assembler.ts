@@ -145,7 +145,7 @@ async function computeAndCache(
   const [fundingData, fjInsight, icInsight, temporalInsight] = await Promise.all([
     fetchFundingData(fecId, cycle, identity),
     fetchCachedInsight<FinanceJurisdictionInsight>(`insight:finance_jurisdiction:${bioguideId}`),
-    fetchCachedInsight<InfluenceChainInsight>(`insight:influence_chain:v3:${bioguideId}`),
+    fetchCachedInsight<InfluenceChainInsight>(`insight:influence_chain:v4:${bioguideId}`),
     fetchCachedInsight<TemporalVoteInsight>(`insight:temporal_votes:${bioguideId}`),
   ]);
 

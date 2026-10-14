@@ -188,7 +188,7 @@ describe('Integration: GET /api/intelligence/representative/[bioguideId]/influen
       lastAnalyzedAt: new Date().toISOString(),
       source: 'statistical-fallback',
     };
-    mockRedisStore.set('insight:influence_chain:v3:T000001', cached);
+    mockRedisStore.set('insight:influence_chain:v4:T000001', cached);
 
     const res = await GET(
       mockRequest('http://localhost/') as never,

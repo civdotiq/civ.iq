@@ -82,6 +82,19 @@ const MGET_CHUNK_SIZE = 100;
 /** Max chains to return */
 const MAX_CHAINS = 10;
 
+/**
+ * Max chains per organization. One organization lobbying on many bills would
+ * otherwise fill every slot and the card would show a single organization.
+ */
+const MAX_CHAINS_PER_ORG = 3;
+
+/**
+ * Minimum folded employer total (USD, current cycle) that counts as
+ * contribution evidence. A few hundred dollars from one or two employees of a
+ * large employer is not evidence of an organization-level money pattern.
+ */
+const MIN_EMPLOYER_CONTRIBUTION = 1000;
+
 /** Max organizations carried into chain assembly */
 const MAX_ORGS = 50;
 
@@ -198,7 +211,7 @@ const DISCLAIMER =
 export async function analyzeInfluenceChains(
   bioguideId: string
 ): Promise<InfluenceChainInsight | null> {
-  const cacheKey = `insight:influence_chain:v3:${bioguideId}`;
+  const cacheKey = `insight:influence_chain:v4:${bioguideId}`;
 
   // 1. Check cache
   try {
@@ -363,12 +376,14 @@ async function computeAndCache(
         : 'Lobbying rows come from a small sample of recent filings, so coverage ' +
           'is partial. ') +
       'Contributions come from FEC itemized contributions aggregated by employer ' +
-      `(the campaign committee's top ${MAX_EMPLOYERS} employers by total). ` +
+      `(the campaign committee's top ${MAX_EMPLOYERS} employers by total); ` +
+      `employers totaling under $${MIN_EMPLOYER_CONTRIBUTION.toLocaleString()} are ignored. ` +
       'Organization names are matched to employer names after normalizing ' +
       'legal suffixes and punctuation, with a Levenshtein fallback (similarity ' +
       '>= 0.8 plus shared tokens) that caps the link at lower confidence. ' +
       'Bills classified by sector using ' +
-      'AI summaries with keyword fallback.',
+      'AI summaries with keyword fallback. ' +
+      `At most ${MAX_CHAINS_PER_ORG} chains per organization are shown.`,
     disclaimer: DISCLAIMER,
     signal: classifySignal({
       value: chains.length,
@@ -714,6 +729,10 @@ async function fetchContributionMatches(
       );
     }
 
+    for (const [normalized, total] of employerContributions) {
+      if (total < MIN_EMPLOYER_CONTRIBUTION) employerContributions.delete(normalized);
+    }
+
     // Exact matching is a hash lookup, so every organization gets it. Fuzzy
     // matching is O(orgs x employers) and the corpus can yield tens of
     // thousands of organizations per committee, so it runs on the highest
@@ -942,10 +961,17 @@ function assembleChains(
 
   const totalDetected = allChains.length;
 
-  // Filter by confidence threshold and cap at MAX_CHAINS
+  // Filter by confidence threshold, then cap per organization and overall
+  const perOrg = new Map<string, number>();
   const validChains = allChains
     .filter(c => c.chainConfidence >= MIN_CHAIN_CONFIDENCE)
     .sort((a, b) => b.chainConfidence - a.chainConfidence)
+    .filter(c => {
+      const count = perOrg.get(c.organization) ?? 0;
+      if (count >= MAX_CHAINS_PER_ORG) return false;
+      perOrg.set(c.organization, count + 1);
+      return true;
+    })
     .slice(0, MAX_CHAINS);
 
   return {
@@ -1111,7 +1137,7 @@ function findMatchingCommittee(org: LobbyingOrgSummary, rep: RepData): string {
 
 /** v3: counts from the employer-aggregate method; never mix with earlier runs. */
 const chainCountKey = (chamber: 'House' | 'Senate', bioguideId: string): string =>
-  `influence-chain-count:v3:${chamber}:${bioguideId}`;
+  `influence-chain-count:v4:${chamber}:${bioguideId}`;
 
 async function recordChainCount(
   bioguideId: string,
