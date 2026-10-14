@@ -20,7 +20,8 @@ import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import { fetchBillFromCongress } from '@/lib/services/bill.service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
-import { aggregateByIndustrySector, type IndustrySector } from '@/lib/fec/industry-taxonomy';
+import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
+import { getTopIndustrySectorsFromAggregates } from '@/lib/fec/finance-aggregator';
 import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { analyzeLobbyingPipeline } from './lobbying-pipeline-analyzer';
@@ -51,6 +52,9 @@ const CACHE_TTL = 7 * 24 * 60 * 60;
 /** Max cosponsors to analyze (top by date) */
 const MAX_COSPONSORS = 10;
 
+/** Rows to read from FEC's by_employer / by_occupation aggregates (its per_page maximum). */
+const MAX_AGGREGATE_ROWS = 100;
+
 /** Story context extracted from bill data — zero additional API calls. */
 interface StoryContext {
   voteOutcome?: BillIntelligenceInsight['voteOutcome'];
@@ -72,7 +76,8 @@ const DISCLAIMER =
 export async function analyzeBillIntelligence(
   billId: string
 ): Promise<BillIntelligenceInsight | null> {
-  const cacheKey = `insight:bill_intelligence:${billId}`;
+  // v2: v1 sponsor/cosponsor money came from a 250-contribution sample.
+  const cacheKey = `insight:bill_intelligence:v2:${billId}`;
 
   // 1. Check cache
   try {
@@ -237,7 +242,10 @@ async function computeAndCache(
   );
 
   const sc = new SourceCollector();
-  sc.add('FEC individual filings', `${getCurrentElectionCycle()} cycle`);
+  sc.add(
+    'FEC itemized contributions by employer and occupation',
+    `${getCurrentElectionCycle()} cycle`
+  );
   sc.add('Congress.gov bills', '119th Congress');
   sc.add('Senate LDA filings (complete corpus)', '119th Congress', lobbyingOrgs);
   if (lobbyingSimilarity) {
@@ -259,7 +267,9 @@ async function computeAndCache(
     confidenceMethod: 'computed',
     dataAsOf: freshestDate(bill.introducedDate, bill.status.lastAction.date)!,
     methodology:
-      'Sponsor/cosponsor campaign contributions aggregated by industry sector from FEC filings. ' +
+      "Sponsor/cosponsor itemized individual contributions grouped by industry sector from FEC's " +
+      'by-employer and by-occupation totals (top 100 rows each, principal campaign committee). ' +
+      'Unitemized small-dollar gifts and PAC money are not included. ' +
       (usedMLClassification
         ? 'Sectors identified by analyzing the bill text with an embedding model. '
         : 'Sectors mapped via Congress.gov policy areas. ') +
@@ -456,39 +466,47 @@ async function analyzeMemberSectorDonations(
   const fecId = getFECIdFromBioguide(bioguideId);
   if (!fecId) return null;
 
-  let contributions;
+  // FEC's by-employer and by-occupation totals cover every itemized
+  // individual contribution to the principal committee (top rows only), not
+  // a sample. They used to come from the 250 largest Schedule A rows, whose
+  // total could exceed what the member actually raised.
+  let byEmployer: Awaited<ReturnType<typeof fecApiService.getContributionsByEmployer>>;
+  let byOccupation: Awaited<ReturnType<typeof fecApiService.getContributionsByOccupation>>;
   try {
-    contributions = await fecApiService.getSampleContributions(
-      fecId,
-      getCurrentElectionCycle(),
-      250
-    );
+    const cycle = getCurrentElectionCycle();
+    [byEmployer, byOccupation] = await Promise.all([
+      fecApiService.getContributionsByEmployer(fecId, cycle, MAX_AGGREGATE_ROWS),
+      fecApiService.getContributionsByOccupation(fecId, cycle, MAX_AGGREGATE_ROWS),
+    ]);
   } catch {
     return null;
   }
 
-  if (contributions.length === 0) return null;
-
-  const sectorAggregation = aggregateByIndustrySector(contributions);
+  const buckets = getTopIndustrySectorsFromAggregates(
+    byEmployer,
+    byOccupation,
+    Number.MAX_SAFE_INTEGER
+  );
   let totalDonations = 0;
   let sectorDonationAmount = 0;
 
-  for (const entry of sectorAggregation) {
-    totalDonations += entry.totalAmount;
-    if (sectors.includes(entry.sector)) {
-      sectorDonationAmount += entry.totalAmount;
+  for (const bucket of buckets) {
+    totalDonations += bucket.amount;
+    if ((sectors as string[]).includes(bucket.sector)) {
+      sectorDonationAmount += bucket.amount;
     }
   }
 
   if (totalDonations === 0) return null;
 
+  // Occupation recovery scales rows proportionally, so sums carry fractions.
   return {
     bioguideId,
     name,
     party,
     sectorDonationPercentage: (sectorDonationAmount / totalDonations) * 100,
-    sectorDonationAmount,
-    totalDonations,
+    sectorDonationAmount: Math.round(sectorDonationAmount),
+    totalDonations: Math.round(totalDonations),
   };
 }
 
@@ -620,12 +638,12 @@ async function generateNarrative(
 ): Promise<{ narrative: string; source: 'ai-generated' | 'statistical-fallback' }> {
   const sectorList = sectors.slice(0, 5).join(', ');
   const sponsorInfo = sponsor
-    ? `The sponsor, ${sponsor.name} (${sponsor.party}), received $${sponsor.sectorDonationAmount.toLocaleString()} from these sectors, representing ${sponsor.sectorDonationPercentage.toFixed(1)}% of their total $${sponsor.totalDonations.toLocaleString()} in contributions.`
+    ? `The sponsor, ${sponsor.name} (${sponsor.party}), received $${sponsor.sectorDonationAmount.toLocaleString()} in itemized individual donations from people working in these sectors. That is ${sponsor.sectorDonationPercentage.toFixed(1)}% of the $${sponsor.totalDonations.toLocaleString()} in itemized individual donations that FEC groups by employer and occupation.`
     : 'Sponsor contribution data is not available.';
 
   const cosponsorInfo =
     cosponsorSummary.analyzedCosponsors > 0
-      ? `Among ${cosponsorSummary.analyzedCosponsors} analyzed cosponsors (of ${cosponsorSummary.totalCosponsors} total), the average sector-related contribution percentage was ${cosponsorSummary.avgSectorDonationPercentage.toFixed(1)}%.`
+      ? `Among ${cosponsorSummary.analyzedCosponsors} analyzed cosponsors (of ${cosponsorSummary.totalCosponsors} total), an average of ${cosponsorSummary.avgSectorDonationPercentage.toFixed(1)}% of itemized individual donations came from people working in these sectors.`
       : `Cosponsor contribution data is not available.`;
 
   // Dollar amount still omitted, but the reason has changed. lobbyingSpending
@@ -666,6 +684,8 @@ async function generateNarrative(
     `${storyFacts}\n` +
     `${lobbyingLanguageBlock}\n` +
     `Use "pattern", "correlation", or "association" — never "caused", "influenced", or "resulted in". ` +
+    `Call the donation figures "itemized donations". Never call them total donations or total funding; ` +
+    `they leave out small gifts and PAC money. ` +
     `State facts only. Lead with the most notable finding.`;
 
   const fallback = buildStatisticalNarrative(
@@ -775,14 +795,14 @@ function buildStatisticalNarrative(
       : '';
     parts.push(
       `${sponsor.name} introduced this ${policyArea.toLowerCase()} bill and sits on the ${sponsorCommitteeConnection.committeeName}, which oversees it. ` +
-        `${sponsor.name} received $${sponsor.sectorDonationAmount.toLocaleString()} from ${sectorList} industries${totalContext}.`
+        `${sponsor.name} received $${sponsor.sectorDonationAmount.toLocaleString()} in itemized donations from people in ${sectorList} industries${totalContext}.`
     );
   } else if (sponsor) {
     const totalContext = sponsorFundingContext
-      ? ` of ${formatCompactDollars(sponsorFundingContext.totalRaised)} total raised`
+      ? ` Total raised this cycle: ${formatCompactDollars(sponsorFundingContext.totalRaised)}.`
       : '';
     parts.push(
-      `${sponsor.name} received ${sponsor.sectorDonationPercentage.toFixed(1)}% of campaign contributions from ${sectorList} sectors${totalContext}.`
+      `${sponsor.sectorDonationPercentage.toFixed(1)}% of ${sponsor.name}'s itemized individual donations came from people in ${sectorList} sectors.${totalContext}`
     );
   } else {
     parts.push(
