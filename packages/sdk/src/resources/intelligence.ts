@@ -31,7 +31,7 @@ export class IntelligenceResource {
     );
   }
 
-  /** Top recipients of contributions from a specific industry sector. */
+  /** House members' yes-vote rates on bills in one industry sector (no money, no ranking). */
   sectorLeaderboard(
     sector: string,
     params?: SectorLeaderboardParams
