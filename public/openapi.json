@@ -1015,6 +1015,56 @@
         }
       }
     },
+    "/intelligence/influence-clusters": {
+      "get": {
+        "summary": "Influence clusters",
+        "description": "Legislators grouped by shared funding patterns. Reveals cross-party clusters with similar donor profiles.",
+        "operationId": "getInfluenceClusters",
+        "tags": ["Intelligence"],
+        "parameters": [
+          {
+            "name": "bioguideId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional: get cluster for a specific legislator"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Influence clusters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clusters": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "crossPartyHighlights": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
+          }
+        }
+      }
+    },
     "/search/unified": {
       "get": {
         "summary": "Unified search",
