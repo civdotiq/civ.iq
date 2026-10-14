@@ -86,7 +86,8 @@ const DISCLAIMER =
  * Returns null if the PAC can't be classified or has insufficient data.
  */
 export async function analyzePACVotes(committeeId: string): Promise<PACVoteInsight | null> {
-  const cacheKey = `insight:pac_votes:${committeeId}`;
+  // v2: unversioned entries counted each recipient's votes twice.
+  const cacheKey = `insight:pac_votes:v2:${committeeId}`;
 
   // 1. Check cache
   try {
@@ -378,25 +379,25 @@ async function fetchAndClassifyRecipientVotes(
   return { records, billIdsByRecipient, freshestVoteDate };
 }
 
-/** Fetch a recipient's votes across both sessions of the 119th Congress. */
+/**
+ * Fetch a recipient's newest votes across both sessions of the current
+ * Congress in one call (session undefined). Separate session-1 and session-2
+ * fetches used to return the same votes twice.
+ */
 async function fetchRecipientRawVotes(recipient: LinkedRecipient) {
-  const fetchSession = (session: 1 | 2) =>
-    recipient.chamber === 'House'
-      ? batchVotingService.getHouseMemberVotes(
-          recipient.bioguideId,
-          getCurrentCongressNumber(),
-          session,
-          MAX_VOTES
-        )
-      : batchVotingService.getSenateMemberVotes(
-          recipient.bioguideId,
-          getCurrentCongressNumber(),
-          session,
-          MAX_VOTES
-        );
-
-  const [session1, session2] = await Promise.all([fetchSession(1), fetchSession(2)]);
-  return [...session1, ...session2];
+  return recipient.chamber === 'House'
+    ? batchVotingService.getHouseMemberVotes(
+        recipient.bioguideId,
+        getCurrentCongressNumber(),
+        undefined,
+        MAX_VOTES
+      )
+    : batchVotingService.getSenateMemberVotes(
+        recipient.bioguideId,
+        getCurrentCongressNumber(),
+        undefined,
+        MAX_VOTES
+      );
 }
 
 /**

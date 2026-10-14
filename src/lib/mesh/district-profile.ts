@@ -86,8 +86,9 @@ export async function buildDistrictProfile(districtId: string): Promise<District
   if (!parsed) return null;
 
   const { state, district } = parsed;
-  // v2: v1 entries hold the $0 spending from the pre-FIPS shape-code bug
-  const cacheKey = `mesh:district_profile:v2:${state}:${district}`;
+  // v2: v1 entries hold the $0 spending from the pre-FIPS shape-code bug.
+  // v3: v2 entries embed vote-finance results with doubled vote counts.
+  const cacheKey = `mesh:district_profile:v3:${state}:${district}`;
   const cache = getRedisCache();
 
   // Check cache

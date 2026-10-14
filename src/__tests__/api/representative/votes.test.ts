@@ -98,8 +98,8 @@ const mockSenateVotes = [
   },
 ];
 
-// Match the route's session calculation: odd years = 1, even years = 2
-const expectedSession = new Date().getFullYear() % 2 === 1 ? 1 : 2;
+// Newest votes across both sessions of the Congress.
+const expectedSession = undefined;
 
 describe('/api/representative/[bioguideId]/votes', () => {
   beforeEach(() => {

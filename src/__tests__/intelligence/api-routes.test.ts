@@ -509,7 +509,7 @@ describe('Intelligence API Routes', () => {
       ]);
       mockAnalyzeFinanceJurisdiction.mockResolvedValue(null);
       mockRedisGet.mockImplementation((key: string) =>
-        Promise.resolve(key === 'insight:vote_finance:v4:X000001' ? { cached: true } : null)
+        Promise.resolve(key === 'insight:vote_finance:v5:X000001' ? { cached: true } : null)
       );
 
       const res = await GET(

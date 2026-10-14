@@ -156,12 +156,11 @@ describe('analyzeVoteFinance', () => {
     expect(mockGetEnhancedRepresentative).not.toHaveBeenCalled();
   });
 
-  it('fetches both sessions of 119th Congress', async () => {
+  it('fetches the whole 119th Congress once, so no vote is counted twice', async () => {
     await analyzeVoteFinance('P000197');
 
-    // Should call getHouseMemberVotes with sessions 1 and 2, trimmed cap (MR12)
-    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith('P000197', 119, 1, 120);
-    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith('P000197', 119, 2, 120);
+    expect(mockGetHouseMemberVotes).toHaveBeenCalledTimes(1);
+    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith('P000197', 119, undefined, 120);
   });
 
   it('classifies votes by sector', async () => {
@@ -217,7 +216,7 @@ describe('analyzeVoteFinance', () => {
 
     const setCalls = mockRedisSet.mock.calls;
     const insightCall = setCalls.find(
-      (call: unknown[]) => (call[0] as string) === 'insight:vote_finance:v4:P000197'
+      (call: unknown[]) => (call[0] as string) === 'insight:vote_finance:v5:P000197'
     );
     expect(insightCall).toBeDefined();
     expect(insightCall![2]).toBe(7 * 24 * 60 * 60);
@@ -228,9 +227,8 @@ describe('analyzeVoteFinance', () => {
     // analyzer must fail fast instead of spinning hundreds of timeouts.
     mockGetEnhancedRepresentative.mockResolvedValue({ ...mockRep, chamber: 'Senate' });
 
-    const { analyzeVoteFinanceWithReason } = await import(
-      '@/lib/intelligence/analyzers/vote-finance-analyzer'
-    );
+    const { analyzeVoteFinanceWithReason } =
+      await import('@/lib/intelligence/analyzers/vote-finance-analyzer');
     const outcome = await analyzeVoteFinanceWithReason('P000197');
 
     expect(outcome.insight).toBeNull();
@@ -350,9 +348,7 @@ describe('analyzeVoteFinance', () => {
       question: 'On Passage',
       result: 'Passed',
     }));
-    mockGetHouseMemberVotes.mockImplementation((...args: unknown[]) =>
-      Promise.resolve(args[2] === 1 ? votes : [])
-    );
+    mockGetHouseMemberVotes.mockResolvedValue(votes);
     mockGetSummary.mockImplementation((...args: unknown[]) => {
       const num = parseInt(String(args[0]).replace(/^hr/, ''), 10);
       return Promise.resolve({ affectedIndustries: num <= 12 ? ['HEALTH'] : ['DEFENSE'] });
@@ -379,9 +375,7 @@ describe('analyzeVoteFinance', () => {
       question: 'On Passage',
       result: 'Passed',
     }));
-    mockGetHouseMemberVotes.mockImplementation((...args: unknown[]) =>
-      Promise.resolve(args[2] === 1 ? votes : [])
-    );
+    mockGetHouseMemberVotes.mockResolvedValue(votes);
 
     const outcome = await analyzeVoteFinanceWithReason('P000197');
 
@@ -402,9 +396,7 @@ describe('analyzeVoteFinance', () => {
       question: 'On Passage',
       result: 'Passed',
     }));
-    mockGetHouseMemberVotes.mockImplementation((...args: unknown[]) =>
-      Promise.resolve(args[2] === 1 ? votes : [])
-    );
+    mockGetHouseMemberVotes.mockResolvedValue(votes);
 
     const outcome = await analyzeVoteFinanceWithReason('P000197');
 

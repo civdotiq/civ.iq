@@ -67,9 +67,8 @@ import {
 const CACHE_TTL = 7 * 24 * 60 * 60;
 
 /**
- * Max recent votes to fetch. The vote services return the newest roll calls
- * across the whole Congress whatever session is passed, so one fetch covers
- * both sessions.
+ * Max recent votes to fetch, newest first across both sessions of the
+ * Congress (one fetch with session undefined).
  */
 const MAX_VOTES = 200;
 
@@ -855,9 +854,8 @@ async function fetchAndClassifyVotes(
 
 async function fetchVotes(bioguideId: string, chamber: 'House' | 'Senate'): Promise<RawVote[]> {
   try {
-    // One fetch: both services ignore the session and return the newest votes
-    // of the whole Congress, so asking for sessions 1 and 2 counted every vote
-    // twice. Passing undefined keeps each service's default session.
+    // One fetch across the whole Congress (session undefined). Asking for
+    // sessions 1 and 2 separately used to count every vote twice.
     const rawVotes =
       chamber === 'House'
         ? await batchVotingService.getHouseMemberVotes(

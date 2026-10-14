@@ -17,6 +17,7 @@
 
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import logger from '@/lib/logging/simple-logger';
+import { voteFinanceCacheKey } from '@/lib/intelligence/insight-cache-keys';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
@@ -129,10 +130,9 @@ export async function analyzeVoteFinance(bioguideId: string): Promise<VoteFinanc
 export async function analyzeVoteFinanceWithReason(
   bioguideId: string
 ): Promise<VoteFinanceOutcome> {
-  // v4: bumped in MR15 because the classifier now sees bill subjects + policyArea,
-  // so v3-cached "insufficient-data" results would otherwise mask the new
-  // sector coverage and keep `overallCorrelation` stuck at null.
-  const cacheKey = `insight:vote_finance:v4:${bioguideId}`;
+  // Version history lives with voteFinanceCacheKey (v4 = MR15 classifier,
+  // v5 = votes no longer double-counted).
+  const cacheKey = voteFinanceCacheKey(bioguideId);
 
   // 1. Check cache
   try {
@@ -385,38 +385,36 @@ interface RawVote {
 
 async function fetchVotes(bioguideId: string, chamber: 'House' | 'Senate'): Promise<RawVote[]> {
   try {
-    const fetchSession = async (session: 1 | 2) => {
-      const rawVotes =
-        chamber === 'House'
-          ? await batchVotingService.getHouseMemberVotes(
-              bioguideId,
-              getCurrentCongressNumber(),
-              session,
-              MAX_VOTES
-            )
-          : await batchVotingService.getSenateMemberVotes(
-              bioguideId,
-              getCurrentCongressNumber(),
-              session,
-              MAX_VOTES
-            );
+    // One fetch across the whole Congress (session undefined). Fetching
+    // sessions 1 and 2 separately used to return the same newest votes twice,
+    // because the services ignored the session, so every count was doubled.
+    const rawVotes =
+      chamber === 'House'
+        ? await batchVotingService.getHouseMemberVotes(
+            bioguideId,
+            getCurrentCongressNumber(),
+            undefined,
+            MAX_VOTES
+          )
+        : await batchVotingService.getSenateMemberVotes(
+            bioguideId,
+            getCurrentCongressNumber(),
+            undefined,
+            MAX_VOTES
+          );
 
-      return rawVotes
-        .filter(v => v.bill && v.position)
-        .map(v => ({
-          billType: v.bill?.type ?? '',
-          billNumber: String(v.bill?.number ?? ''),
-          billCongress: v.bill?.congress ?? 0,
-          billTitle: v.bill?.title ?? '',
-          billPolicyArea: v.bill?.policyArea,
-          billSubjects: v.bill?.subjects,
-          position: v.position,
-          date: v.date,
-        }));
-    };
-
-    const [session1, session2] = await Promise.all([fetchSession(1), fetchSession(2)]);
-    return [...session1, ...session2];
+    return rawVotes
+      .filter(v => v.bill && v.position)
+      .map(v => ({
+        billType: v.bill?.type ?? '',
+        billNumber: String(v.bill?.number ?? ''),
+        billCongress: v.bill?.congress ?? 0,
+        billTitle: v.bill?.title ?? '',
+        billPolicyArea: v.bill?.policyArea,
+        billSubjects: v.bill?.subjects,
+        position: v.position,
+        date: v.date,
+      }));
   } catch (error) {
     logger.warn('[VoteFinance] Vote fetch failed', { bioguideId, error: (error as Error).message });
     return [];

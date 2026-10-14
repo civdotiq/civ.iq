@@ -242,12 +242,11 @@ export async function getSenateApiVotes(
   limit: number = 10
 ): Promise<MemberApiVote[]> {
   const { batchVotingService } = await import('./batch-voting-service');
-  // Congressional sessions: odd years = Session 1, even years = Session 2
-  const currentSession = new Date().getFullYear() % 2 === 1 ? 1 : 2;
+  // Newest votes across both sessions of the Congress (session undefined).
   const memberVotes = await batchVotingService.getSenateMemberVotes(
     bioguideId,
     getCurrentCongressNumber(),
-    currentSession,
+    undefined,
     limit
   );
   return toSenateApiVotes(memberVotes);

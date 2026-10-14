@@ -26,6 +26,7 @@
 import { mean, median, sampleStandardDeviation } from 'simple-statistics';
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
+import { voteFinanceCacheKey } from '@/lib/intelligence/insight-cache-keys';
 import {
   getAllEnhancedRepresentatives,
   getEnhancedRepresentative,
@@ -41,6 +42,13 @@ import { trackInsightCacheHit, withInsightTracking } from './shared';
 /** Redis cache TTL: 24 hours */
 const CACHE_TTL = 24 * 60 * 60;
 
+/**
+ * TTL while fewer than MINIMUM_REQUIRED members have cached insights (after a
+ * vote-finance key bump the cron refills them over ~13h), so a sparse table
+ * isn't held for a full day.
+ */
+const PARTIAL_CACHE_TTL = 60 * 60;
+
 /** Concurrency limit for member enrichment calls */
 const ENRICHMENT_CONCURRENCY = 5;
 
@@ -52,9 +60,6 @@ export const SECTOR_VOTE_RATE_COVERAGE_NOTE =
   'House members only. Rate = yea votes / (yea + nay votes) on recent House roll calls on bills ' +
   'classified to this sector; members with fewer than 10 such votes are excluded. ' +
   'Vote-finance data is not computed for senators.';
-
-/** Must match the key written by vote-finance-analyzer.ts. */
-const voteFinanceKey = (bioguideId: string): string => `insight:vote_finance:v4:${bioguideId}`;
 
 // ── Main Export ──────────────────────────────────────────────────────
 
@@ -74,7 +79,8 @@ export async function buildSectorLeaderboard(
       ? Math.max(Math.floor(options.limit), 1)
       : undefined;
   // Cache key omits limit: the full list is cached once and capped on read.
-  const cacheKey = `leaderboard:v3:${sector}:${chamber}:${party}`;
+  // v4: built from vote_finance:v5 (v3 used double-counted vote totals).
+  const cacheKey = `leaderboard:v4:${sector}:${chamber}:${party}`;
 
   // 1. Check cache
   try {
@@ -223,7 +229,7 @@ async function computeLeaderboard(
 async function loadVoteFinanceInsights(): Promise<VoteFinanceInsight[]> {
   try {
     const roster = await getAllEnhancedRepresentatives();
-    const keys = roster.map(rep => voteFinanceKey(rep.bioguideId));
+    const keys = roster.map(rep => voteFinanceCacheKey(rep.bioguideId));
 
     const insights: VoteFinanceInsight[] = [];
     for (let i = 0; i < keys.length; i += MGET_CHUNK_SIZE) {
@@ -295,7 +301,8 @@ async function enrichCandidates(candidates: Candidate[]): Promise<EnrichedCandid
 
 async function cacheResponse(key: string, response: SectorLeaderboardResponse): Promise<void> {
   try {
-    await getRedisCache().set(key, response, CACHE_TTL);
+    const ttl = response.dataAvailability.status === 'sufficient' ? CACHE_TTL : PARTIAL_CACHE_TTL;
+    await getRedisCache().set(key, response, ttl);
     logger.info('[SectorLeaderboard] Cached sector vote-rate table', {
       sector: response.sector,
       entries: response.entries.length,
