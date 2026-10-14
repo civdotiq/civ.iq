@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -85,7 +85,7 @@ export async function GET(
 
         const [vfCached, temporalCached] = await Promise.all([
           getRedisCache()
-            .get(`insight:vote_finance:${rep.bioguideId}`)
+            .get(`insight:vote_finance:v4:${rep.bioguideId}`)
             .catch(() => null),
           getRedisCache()
             .get(`insight:temporal_votes:${rep.bioguideId}`)

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2026 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Bill roll calls: Congress.gov repeats a roll call on several actions, and
  * bill pages must link each vote to its own chamber's vote page.

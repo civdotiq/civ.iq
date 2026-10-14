@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Shared bottom attribution mark for the embed chassis (PR 22).
  * "Data via CIV.IQ · {timestamp}" — one tag at the bottom, mono 9px,

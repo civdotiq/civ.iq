@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Districts route — `?v=new` swaps in the SearchVariants chassis (PR 21).
  * The legacy client page is preserved as the default branch unchanged.

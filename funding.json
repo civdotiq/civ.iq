@@ -22,7 +22,7 @@
       "repositoryUrl": {
         "url": "https://github.com/civdotiq/civ.iq"
       },
-      "licenses": ["spdx:MIT"],
+      "licenses": ["spdx:Apache-2.0"],
       "tags": [
         "civic-tech",
         "government-transparency",

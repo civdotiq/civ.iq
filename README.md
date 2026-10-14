@@ -210,7 +210,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Apache License 2.0. Copyright 2019-2026 Mark Sandford.
 
-Use it, modify it, distribute it. Include the copyright, license, and NOTICE file per Apache 2.0 Section 4. Provide visible attribution: "Powered by CIV.IQ." The CIV.IQ name and logo are trademarks and require written permission to use. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Use it, modify it, distribute it. Include the copyright, license, and NOTICE file per Apache 2.0 Section 4. Credit is appreciated but not required: "Powered by CIV.IQ." The government data the API serves is in the public domain. The `@civiq/*` npm packages are MIT. The CIV.IQ name and logo are trademarks and require written permission to use. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 ---
 

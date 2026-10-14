@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2026 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * The bill page 404s on `not_found`. That outcome must come only from
  * Congress.gov's own 404; an outage or odd response is `unavailable`, and

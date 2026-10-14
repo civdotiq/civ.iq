@@ -629,7 +629,7 @@ Resource templates (returned by `resources/templates/list`):
     "apiVersion": "v1",
     "timestamp": "2026-08-21T00:00:00Z",
     "source": "error",
-    "license": "MIT",
+    "license": "Public Domain",
     "documentation": "https://civdotiq.org/docs/api"
   }
 }
@@ -705,4 +705,4 @@ List endpoints use offset-based pagination:
 - No data is fabricated — if a source is unavailable, the response returns empty arrays or null
 - Intelligence analysis never claims causation, only correlation and patterns
 - ML model accuracy is always disclosed alongside predictions
-- The platform is open source under MIT license
+- The platform is open source under the Apache-2.0 license; the government data it serves is public domain

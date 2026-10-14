@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * EmbedRepsCard — mast-less render chassis for /embed/reps/[districtId]?v=new.
  * 1–3 federal reps for a district (1 House + up to 2 Senate). Width-responsive

@@ -1,7 +1,7 @@
 /**
  * Congressional Constants - Hardcoded Reference Data
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * This file centralizes all congressional metadata that rarely or never changes:
  * - Party definitions and colors
