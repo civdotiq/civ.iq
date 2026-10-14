@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Static SVG district shape — boundary preview only. Real Mapbox/MapLibre
  * wiring is a follow-up PR (chat10 decision #8). Do NOT replace with a

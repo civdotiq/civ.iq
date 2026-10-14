@@ -85,7 +85,7 @@ export default function TermsPage() {
                     rel="noopener noreferrer"
                     className="text-civiq-blue hover:underline"
                   >
-                    MIT License
+                    Apache License 2.0
                   </a>
                   . You are free to use, copy, modify, and distribute the source code under the
                   terms of that license.

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -122,7 +122,7 @@ export async function GET(
         exportedAt: new Date().toISOString(),
         version: '1.0',
         sources,
-        license: 'MIT',
+        license: 'Public Domain',
         platform: 'CIV.IQ',
         districtId: districtId.toUpperCase(),
         congress: '119th Congress (2025-2027)',

@@ -2,7 +2,7 @@
  * Demographics Dashboard Component - Ulm School redesign
  * Shows only reliable, meaningful data without jargon
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import Link from 'next/link';

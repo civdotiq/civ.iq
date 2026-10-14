@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2026 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * A Congress.gov 429 pauses upstream calls for Retry-After seconds (clamped
  * to 1–60 minutes), shared through Redis, and the pause ends on its own.

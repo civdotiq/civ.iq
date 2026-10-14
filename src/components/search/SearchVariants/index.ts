@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * SearchVariants chassis (PR 21) — five listing routes redesigned behind
  * `?v=new`. See PLAN-redesign-implementation-2026-05.md (PR 21) for the

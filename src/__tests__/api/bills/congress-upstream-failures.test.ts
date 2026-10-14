@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2026 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Congress.gov occasionally stalls for minutes at a time. With no fetch
  * timeout, /api/v1/bills/[billId] and /api/feed/bill/[billId] hung until the

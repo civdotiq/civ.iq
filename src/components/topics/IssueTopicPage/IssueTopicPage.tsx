@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * IssueTopicPage — redesigned topic file (PR 16). Reduced-scope per
  * 2026-05-08 plan: no sub-topic taxonomy, no milestones timeline, no

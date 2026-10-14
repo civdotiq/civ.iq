@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Developer Portal
  * Comprehensive hub for all developer-facing resources.
@@ -16,12 +16,12 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/developers' },
   title: 'CIV.IQ Developer Portal — Free Civic Data API, MCP Server, SDK, CLI & Bulk Data',
   description:
-    'The CIV.IQ (civdotiq.org) developer portal: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. MIT licensed.',
+    'The CIV.IQ (civdotiq.org) developer portal: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. Open source (Apache-2.0).',
   openGraph: {
     images: SITE_OG_IMAGES,
     title: 'CIV.IQ Developer Portal — Free Civic Data API, MCP Server, SDK, CLI & Bulk Data',
     description:
-      'The CIV.IQ (civdotiq.org) developer portal: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. MIT licensed.',
+      'The CIV.IQ (civdotiq.org) developer portal: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. Open source (Apache-2.0).',
     type: 'website',
   },
   keywords: [
@@ -197,7 +197,8 @@ export default function DevelopersPage() {
         </p>
         <p className="text-sm text-gray-600 max-w-3xl mb-grid-6">
           No API key. No account. No tracking. Every endpoint, dataset, and protocol on this page is
-          free and open under the MIT license.
+          free to use. The government data is in the public domain; the code is open source under
+          the Apache-2.0 license.
         </p>
 
         {/* Stat cards */}
@@ -215,7 +216,7 @@ export default function DevelopersPage() {
             <div className="text-sm text-gray-600 uppercase tracking-wider">Bulk Datasets</div>
           </div>
           <div className="border-2 border-black p-grid-3">
-            <div className="text-3xl font-bold">MIT</div>
+            <div className="text-3xl font-bold">Apache 2.0</div>
             <div className="text-sm text-gray-600 uppercase tracking-wider">License</div>
           </div>
         </div>
@@ -266,7 +267,7 @@ const reps = await civiq.representatives.list({ state: 'MI', chamber: 'house' })
     "apiVersion": "v1",
     "timestamp": "2026-03-25T14:32:15.894Z",
     "source": "congress-legislators",
-    "license": "MIT",
+    "license": "Public Domain",
     "documentation": "https://civdotiq.org/docs/api"
   }
 }`}
@@ -707,7 +708,7 @@ npx @civiq/sdk --help`}
             </div>
             <div className="border-2 border-gray-200 p-grid-3">
               <h3 className="font-bold mb-1">GitHub</h3>
-              <p className="text-sm text-gray-600 mb-grid-2">Open source, MIT license.</p>
+              <p className="text-sm text-gray-600 mb-grid-2">Open source, Apache-2.0 license.</p>
               <a
                 href="https://github.com/civdotiq/civ.iq"
                 target="_blank"
@@ -1060,7 +1061,7 @@ npx @civiq/sdk --help`}
             <div className="border-2 border-gray-200 p-grid-3">
               <h3 className="font-bold mb-1">Contribute</h3>
               <p className="text-sm text-gray-600 mb-grid-2">
-                PRs welcome. The entire platform is MIT licensed and open source.
+                PRs welcome. The platform is open source under the Apache-2.0 license.
               </p>
               <a
                 href="https://github.com/civdotiq/civ.iq"
@@ -1120,7 +1121,8 @@ npx @civiq/sdk --help`}
             {`<a href="https://civdotiq.org" rel="dofollow">Powered by CIV.IQ</a>`}
           </pre>
           <p className="text-xs text-gray-500">
-            All data is sourced from official government APIs. CIV.IQ is MIT licensed.
+            All data is sourced from official government APIs. CIV.IQ is open source under the
+            Apache-2.0 license.
           </p>
         </section>
       </div>

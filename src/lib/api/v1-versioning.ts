@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -12,7 +12,7 @@
 
 // Keep in sync with public/openapi.json info.version and the newest
 // /api/v1/changelog entry.
-const API_VERSION = '1.2.1';
+const API_VERSION = '1.2.2';
 
 interface VersionConfig {
   sunset?: string; // RFC 7231 date string (e.g., "Sat, 01 Jan 2028 00:00:00 GMT")
