@@ -85,7 +85,7 @@ export async function GET(
 
         const [vfCached, temporalCached] = await Promise.all([
           getRedisCache()
-            .get(`insight:vote_finance:${rep.bioguideId}`)
+            .get(`insight:vote_finance:v4:${rep.bioguideId}`)
             .catch(() => null),
           getRedisCache()
             .get(`insight:temporal_votes:${rep.bioguideId}`)

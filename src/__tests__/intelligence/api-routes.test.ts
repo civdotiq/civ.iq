@@ -17,9 +17,10 @@ jest.mock('@/lib/logging/simple-logger', () => ({
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 
+const mockRedisGet = jest.fn().mockResolvedValue(null);
 jest.mock('@/lib/cache/redis-client', () => ({
   getRedisCache: () => ({
-    get: jest.fn().mockResolvedValue(null),
+    get: (...args: unknown[]) => mockRedisGet(...args),
     set: jest.fn().mockResolvedValue(undefined),
     keys: jest.fn().mockResolvedValue([]),
     mget: jest.fn().mockResolvedValue([]),
@@ -474,6 +475,32 @@ describe('Intelligence API Routes', () => {
       expect(data.representatives.map((r: { bioguideId: string }) => r.bioguideId)).toEqual([
         'X000001',
       ]);
+    });
+
+    it("counts a cached vote-finance insight under the analyzer's v4 key", async () => {
+      mockGetAllEnhancedRepresentatives.mockResolvedValue([
+        {
+          bioguideId: 'X000001',
+          name: 'Rep',
+          party: 'Independent',
+          state: 'MI',
+          chamber: 'House',
+          district: '5',
+        },
+      ]);
+      mockAnalyzeFinanceJurisdiction.mockResolvedValue(null);
+      mockRedisGet.mockImplementation((key: string) =>
+        Promise.resolve(key === 'insight:vote_finance:v4:X000001' ? { cached: true } : null)
+      );
+
+      const res = await GET(
+        mockRequest('http://localhost/') as never,
+        mockParams({ districtId: 'MI-05' })
+      );
+      const data = await res.json();
+      mockRedisGet.mockReset().mockResolvedValue(null);
+
+      expect(data.representatives[0].insightsAvailable).toBe(1);
     });
   });
 });
