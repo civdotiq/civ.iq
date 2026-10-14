@@ -714,6 +714,50 @@
         }
       }
     },
+    "/intelligence/representative/{bioguideId}/influence-chain": {
+      "get": {
+        "summary": "Influence chain analysis",
+        "description": "Association chains for one legislator: an organization lobbied the member's committees, people who list that organization as their employer gave to the member's campaign (FEC itemized contributions aggregated by employer), and the member voted on bills in the sectors the organization lobbied on. Describes patterns, not causation. 404 when no chain reaches 0.5 confidence, for example a member with no committee seats.",
+        "operationId": "getInfluenceChain",
+        "tags": ["Intelligence"],
+        "parameters": [
+          {
+            "name": "bioguideId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Bioguide ID",
+            "example": "C001035"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Influence chain insight",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntelligenceInsightResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/ApiNotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
+          }
+        }
+      }
+    },
     "/intelligence/representative/{bioguideId}/finance-jurisdiction": {
       "get": {
         "summary": "Finance-jurisdiction overlap",
