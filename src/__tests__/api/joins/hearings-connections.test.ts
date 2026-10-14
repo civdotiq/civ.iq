@@ -22,7 +22,6 @@ jest.mock('@/lib/logging/simple-logger', () => ({
 }));
 
 jest.mock('@/lib/services/bill.service', () => ({
-  billTypeChamber: jest.fn(),
   fetchBillFromCongress: jest.fn().mockResolvedValue({
     id: '119-hr-1',
     title: 'National Defense Authorization Act for Fiscal Year 2026',
