@@ -10,14 +10,17 @@
  * industry sector's money. Reads cached vote-finance insights, enriches with
  * member data, computes aggregate statistics, and returns a ranked list.
  *
- * Flow: check cache → scan vote-finance insights → filter → enrich → rank → cache → return
+ * Flow: check cache → read current members' vote-finance insights → filter → enrich → rank → cache → return
  * Pattern: vote-finance-analyzer.ts
  */
 
 import { mean, median, sampleStandardDeviation } from 'simple-statistics';
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
-import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import {
+  getAllEnhancedRepresentatives,
+  getEnhancedRepresentative,
+} from '@/features/representatives/services/congress.service';
 import type {
   VoteFinanceInsight,
   SectorLeaderboardEntry,
@@ -38,6 +41,12 @@ const MAX_LIMIT = 100;
 /** Concurrency limit for member enrichment calls */
 const ENRICHMENT_CONCURRENCY = 5;
 
+/** Keys per MGET; Upstash REST puts them in the URL path, so keep it short. */
+const MGET_CHUNK_SIZE = 100;
+
+/** Must match the key written by vote-finance-analyzer.ts. */
+const voteFinanceKey = (bioguideId: string): string => `insight:vote_finance:v4:${bioguideId}`;
+
 // ── Main Export ──────────────────────────────────────────────────────
 
 /**
@@ -53,7 +62,7 @@ export async function buildSectorLeaderboard(
   const limit = Math.min(Math.max(options?.limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
   // Cache key intentionally omits limit: the full leaderboard (MAX_LIMIT
   // entries) is cached once and sliced to the requested limit on read.
-  const cacheKey = `leaderboard:${sector}:${chamber}:${party}`;
+  const cacheKey = `leaderboard:v2:${sector}:${chamber}:${party}`;
 
   // 1. Check cache
   try {
@@ -80,7 +89,7 @@ async function computeLeaderboard(
   limit: number,
   cacheKey: string
 ): Promise<SectorLeaderboardResponse | null> {
-  // 2. Scan cached vote-finance insights
+  // 2. Read cached vote-finance insights
   const insights = await loadVoteFinanceInsights();
   if (insights.length === 0) {
     logger.warn(
@@ -199,13 +208,25 @@ async function computeLeaderboard(
 
 // ── Data Loading ─────────────────────────────────────────────────────
 
+/**
+ * Reads each current member's cached insight by its exact key. A KEYS pattern
+ * match is disabled in prod (it silently returns []), a SCAN would walk the
+ * whole keyspace on every cold build, and either would also pick up departed
+ * members and stale key versions.
+ */
 async function loadVoteFinanceInsights(): Promise<VoteFinanceInsight[]> {
   try {
-    const keys = await getRedisCache().keys('insight:vote_finance:*');
-    if (keys.length === 0) return [];
+    const roster = await getAllEnhancedRepresentatives();
+    const keys = roster.map(rep => voteFinanceKey(rep.bioguideId));
 
-    const values = await getRedisCache().mget<VoteFinanceInsight>(keys);
-    return values.filter((v): v is VoteFinanceInsight => v !== null);
+    const insights: VoteFinanceInsight[] = [];
+    for (let i = 0; i < keys.length; i += MGET_CHUNK_SIZE) {
+      const values = await getRedisCache().mget<VoteFinanceInsight>(
+        keys.slice(i, i + MGET_CHUNK_SIZE)
+      );
+      insights.push(...values.filter((v): v is VoteFinanceInsight => v !== null));
+    }
+    return insights;
   } catch (error) {
     logger.warn('[SectorLeaderboard] Failed to load vote-finance insights', {
       error: (error as Error).message,

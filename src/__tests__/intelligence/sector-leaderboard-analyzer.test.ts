@@ -11,14 +11,12 @@
 
 const mockRedisGet = jest.fn();
 const mockRedisSet = jest.fn();
-const mockRedisKeys = jest.fn();
 const mockRedisMget = jest.fn();
 
 jest.mock('@/lib/cache/redis-client', () => ({
   getRedisCache: () => ({
     get: mockRedisGet,
     set: mockRedisSet,
-    keys: mockRedisKeys,
     mget: mockRedisMget,
   }),
 }));
@@ -40,8 +38,10 @@ jest.mock('@/lib/intelligence/analyzers/shared', () => ({
 }));
 
 const mockGetEnhancedRepresentative = jest.fn();
+const mockGetAllEnhancedRepresentatives = jest.fn();
 jest.mock('@/features/representatives/services/congress.service', () => ({
   getEnhancedRepresentative: (...args: unknown[]) => mockGetEnhancedRepresentative(...args),
+  getAllEnhancedRepresentatives: () => mockGetAllEnhancedRepresentatives(),
 }));
 
 // ── Imports ───────────────────────────────────────────────────────
@@ -104,8 +104,9 @@ function setupRepMock() {
 }
 
 function setupInsightKeys(...bioguideIds: string[]) {
-  const keys = bioguideIds.map(id => `insight:vote_finance:${id}`);
-  mockRedisKeys.mockResolvedValue(keys);
+  mockGetAllEnhancedRepresentatives.mockResolvedValue(
+    bioguideIds.map(bioguideId => ({ bioguideId }))
+  );
 }
 
 function setupMget(...insights: unknown[]) {
@@ -119,7 +120,7 @@ describe('buildSectorLeaderboard', () => {
     jest.clearAllMocks();
     mockRedisGet.mockResolvedValue(null);
     mockRedisSet.mockResolvedValue(undefined);
-    mockRedisKeys.mockResolvedValue([]);
+    mockGetAllEnhancedRepresentatives.mockResolvedValue([]);
     mockRedisMget.mockResolvedValue([]);
     setupRepMock();
   });
@@ -148,12 +149,12 @@ describe('buildSectorLeaderboard', () => {
     const result = await buildSectorLeaderboard(SECTOR);
 
     expect(result).toEqual(cached);
-    expect(mockRedisKeys).not.toHaveBeenCalled();
+    expect(mockGetAllEnhancedRepresentatives).not.toHaveBeenCalled();
     expect(mockGetEnhancedRepresentative).not.toHaveBeenCalled();
   });
 
   it('returns null when no vote-finance insights exist', async () => {
-    mockRedisKeys.mockResolvedValue([]);
+    mockGetAllEnhancedRepresentatives.mockResolvedValue([]);
 
     const result = await buildSectorLeaderboard(SECTOR);
 
@@ -283,7 +284,7 @@ describe('buildSectorLeaderboard', () => {
   });
 
   it('returns null and logs warning when Redis has no cached insights', async () => {
-    mockRedisKeys.mockResolvedValue([]);
+    mockGetAllEnhancedRepresentatives.mockResolvedValue([]);
 
     const result = await buildSectorLeaderboard(SECTOR);
 
@@ -312,5 +313,18 @@ describe('buildSectorLeaderboard', () => {
       minimumRequired: 50,
       status: 'partial',
     });
+  });
+
+  it('reads each current member by exact v4 key, in MGET chunks of 100', async () => {
+    const ids = Array.from({ length: 250 }, (_, i) => `X${String(i).padStart(6, '0')}`);
+    setupInsightKeys(...ids);
+    mockRedisMget.mockImplementation((keys: string[]) => Promise.resolve(keys.map(() => null)));
+
+    await buildSectorLeaderboard(SECTOR);
+
+    const calls = mockRedisMget.mock.calls.map(([keys]) => keys as string[]);
+    expect(calls.map(keys => keys.length)).toEqual([100, 100, 50]);
+    expect(calls[0][0]).toBe('insight:vote_finance:v4:X000000');
+    expect(calls[2][49]).toBe('insight:vote_finance:v4:X000249');
   });
 });

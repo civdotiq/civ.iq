@@ -76,8 +76,8 @@ function formatCompactDollars(amount: number): string {
 
 /** Score intensity: darker gray = higher value. Neutral, non-editorial. */
 function alignmentColor(score: number): string {
-  if (score > 60) return 'text-gray-900';
-  if (score >= 30) return 'text-gray-600';
+  if (score > 0.6) return 'text-gray-900';
+  if (score >= 0.3) return 'text-gray-600';
   return 'text-gray-400';
 }
 
@@ -259,7 +259,8 @@ export function SectorLeaderboard({ initialSector, className = '' }: SectorLeade
                   <td
                     className={`type-xs font-medium text-right p-2 ${alignmentColor(entry.sectorAlignmentScore)}`}
                   >
-                    {entry.sectorAlignmentScore.toFixed(1)}%
+                    {/* The API sends a 0-1 rate (yea votes / sector votes). */}
+                    {(entry.sectorAlignmentScore * 100).toFixed(1)}%
                   </td>
                   <td className="type-xs text-gray-600 text-right p-2 hidden sm:table-cell">
                     {formatCompactDollars(entry.sectorDonationAmount)}
