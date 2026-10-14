@@ -27,6 +27,17 @@ describe('identifyCrawler', () => {
     expect(identifyCrawler('Mozilla/5.0 (compatible; CCBot/2.0)')).toBe('ccbot');
   });
 
+  it('keeps Meta AI search indexing distinct from Meta training', () => {
+    // Meta-WebIndexer feeds Meta AI search citations; meta-externalagent is
+    // training/product indexing. Separate labels show which one reads us.
+    expect(
+      identifyCrawler(
+        'meta-webindexer/1.1 (+https://developers.facebook.com/docs/sharing/webmasters/crawler)'
+      )
+    ).toBe('meta-webindexer');
+    expect(identifyCrawler('meta-externalagent/1.1')).toBe('meta-externalagent');
+  });
+
   it('is case-insensitive', () => {
     expect(identifyCrawler('GOOGLEBOT/2.1')).toBe('googlebot');
   });
