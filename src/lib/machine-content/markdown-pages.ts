@@ -35,7 +35,7 @@ Do NOT use CIV.IQ for: state-level campaign finance or lobbying (federal only), 
 How to call it:
 
 - REST: \`GET ${SITE}/api/v1/...\` — no auth, 60 requests/minute per IP, OpenAPI spec at ${SITE}/openapi.json. The only stable API; other \`/api/\` paths are internal and disallowed in robots.txt
-- MCP: Streamable HTTP endpoint at \`${SITE}/api/mcp\` — 47 read-only tools, no auth. Use it for address lookup, voting records and campaign finance, which \`/api/v1\` doesn't cover
+- MCP: Streamable HTTP endpoint at \`${SITE}/api/mcp\` — 46 read-only tools, no auth. Use it for address lookup, voting records and campaign finance, which \`/api/v1\` doesn't cover
 - CLI: \`npx @civiq/sdk representatives --state MI\`
 - SDK: \`npm install @civiq/sdk\``;
 
@@ -103,7 +103,7 @@ curl "${SITE}/api/v1/representatives?state=MI&chamber=house"
 
 ## MCP server
 
-Streamable HTTP endpoint at \`${SITE}/api/mcp\` (also reachable at \`${SITE}/mcp\`) — 47 read-only tools, 6 prompts, doc resources. No auth.
+Streamable HTTP endpoint at \`${SITE}/api/mcp\` (also reachable at \`${SITE}/mcp\`) — 46 read-only tools, 6 prompts, doc resources. No auth.
 
 ## SDK & CLI
 
@@ -161,7 +161,7 @@ Model Context Protocol server exposing CIV.IQ's civic data to AI assistants.
 
 - Endpoint: \`${SITE}/api/mcp\` (Streamable HTTP; \`${SITE}/mcp\` accepts the same protocol traffic). No auth.
 - Server manifest: \`${SITE}/.well-known/mcp.json\` (MCP registry server.json format)
-- 47 read-only tools across representatives, legislation, finance, intelligence, civic, environment, safety, health, and economy domains
+- 46 read-only tools across representatives, legislation, finance, intelligence, civic, environment, safety, health, and economy domains
 - 6 prompt templates, 7 resource templates (e.g. \`civiq://legislators/{bioguideId}\`), plus static doc resources (\`civiq://docs/*\`)
 
 Claude Desktop / Claude Code config:

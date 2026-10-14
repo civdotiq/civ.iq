@@ -63,7 +63,7 @@ Server-rendered HTML, listed in `https://civdotiq.org/sitemap.xml` and `https://
 | `/state-districts/{state}/{upper\|lower}/{district}` | State legislative district: members and population | `/state-districts/mi/upper/8` |
 | `/bill/{congress}-{type}-{number}` | Bill status, sponsors, actions, summary | `/bill/119-hr-1` |
 | `/vote/{chamber}-{congress}-{session}-{rollNumber}` | Roll-call vote | `/vote/senate-119-2-1` |
-| `/ask/{question}/{bioguideId}` | Question pages (campaign contributions, party alignment, voting record) | `/ask/voting-record/T000481` |
+| `/ask/{question}/{entityId}` | Question pages. Members (`{bioguideId}`): `voting-record`, `bills-sponsored`, `campaign-contributions`, `donor-voting-alignment`, `contact-info`. Committees (`{committeeId}`): `committee-members`, `committee-activity`, `committee-lobbying`. Policy areas (`{topic}`): `topic-bills` | `/ask/voting-record/T000481`, `/ask/committee-members/HSAG`, `/ask/topic-bills/health` |
 
 Unknown member, legislator, state, district and bill IDs return HTTP 404.
 
@@ -323,21 +323,22 @@ Detailed committee information.
 
 ## Campaign Finance (FEC)
 
-### GET /api/fec/candidate/{candidateId}/summary
+### GET /api/fec/contributions-by-employer?candidateId={candidateId}
 
-FEC financial summary for a candidate.
-
-**Path parameter:** `candidateId` — FEC candidate ID
-
-### GET /api/fec/contributions
-
-Search individual contributions.
+Itemized individual contributions to a candidate, grouped by contributor employer.
 
 **Parameters:**
-- `candidateId` (string, optional): FEC candidate ID
-- `state` (string, optional): contributor state
-- `employer` (string, optional): contributor employer
-- `limit` (integer, optional): default 20
+- `candidateId` (string, required): FEC candidate ID (e.g. `H8CA05035`)
+- `cycle` (integer, optional): two-year election cycle; defaults to the current cycle
+- `limit` (integer, optional): 1-100, default 25
+
+### GET /api/fec/contributions-by-size?candidateId={candidateId}
+
+Individual contributions to a candidate, bucketed by contribution size.
+
+**Parameters:**
+- `candidateId` (string, required): FEC candidate ID
+- `cycle` (integer, optional): two-year election cycle; defaults to the current cycle
 
 ---
 
@@ -367,14 +368,12 @@ Lobbying filings related to a legislator's committees.
 
 ## Federal Spending (USASpending)
 
-### GET /api/spending/{state}
+### GET /api/spending/district/{districtId}
 
-Federal contracts and grants in a state.
+Federal contracts and grants with a place of performance in a congressional district, current fiscal year.
 
 **Parameters:**
-- `state` (path): two-letter state code
-- `district` (query, optional): district number
-- `type` (query, optional): "contracts" or "grants"
+- `districtId` (path): state and district, e.g. `MI-12`
 
 ---
 
@@ -487,17 +486,17 @@ Overlap between campaign donors' industry sectors and committee jurisdictions.
 
 Correlation between campaign donors (by sector) and voting record.
 
-### GET /api/intelligence/representative/{bioguideId}/temporal-votes
+### GET /api/intelligence/representative/{bioguideId}/temporal
 
 Temporal shifts in party-line voting alignment over calendar quarters.
 
-### GET /api/intelligence/committee/{committeeId}/lobbying-pipeline
+### GET /api/intelligence/committee/{committeeId}
 
-Lobbying expenditures to committee activity to legislative output.
+Lobbying pipeline for a committee: lobbying expenditures to committee activity to legislative output. `committeeId` is the committee code, e.g. `HSAG`.
 
-### GET /api/intelligence/representative/{bioguideId}/stock-committee
+### GET /api/intelligence/representative/{bioguideId}/stock-trades
 
-Stock trades in sectors regulated by the legislator's committees.
+Stock trades in sectors regulated by the legislator's committees. House members only; returns 404 when a member has too few trades or committee seats to analyze.
 
 ### GET /api/intelligence/bill/{billId}
 
@@ -508,7 +507,7 @@ Sponsor/cosponsor funding analysis and related lobbying for a bill.
 Legislators ranked by voting alignment with a specific industry sector.
 
 **Parameters:**
-- `sector` (path): industry sector name
+- `sector` (path): industry sector slug, e.g. `defense`, `health`, `finance-insurance-real-estate`
 - `chamber` (query, optional): "house" or "senate"
 - `party` (query, optional): "D", "R", or "I"
 
@@ -593,14 +592,14 @@ CIV.IQ provides a Model Context Protocol server for AI assistant integration.
 **Transport:** Streamable HTTP (POST for messages)
 **Manifest:** `https://civdotiq.org/.well-known/mcp.json` (MCP registry server.json format)
 
-### Tools (47, all read-only)
+### Tools (46, all read-only)
 
 By domain:
 
 - **Representatives:** `lookup_representatives` (full street address — not ZIP; returns US Senators, House member and every state legislator), `list_state_delegation`, `get_representative_profile`, `compare_legislators`
 - **Legislation:** `search_legislation`, `get_bill_details`, `get_voting_history`, `get_vote_record`
 - **Finance:** `get_campaign_finance`, `search_lobbying`, `get_federal_spending`
-- **Intelligence:** `analyze_vote_prediction`, `get_influence_chain`, `analyze_district_comprehensive`, `analyze_industry_regulatory_landscape`, `analyze_policy_area_ecosystem`
+- **Intelligence:** `get_influence_chain`, `analyze_district_comprehensive`, `analyze_industry_regulatory_landscape`, `analyze_policy_area_ecosystem`
 - **Civic:** `get_committee_info`, `get_federal_register`, `get_district_info`
 - **Environment:** `search_epa_facilities`, `get_district_environmental_profile`, `analyze_environmental_influence`, `get_climate_data`, `get_state_climate_profile`
 - **Safety:** `search_fema_disasters`, `get_district_disaster_history`, `search_crime_statistics`, `get_state_public_safety_profile`, `search_consumer_complaints`, `get_district_consumer_complaints`, `analyze_consumer_protection_influence`, `get_housing_affordability`, `get_district_housing_profile`, `search_vehicle_recalls`, `search_vehicle_complaints`

@@ -5,9 +5,8 @@
  * handshakes, crawler hits. GA4 is the only source for actual people, and it
  * used to be a manual "go look at the dashboard" reminder. This pulls it.
  *
- * Auth is a service-account JWT exchanged for an OAuth token. Signed with
- * node:crypto rather than google-auth-library — the flow is ~20 lines and
- * this is a dev script, so a dependency would cost more than it saves.
+ * Auth is a service-account JWT exchanged for an OAuth token (google-auth.ts,
+ * shared with the Search Console client).
  *
  * Setup (one time):
  *   1. Google Cloud console → create a service account, add a JSON key.
@@ -24,9 +23,8 @@
  * details. Mixing them up returns a confusing 403.
  */
 
-import { createSign } from 'node:crypto';
+import { getAccessToken, readServiceAccount } from './google-auth';
 
-const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const DATA_API = 'https://analyticsdata.googleapis.com/v1beta';
 const SCOPE = 'https://www.googleapis.com/auth/analytics.readonly';
 
@@ -88,62 +86,9 @@ export function isAiSource(source: string): boolean {
 
 export function readGa4Config(): Ga4Config | null {
   const propertyId = process.env.GA4_PROPERTY_ID;
-  const clientEmail = process.env.GA4_CLIENT_EMAIL;
-  // Env files store the PEM with literal \n; restore real newlines for crypto.
-  const privateKey = process.env.GA4_PRIVATE_KEY?.replace(/\\n/g, '\n');
-
-  if (!propertyId || !clientEmail || !privateKey) return null;
-  return { propertyId, clientEmail, privateKey };
-}
-
-function base64url(input: string | Buffer): string {
-  return Buffer.from(input)
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-}
-
-/** Build and RS256-sign the service-account assertion. */
-function signJwt(cfg: Ga4Config): string {
-  const now = Math.floor(Date.now() / 1000);
-  const header = base64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-  const claims = base64url(
-    JSON.stringify({
-      iss: cfg.clientEmail,
-      scope: SCOPE,
-      aud: TOKEN_URL,
-      iat: now,
-      exp: now + 3600,
-    })
-  );
-
-  const signer = createSign('RSA-SHA256');
-  signer.update(`${header}.${claims}`);
-  signer.end();
-  const signature = base64url(signer.sign(cfg.privateKey));
-
-  return `${header}.${claims}.${signature}`;
-}
-
-async function getAccessToken(cfg: Ga4Config): Promise<string> {
-  const res = await fetch(TOKEN_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: signJwt(cfg),
-    }),
-  });
-
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(`OAuth token exchange failed (${res.status}): ${detail.slice(0, 300)}`);
-  }
-
-  const json = (await res.json()) as { access_token?: string };
-  if (!json.access_token) throw new Error('OAuth response contained no access_token');
-  return json.access_token;
+  const account = readServiceAccount();
+  if (!propertyId || !account) return null;
+  return { propertyId, ...account };
 }
 
 interface ReportRow {
@@ -244,7 +189,7 @@ export async function fetchGa4Summary(windowDays: number): Promise<Ga4Summary> {
   if (!cfg) return empty;
 
   try {
-    const token = await getAccessToken(cfg);
+    const token = await getAccessToken(cfg, SCOPE);
     const [totalsReport, pagesReport, sourcesReport, excludedReport] = await batchRunReports(
       cfg,
       token,

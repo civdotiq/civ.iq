@@ -654,7 +654,7 @@
       },
       "post": {
         "summary": "MCP server",
-        "description": "Model Context Protocol endpoint for AI assistant integration. 47 tools, 3 resources, 3 prompts. See https://modelcontextprotocol.io",
+        "description": "Model Context Protocol endpoint for AI assistant integration. 46 tools, 3 resources, 7 resource templates, 6 prompts. See https://modelcontextprotocol.io",
         "operationId": "mcpServer",
         "tags": ["MCP"],
         "responses": {
@@ -817,7 +817,7 @@
               "type": "string"
             },
             "description": "Bioguide ID",
-            "example": "P000197"
+            "example": "T000481"
           }
         ],
         "responses": {
@@ -860,8 +860,8 @@
             "schema": {
               "type": "string"
             },
-            "description": "Industry sector name (e.g., Defense, Health, Energy)",
-            "example": "Defense"
+            "description": "Industry sector slug (e.g., defense, health, energy-natural-resources)",
+            "example": "defense"
           },
           {
             "name": "chamber",
@@ -4037,7 +4037,7 @@
     },
     {
       "name": "Intelligence",
-      "description": "ML-powered analysis — vote prediction, influence chains, temporal shifts"
+      "description": "Statistical analysis — donor-vote correlation, influence chains, temporal shifts"
     },
     {
       "name": "Search",

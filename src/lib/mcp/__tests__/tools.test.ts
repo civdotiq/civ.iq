@@ -28,6 +28,8 @@ jest.mock('@/features/legislation/services/ai/bill-summary-cache', () => ({
   setCachedSummary: jest.fn(),
 }));
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
@@ -136,5 +138,51 @@ describe('MCP server surface', () => {
     const text = result.contents[0]?.text as string;
     expect(text).toContain('When to use CIV.IQ');
     expect(text).toContain('/api/v1');
+  });
+});
+
+/**
+ * Agent-facing docs state the tool count and name tools. They are hand
+ * edited, so after #223 retired a tool they kept advertising 47 tools and
+ * `analyze_vote_prediction`, which no longer existed. Hold them to the
+ * registered surface.
+ */
+describe('agent docs match the MCP surface', () => {
+  let toolNames: string[];
+
+  beforeAll(async () => {
+    const client = await connectedClient();
+    toolNames = (await client.listTools()).tools.map(t => t.name);
+    await client.close();
+  });
+
+  const read = (path: string): string => readFileSync(join(process.cwd(), path), 'utf8');
+
+  it.each([
+    'public/llms.txt',
+    'public/llms-full.txt',
+    'public/openapi.json',
+    'src/lib/machine-content/markdown-pages.ts',
+  ])('every tool count stated in %s matches the registered count', path => {
+    const counts = [
+      ...read(path).matchAll(/\b(\d+) (?:read-only )?tools\b|### Tools \((\d+)/g),
+    ].map(m => Number(m[1] ?? m[2]));
+    expect(counts.length).toBeGreaterThan(0);
+    for (const count of counts) expect(count).toBe(toolNames.length);
+  });
+
+  it('llms-full.txt lists exactly the registered tools', () => {
+    const text = read('public/llms-full.txt');
+    const section = text.slice(text.indexOf('### Tools ('), text.indexOf('### Resources'));
+    const documented = [...section.matchAll(/`([a-z_]+)`/g)].map(m => m[1]);
+    expect([...new Set(documented)].sort()).toEqual([...toolNames].sort());
+  });
+
+  it('llms.txt names only registered tools', () => {
+    const text = read('public/llms.txt');
+    const section = text.slice(text.indexOf('MCP tools for what'), text.indexOf('## Pages'));
+    const named = [...section.matchAll(/^- `([a-z_]+)`/gm)].map(m => m[1]);
+    expect(named.length).toBeGreaterThan(0);
+    for (const name of named) expect(toolNames).toContain(name);
   });
 });

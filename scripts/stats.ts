@@ -6,7 +6,8 @@
  *   2. API request volume for the last 7 days with top endpoints
  *   3. MCP client + SDK adoption counters for the last 28 days
  *   4. npm download counts for the three @civiq packages
- *   5. A reminder checklist for the GA4 views that have no API access here
+ *   5. GA4 human traffic for the last 7 days
+ *   6. Google Search top queries and pages for the last 28 days (Search Console)
  *
  * Redis data comes from Upstash REST (UPSTASH_REDIS_REST_URL/TOKEN in
  * .env.local — same store production writes to). Sections degrade to a
@@ -20,6 +21,7 @@
 import * as dotenv from 'dotenv';
 import { Redis } from '@upstash/redis';
 import { fetchGa4Summary, type Ga4Summary } from './ga4-client';
+import { fetchGscSummary, type GscRow, type GscSummary } from './gsc-client';
 
 dotenv.config({ path: '.env.local' });
 
@@ -30,6 +32,7 @@ const REQUEST_WINDOW_DAYS = 7;
 const ADOPTION_WINDOW_DAYS = 28;
 const CRAWLER_WINDOW_DAYS = 7;
 const GA4_WINDOW_DAYS = 7;
+const GSC_WINDOW_DAYS = 28;
 
 interface Subscription {
   verified: boolean;
@@ -66,6 +69,7 @@ interface StatsReport {
     byBot: Record<string, number>;
   };
   ga4: Ga4Summary;
+  gsc: GscSummary;
   npmDownloads: Array<{ package: string; lastWeek: number | null; lastMonth: number | null }>;
 }
 
@@ -405,18 +409,54 @@ function printReport(report: StatsReport): void {
       for (const s of report.ga4.aiReferrals) line(`    ${s.sessions}  ${s.source}`);
     }
   }
+
+  line();
+  const gsc = report.gsc;
+  const range = gsc.startDate ? `, ${gsc.startDate} to ${gsc.endDate}` : '';
+  line(`Google Search — top queries / top pages (last ${gsc.windowDays} days${range})`);
+  if (!gsc.configured) {
+    line('  not configured — needs GA4_CLIENT_EMAIL and GA4_PRIVATE_KEY in .env.local');
+    line('  (see scripts/gsc-client.ts for setup)');
+  } else if (gsc.error) {
+    line(`  ERROR: ${gsc.error}`);
+  } else {
+    const t = gsc.totals;
+    if (t) {
+      line(
+        `  ${gsc.siteUrl}: ${t.clicks} clicks, ${t.impressions} impressions, ` +
+          `CTR ${(t.ctr * 100).toFixed(1)}%, avg position ${t.position.toFixed(1)}`
+      );
+    }
+    const table = (title: string, rows: GscRow[]): void => {
+      line(`  ${title}:`);
+      if (rows.length === 0) {
+        line('    none');
+        return;
+      }
+      line('    clicks  impr    CTR  pos  ');
+      for (const r of rows) {
+        line(
+          `    ${String(r.clicks).padStart(6)}  ${String(r.impressions).padStart(6)}  ` +
+            `${(r.ctr * 100).toFixed(1).padStart(4)}%  ${r.position.toFixed(1).padStart(4)}  ${r.key}`
+        );
+      }
+    };
+    table('Top queries', gsc.topQueries);
+    table('Top pages', gsc.topPages);
+  }
 }
 
 async function main(): Promise<void> {
   const asJson = process.argv.includes('--json');
   const redis = getRedis();
 
-  const [subscribers, apiRequests, adoption, crawlers, ga4, npmDownloads] = await Promise.all([
+  const [subscribers, apiRequests, adoption, crawlers, ga4, gsc, npmDownloads] = await Promise.all([
     collectSubscribers(redis),
     collectApiRequests(redis),
     collectAdoption(redis),
     collectCrawlers(redis),
     fetchGa4Summary(GA4_WINDOW_DAYS),
+    fetchGscSummary(GSC_WINDOW_DAYS),
     collectNpm(),
   ]);
 
@@ -427,6 +467,7 @@ async function main(): Promise<void> {
     adoption,
     crawlers,
     ga4,
+    gsc,
     npmDownloads,
   };
 
