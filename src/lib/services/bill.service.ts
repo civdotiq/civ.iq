@@ -763,11 +763,29 @@ export async function fetchBillVotes(
 
 // ── Exported functions ─────────────────────────────────────────────────
 
+/** The chamber a bill or resolution type belongs to: hr/hres/hjres/hconres → House. */
+export function billTypeChamber(type: string): 'House' | 'Senate' | undefined {
+  const t = type.toLowerCase();
+  if (t.startsWith('h')) return 'House';
+  if (t.startsWith('s')) return 'Senate';
+  return undefined;
+}
+
 /**
  * Map Congress.gov action text to a BillStatus enum value.
  * Used by the bill route and by lifecycle/join endpoints.
+ *
+ * `chamber` is the chamber the action took place in — the action's own
+ * chamber when known, else the bill's chamber of origin. House floor actions
+ * name no chamber ("Motion to reconsider laid on the table Agreed to without
+ * objection"; "On motion to suspend the rules and pass the bill Agreed to by
+ * the Yeas and Nays"), so a bare "agreed to" needs it to tell House passage
+ * from Senate passage.
  */
-export function mapCongressStatus(actionText?: string): BillStatus | null {
+export function mapCongressStatus(
+  actionText?: string,
+  chamber?: 'House' | 'Senate'
+): BillStatus | null {
   if (!actionText) return null;
 
   const lowerText = actionText.toLowerCase();
@@ -777,15 +795,12 @@ export function mapCongressStatus(actionText?: string): BillStatus | null {
 
   if (lowerText.includes('passed house') || lowerText.includes('agreed to in house'))
     return 'passed_house';
-  if (
-    lowerText.includes('passed senate') ||
-    lowerText.includes('agreed to in senate') ||
-    lowerText.includes('agreed to without amendment')
-  )
+  if (lowerText.includes('passed senate') || lowerText.includes('agreed to in senate'))
     return 'passed_senate';
   if (lowerText.includes('passed both')) return 'passed_both';
 
-  if (lowerText.includes('agreed to') && !lowerText.includes('not agreed')) return 'passed_senate';
+  if (lowerText.includes('agreed to') && !lowerText.includes('not agreed'))
+    return chamber === 'House' ? 'passed_house' : 'passed_senate';
 
   if (
     lowerText.includes('failed') ||
@@ -832,7 +847,8 @@ export async function lookupBill(billId: string): Promise<BillLookup> {
   // v4: committees, related bills, summaries from their sub-endpoints
   // v6: official roll-call question/result (House + Senate) — bump drops stale entries
   // v7: popular and short titles from the /titles sub-endpoint
-  const cacheKey = `bill-v7-${type}-${number}-${congress}`;
+  // v8: status uses the acting chamber (House "Agreed to" was "Passed Senate")
+  const cacheKey = `bill-v8-${type}-${number}-${congress}`;
 
   const result = await cachedFetch<Bill | BillMiss>(
     cacheKey,
@@ -902,6 +918,13 @@ export async function lookupBill(billId: string): Promise<BillLookup> {
         ]);
         const summary = latestSummary(summaries);
         const { popularTitle, shortTitle } = pickBillTitles(titles);
+        // latestAction carries no chamber info; borrow it from the matching action
+        const latestActionChamber = actionChamber(
+          billActions.find(
+            (a: CongressAction) =>
+              a.actionDate === bill.latestAction?.actionDate && a.text === bill.latestAction?.text
+          )
+        );
 
         const result: Bill = {
           // Lowercase type so the id is the true canonical slug (119-hr-8814);
@@ -918,18 +941,15 @@ export async function lookupBill(billId: string): Promise<BillLookup> {
           chamber: bill.originChamber === 'House' ? 'House' : 'Senate',
 
           status: {
-            current: mapCongressStatus(bill.latestAction?.text) || 'introduced',
+            current:
+              mapCongressStatus(
+                bill.latestAction?.text,
+                latestActionChamber ?? billTypeChamber(bill.type)
+              ) || 'introduced',
             lastAction: {
               date: bill.latestAction?.actionDate || bill.introducedDate,
               description: bill.latestAction?.text || 'Introduced',
-              // latestAction carries no chamber info; borrow it from the matching action
-              chamber: actionChamber(
-                billActions.find(
-                  (a: CongressAction) =>
-                    a.actionDate === bill.latestAction?.actionDate &&
-                    a.text === bill.latestAction?.text
-                )
-              ),
+              chamber: latestActionChamber,
             },
             timeline: billActions.flatMap((action: CongressAction) =>
               action.text

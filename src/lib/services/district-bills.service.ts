@@ -27,7 +27,7 @@ import {
   fetchCommitteeMemberships,
   fetchCommittees,
 } from '@/features/representatives/services/congress.service';
-import { mapCongressStatus } from '@/lib/services/bill.service';
+import { billTypeChamber, mapCongressStatus } from '@/lib/services/bill.service';
 import type { BillStatus } from '@/types/bill';
 import type { JoinMetadata } from '@/types/joins';
 import { censusCongressionalDistrictCode } from '@/lib/data/us-states';
@@ -394,7 +394,9 @@ export async function getDistrictBills(
             type: bill.type,
             number: bill.number.toString(),
             congress: bill.congress,
-            status: mapCongressStatus(bill.latestAction?.text) ?? 'introduced',
+            status:
+              mapCongressStatus(bill.latestAction?.text, billTypeChamber(bill.type)) ??
+              'introduced',
             policyArea: billPolicyArea ?? null,
             introducedDate: detail?.introducedDate ?? actionDate,
             latestActionDate: actionDate,

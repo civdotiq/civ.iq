@@ -22,6 +22,7 @@ jest.mock('@/lib/logging/simple-logger', () => ({
 }));
 
 jest.mock('@/lib/services/bill.service', () => ({
+  billTypeChamber: jest.fn(),
   mapCongressStatus: jest.fn().mockImplementation((text?: string) => {
     if (!text) return null;
     if (text.toLowerCase().includes('enacted')) return 'enacted';

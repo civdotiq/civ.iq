@@ -22,6 +22,7 @@ jest.mock('@/lib/logging/simple-logger', () => ({
 }));
 
 jest.mock('@/lib/services/bill.service', () => ({
+  billTypeChamber: jest.fn(),
   mapCongressStatus: jest.fn().mockReturnValue('introduced'),
 }));
 

@@ -22,7 +22,7 @@ import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
-import { mapCongressStatus } from '@/lib/services/bill.service';
+import { billTypeChamber, mapCongressStatus } from '@/lib/services/bill.service';
 import type { BillStatus } from '@/types/bill';
 import type { JoinMetadata } from '@/types/joins';
 
@@ -170,7 +170,8 @@ export async function GET(
           const billChamber = bill.originChamber?.toLowerCase();
           if (chamberFilter && billChamber !== chamberFilter) continue;
 
-          const status = mapCongressStatus(bill.latestAction?.text) ?? 'introduced';
+          const status =
+            mapCongressStatus(bill.latestAction?.text, billTypeChamber(bill.type)) ?? 'introduced';
 
           // Count all statuses for summary
           statusCounts[status] = (statusCounts[status] ?? 0) + 1;
