@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * OpenAPI Specification Validation Tests
  *
@@ -72,8 +72,8 @@ describe('OpenAPI Specification', () => {
       expect(spec.info.version).toMatch(/^\d+\.\d+\.\d+$/);
     });
 
-    it('should include MIT license', () => {
-      expect(spec.info.license.name).toBe('MIT');
+    it('should include Apache-2.0 license', () => {
+      expect(spec.info.license.name).toBe('Apache-2.0');
     });
   });
 

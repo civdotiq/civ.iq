@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Hand-drawn period-of-performance band. No chart library — inline SVG
  * tuned to the Aicher language. Renders a horizontal time line between

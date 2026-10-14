@@ -3,7 +3,7 @@
  * Provides both Tailwind CSS classes and hex color values.
  *
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 export type Party = 'democrat' | 'republican' | 'independent' | 'unknown';

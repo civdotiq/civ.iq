@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Pure helpers for the IssueTopic redesigned page (PR 16). Slug map,
  * formatters, and party-bucket helpers. No data fetching here — SWR

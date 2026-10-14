@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * 2024 result inset — only renders when the race year is 2024 AND
  * the state is in MEDSL coveredStates. Two-column readout with the

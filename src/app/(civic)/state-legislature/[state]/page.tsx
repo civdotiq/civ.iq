@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * "Who is my state representative in [State]?" — rendered on the server from
  * the committed roster corpus, so crawling the 52 hubs makes no OpenStates

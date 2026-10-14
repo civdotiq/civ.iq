@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2026 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Legacy About page — lifted from the original
  * src/app/(public)/about/page.tsx so the redesign can ship behind ?v=new.

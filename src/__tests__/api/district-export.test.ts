@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import { describe, test, expect } from '@jest/globals';
@@ -13,7 +13,7 @@ describe('District Export Types', () => {
         exportedAt: '2025-02-25T00:00:00.000Z',
         version: '1.0',
         sources: ['Congress.gov API', 'Census Bureau ACS'],
-        license: 'MIT',
+        license: 'Public Domain',
         platform: 'CIV.IQ',
         districtId: 'MI-12',
         congress: '119th Congress (2025-2027)',
@@ -63,7 +63,7 @@ describe('District Export Types', () => {
       bills: [],
     };
 
-    expect(exportData.metadata.license).toBe('MIT');
+    expect(exportData.metadata.license).toBe('Public Domain');
     expect(exportData.metadata.platform).toBe('CIV.IQ');
     expect(exportData.metadata.districtId).toBe('MI-12');
     expect(exportData.district.state).toBe('MI');
@@ -120,7 +120,7 @@ describe('District Export Types', () => {
         exportedAt: '2025-02-25T00:00:00.000Z',
         version: '1.0',
         sources: ['Congress.gov API'],
-        license: 'MIT',
+        license: 'Public Domain',
         platform: 'CIV.IQ',
         districtId: 'AK-AL',
         congress: '119th Congress (2025-2027)',
@@ -161,7 +161,7 @@ describe('District Export Types', () => {
         exportedAt: new Date().toISOString(),
         version: '1.0',
         sources: ['Congress.gov API'],
-        license: 'MIT',
+        license: 'Public Domain',
         platform: 'CIV.IQ',
         districtId: 'CA-12',
         congress: '119th Congress (2025-2027)',

@@ -3,9 +3,9 @@
   "info": {
     "title": "CIV.IQ Public API",
     "description": "Open REST API for normalized U.S. government data — federal and state legislators, bills, votes, campaign finance, lobbying, and ML-powered intelligence analysis. No API key required. Rate limited to 60 requests/minute per IP.\n\n## Rate limiting\n\nResponses carry the IETF RateLimit-Limit / RateLimit-Remaining / RateLimit-Reset / RateLimit-Policy headers (plus the legacy X-RateLimit-* trio); a 429 includes Retry-After.\n\n## Versioning & deprecation policy\n\nThe API is versioned in the URL path (/api/v1); every v1 response carries X-API-Version. Additive changes ship within v1 and are recorded at GET /v1/changelog. Breaking changes only ship as a new URL version. Before any version is retired, its responses will carry Deprecation and Sunset headers (RFC 8594) plus Link rel=\"successor-version\" at least 6 months before shutdown. No version is currently deprecated. Full policy: https://civdotiq.org/docs/api#versioning\n\n## Errors\n\nEvery error is structured JSON: v1 endpoints return V1Error (integer code + meta), non-v1 endpoints return ApiError (string code + metadata). Unknown API paths return a JSON 404, never HTML.",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "license": {
-      "name": "MIT",
+      "name": "Apache-2.0",
       "url": "https://github.com/civdotiq/civ.iq/blob/main/LICENSE"
     },
     "contact": {
@@ -2550,7 +2550,7 @@
           },
           "license": {
             "type": "string",
-            "example": "MIT"
+            "example": "Public Domain"
           },
           "documentation": {
             "type": "string",
