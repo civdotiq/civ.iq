@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Public health for the district — CDC PLACES. Leads with the population-
  * weighted DISTRICT estimate (aggregated from census-tract crude prevalence,

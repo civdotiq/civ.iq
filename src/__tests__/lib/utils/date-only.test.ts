@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2026 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Bill pages render on the server (UTC on Vercel) and hydrate in the reader's
  * browser. Any date that depends on the runtime's timezone prints a different

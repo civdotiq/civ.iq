@@ -2,7 +2,7 @@
 
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * The hub's browser-loaded extras: recent bills, statewide executives and the
  * judiciary. Each reads a robots-blocked /api/ route, so these load for

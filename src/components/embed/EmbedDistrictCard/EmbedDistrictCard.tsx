@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * EmbedDistrictCard — mast-less render chassis for
  * /embed/district/[districtId]?v=new. Receives the same `district` object

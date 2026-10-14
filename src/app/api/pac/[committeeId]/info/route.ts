@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Thin wrapper around fecApiService.getCommitteeInfo for the redesigned
  * PAC profile (PR 17). Returns committee metadata plus the classified

@@ -1,7 +1,7 @@
 /**
  * URL Builder Helpers - Centralized URL generation for consistent routing
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * This file provides type-safe URL builders to ensure consistent URL formats
  * across the entire application. All internal link generation should use these

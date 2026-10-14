@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Inverse ZIP-to-district lookup: given a district like "NY-08", return the
  * ZIP codes that fall (wholly or partially) inside it. Backed by the same

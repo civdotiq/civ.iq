@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Race + ethnicity stacked bar + legend. Colors are non-partisan
  * (blue / amber / greige / ink) — red and green are reserved for
