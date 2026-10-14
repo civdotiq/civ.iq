@@ -48,8 +48,10 @@ jest.mock('@/features/legislation/services/ai/bill-summary-cache', () => ({
 }));
 
 const mockGetEnhancedRepresentative = jest.fn();
+const mockGetAllEnhancedRepresentatives = jest.fn();
 jest.mock('@/features/representatives/services/congress.service', () => ({
   getEnhancedRepresentative: (...args: unknown[]) => mockGetEnhancedRepresentative(...args),
+  getAllEnhancedRepresentatives: (...args: unknown[]) => mockGetAllEnhancedRepresentatives(...args),
 }));
 
 const mockGetFECIdFromBioguide = jest.fn();
@@ -57,9 +59,11 @@ jest.mock('@/lib/data/bioguide-fec-mapping', () => ({
   getFECIdFromBioguide: (...args: unknown[]) => mockGetFECIdFromBioguide(...args),
 }));
 
+const mockGetContributionsByEmployer = jest.fn();
 const mockGetSampleContributions = jest.fn();
 jest.mock('@/lib/fec/fec-api-service', () => ({
   fecApiService: {
+    getContributionsByEmployer: (...args: unknown[]) => mockGetContributionsByEmployer(...args),
     getSampleContributions: (...args: unknown[]) => mockGetSampleContributions(...args),
   },
 }));
@@ -136,10 +140,20 @@ function makeLobbyingFilings(count: number) {
   }));
 }
 
-function makeContributions(count: number) {
+/** FEC schedule_a/by_employer rows: one aggregate per employer spelling. */
+function makeEmployerRows(count: number) {
   return Array.from({ length: count }, (_, i) => ({
-    contributor_employer: `Acme Health ${i % 3}`,
-    contribution_receipt_amount: 1000 + i * 500,
+    employer: `Acme Health ${i}`,
+    total: 1000 + i * 500,
+    count: 2,
+  }));
+}
+
+/** Current-roster stand-ins for peer lookups. */
+function makeRoster(chamber: 'House' | 'Senate', count: number) {
+  return Array.from({ length: count }, (_, i) => ({
+    bioguideId: `A00000${i + 1}`,
+    chamber,
   }));
 }
 
@@ -175,8 +189,11 @@ describe('analyzeInfluenceChains', () => {
     // Default: valid FEC mapping
     mockGetFECIdFromBioguide.mockReturnValue('H0CA12345');
 
-    // Default: contributions that match lobbying org names
-    mockGetSampleContributions.mockResolvedValue(makeContributions(10));
+    // Default: employer aggregates that match lobbying org names
+    mockGetContributionsByEmployer.mockResolvedValue(makeEmployerRows(3));
+
+    // Default: no peers on the roster
+    mockGetAllEnhancedRepresentatives.mockResolvedValue([]);
 
     // Default: corpus unavailable, so the API sample path runs
     mockForEachFilingForCommittees.mockResolvedValue(false);
@@ -270,12 +287,9 @@ describe('analyzeInfluenceChains', () => {
   });
 
   it('emits honest unavailable variant when fewer than 5 peers have data', async () => {
-    // Only 2 cached peers — below MIN_PEERS (5)
-    mockRedisKeys.mockResolvedValue([
-      'influence-chain-count:House:A000001',
-      'influence-chain-count:House:A000002',
-    ]);
-    mockRedisMget.mockResolvedValue([3, 7]);
+    // Six peers on the roster but only 2 have cached counts — below MIN_PEERS (5)
+    mockGetAllEnhancedRepresentatives.mockResolvedValue(makeRoster('House', 6));
+    mockRedisMget.mockResolvedValue([3, 7, null, null, null, null]);
 
     const result = await analyzeInfluenceChains(BIO_ID);
 
@@ -287,13 +301,10 @@ describe('analyzeInfluenceChains', () => {
   });
 
   it('computes a real peer comparison when enough peers are cached', async () => {
-    mockRedisKeys.mockResolvedValue([
-      'influence-chain-count:House:A000001',
-      'influence-chain-count:House:A000002',
-      'influence-chain-count:House:A000003',
-      'influence-chain-count:House:A000004',
-      'influence-chain-count:House:A000005',
-      'influence-chain-count:House:A000006',
+    mockGetAllEnhancedRepresentatives.mockResolvedValue([
+      ...makeRoster('House', 6),
+      { bioguideId: BIO_ID, chamber: 'House' },
+      { bioguideId: 'S999999', chamber: 'Senate' },
     ]);
     mockRedisMget.mockResolvedValue([1, 2, 3, 4, 5, 6]);
 
@@ -303,6 +314,24 @@ describe('analyzeInfluenceChains', () => {
     expect(result!.peerComparison).not.toBeNull();
     expect(result!.peerComparison!.peerCount).toBe(6);
     expect(result!.peerComparisonUnavailableReason).toBeUndefined();
+    // Exact keys for same-chamber peers only, never a KEYS pattern scan
+    expect(mockRedisKeys).not.toHaveBeenCalled();
+    expect(mockRedisMget).toHaveBeenCalledWith(
+      makeRoster('House', 6).map(r => `influence-chain-count:v3:House:${r.bioguideId}`)
+    );
+  });
+
+  it('records a zero chain count for the peer baseline when no chain qualifies', async () => {
+    mockGetContributionsByEmployer.mockResolvedValue([]);
+
+    const result = await analyzeInfluenceChains(BIO_ID);
+
+    expect(result).toBeNull();
+    expect(mockRedisSet).toHaveBeenCalledWith(
+      `influence-chain-count:v3:House:${BIO_ID}`,
+      0,
+      7 * 24 * 60 * 60
+    );
   });
 
   it('drops chains below 0.5 confidence threshold', async () => {
@@ -325,7 +354,7 @@ describe('analyzeInfluenceChains', () => {
     // Provide many lobbying orgs and many votes to generate many chains
     mockFetchRecentFilings.mockResolvedValue(makeLobbyingFilings(20));
     mockGetHouseMemberVotes.mockResolvedValue(makeVotes(30));
-    mockGetSampleContributions.mockResolvedValue(makeContributions(50));
+    mockGetContributionsByEmployer.mockResolvedValue(makeEmployerRows(20));
 
     const result = await analyzeInfluenceChains(BIO_ID);
 
@@ -365,7 +394,7 @@ describe('analyzeInfluenceChains', () => {
 
     const setCalls = mockRedisSet.mock.calls;
     const insightCall = setCalls.find(
-      (call: unknown[]) => (call[0] as string) === `insight:influence_chain:v2:${BIO_ID}`
+      (call: unknown[]) => (call[0] as string) === `insight:influence_chain:v3:${BIO_ID}`
     );
 
     if (insightCall) {
@@ -373,11 +402,15 @@ describe('analyzeInfluenceChains', () => {
     }
   });
 
-  it('fetches both sessions of 119th Congress for House members', async () => {
-    await analyzeInfluenceChains(BIO_ID);
+  it('fetches House votes once, so no vote is counted twice', async () => {
+    const result = await analyzeInfluenceChains(BIO_ID);
 
-    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith(BIO_ID, 119, 1, 200);
-    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith(BIO_ID, 119, 2, 200);
+    expect(mockGetHouseMemberVotes).toHaveBeenCalledTimes(1);
+    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith(BIO_ID, 119, undefined, 200);
+    // One chain per organization per bill: 10 votes on 10 bills, never 20
+    const perOrg = result!.chains.filter(c => c.organization === result!.chains[0]!.organization);
+    expect(new Set(perOrg.map(c => c.billId)).size).toBe(perOrg.length);
+    expect(result!.sources.find(s => s.name === 'Congress.gov roll calls')?.recordCount).toBe(10);
   });
 
   it('uses Senate vote service for senators', async () => {
@@ -503,8 +536,8 @@ describe('analyzeInfluenceChains', () => {
   it('ranks organizations with contribution evidence ahead of bigger spenders', async () => {
     // The top spender never contributed; only the smaller organization did, and
     // a chain without contribution evidence is dropped below the threshold.
-    mockGetSampleContributions.mockResolvedValue([
-      { contributor_employer: 'Acme Health 0', contribution_receipt_amount: 2500 },
+    mockGetContributionsByEmployer.mockResolvedValue([
+      { employer: 'ACME HEALTH 0', total: 2500, count: 3 },
     ]);
     serveCorpus([
       corpusRow({
@@ -520,5 +553,63 @@ describe('analyzeInfluenceChains', () => {
     expect(result).not.toBeNull();
     expect(new Set(result!.chains.map(c => c.organization))).toEqual(new Set(['Acme Health 0']));
     expect(result!.chains[0]!.hasContributionEvidence).toBe(true);
+  });
+
+  // ── Employer aggregates ─────────────────────────────────────────
+
+  it('matches organizations against FEC by-employer totals, not a receipt sample', async () => {
+    // Donors spell one employer several ways; FEC returns a row per spelling.
+    mockGetContributionsByEmployer.mockResolvedValue([
+      { employer: 'ACME HEALTH 0', total: 4000, count: 5 },
+      { employer: 'Acme Health 0, Inc.', total: 1000, count: 1 },
+      { employer: 'RETIRED', total: 90000, count: 300 },
+    ]);
+    serveCorpus([corpusRow()]);
+
+    const result = await analyzeInfluenceChains(BIO_ID);
+
+    expect(mockGetContributionsByEmployer).toHaveBeenCalledWith(
+      'H0CA12345',
+      expect.any(Number),
+      100
+    );
+    expect(mockGetSampleContributions).not.toHaveBeenCalled();
+    expect(result!.chains[0]!.contributionAmount).toBe(5000);
+    const link = result!.chains[0]!.links.find(l => l.type === 'contribution');
+    expect(link?.data).toEqual({ amount: 5000, matchType: 'exact' });
+    expect(result!.methodology).toContain('aggregated by employer');
+    expect(
+      result!.sources.some(s => s.name === 'FEC itemized contributions aggregated by employer')
+    ).toBe(true);
+  });
+
+  it('does not match an organization to an employer that only shares a prefix', async () => {
+    mockGetContributionsByEmployer.mockResolvedValue([{ employer: 'ACME', total: 5000, count: 4 }]);
+    serveCorpus([corpusRow({ clientName: 'Acme Healthcare Intelligence Systems' })]);
+
+    const result = await analyzeInfluenceChains(BIO_ID);
+
+    expect(result).toBeNull();
+  });
+
+  it("maps committees by the member's own committee code, not by name", async () => {
+    // A Senate appropriations subcommittee whose name mentions Veterans Affairs
+    // must not resolve to the Veterans' Affairs committee (SSVA).
+    mockGetEnhancedRepresentative.mockResolvedValue({
+      ...mockRep,
+      chamber: 'Senate',
+      committees: [
+        { name: 'Committee on Appropriations', thomas_id: 'SSAP' },
+        {
+          name: 'Subcommittee on Military Construction, Veterans Affairs, and Related Agencies',
+          thomas_id: 'SSAP18',
+        },
+      ],
+    });
+    serveCorpus([corpusRow()]);
+
+    await analyzeInfluenceChains(BIO_ID);
+
+    expect(mockForEachFilingForCommittees).toHaveBeenCalledWith(['SSAP'], expect.any(Function));
   });
 });
