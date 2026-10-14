@@ -413,9 +413,15 @@ export interface BillIntelligenceInsight extends InsightBase {
     bioguideId: string;
     name: string;
     party: string;
-    /** What % of sponsor's donations come from sectors this bill affects. */
+    /**
+     * What % of the sponsor's itemized individual donations (FEC by-employer
+     * and by-occupation totals, top 100 rows each) come from people working
+     * in sectors this bill affects. Not a share of total raised.
+     */
     sectorDonationPercentage: number;
+    /** Dollars of those itemized donations attributed to the bill's sectors. */
     sectorDonationAmount: number;
+    /** All itemized individual donations FEC groups by employer/occupation. */
     totalDonations: number;
   } | null;
   cosponsorSummary: {
