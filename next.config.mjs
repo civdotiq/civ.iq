@@ -29,7 +29,8 @@
 // Vercel builds and runs on linux/x64. This must be an include, applied inside
 // `next build`: Vercel's build adapter collects each function's files from the
 // traces before any postbuild script runs.
-const ONNX_NODE_SHARED_LIB = './node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime.so.1';
+const ONNX_NODE_SHARED_LIB =
+  './node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime.so.1';
 
 const nextConfig = {
   typescript: {
@@ -57,6 +58,10 @@ const nextConfig = {
     // those functions explicitly.
     '/api/lda/**': ['./data/lda-aggregates.meta.json', './data/lda-filings.meta.json'],
     '/api/health': ['./data/lda-aggregates.meta.json'],
+    // Precomputed influence clusters, read with fs at runtime.
+    '/api/intelligence/influence-clusters': [
+      './src/lib/intelligence/clusters/influence-clusters.json',
+    ],
     // The rep lobbying route reads the full corpus for per-committee totals.
     '/api/representative/[bioguideId]/lobbying': ['./data/lda-aggregates.json'],
     // The industry organizations route reads it for per-sector issue totals.
