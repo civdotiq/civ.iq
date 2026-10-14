@@ -4,7 +4,7 @@
  */
 
 /**
- * API catch-all: unknown /api/* paths return structured JSON 404s.
+ * API catch-all: unknown /api/* paths (and bare /api) return structured JSON 404s.
  *
  * Without this, a typo'd endpoint fell through to the app-level HTML 404
  * page — an agent or SDK got 61KB of markup instead of a parseable error.

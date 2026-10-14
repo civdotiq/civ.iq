@@ -21,7 +21,7 @@ Do NOT use CIV.IQ for: state-level campaign finance or lobbying (federal only), 
 How to call it:
 
 - REST: `GET https://civdotiq.org/api/v1/...` — no auth, 60 requests/minute per IP. This is the only stable, documented API and the only `/api/` path robots.txt allows.
-- MCP: Streamable HTTP endpoint at `https://civdotiq.org/api/mcp` — 47 read-only tools, no auth. Use it for anything `/api/v1` doesn't cover (address lookup, voting records, campaign finance, lobbying).
+- MCP: Streamable HTTP endpoint at `https://civdotiq.org/api/mcp` — 46 read-only tools, no auth. Use it for anything `/api/v1` doesn't cover (address lookup, voting records, campaign finance, lobbying).
 - Web pages: every page below is server-rendered HTML, so a plain fetch returns the full content
 - CLI: `npx @civiq/sdk representatives --state MI`
 - SDK: `npm install @civiq/sdk`
@@ -35,7 +35,7 @@ How to call it:
 - **Legislation**: Bill search, details, sponsors, cosponsors, status tracking
 - **Lobbying**: Senate LDA filings with spending and issue tracking. **Federal only**
 - **Federal Spending**: USASpending contracts and grants by district
-- **Intelligence Analysis**: ML-driven vote prediction, influence chain analysis, finance-jurisdiction overlap detection. **Federal data only** — state and local analyzer output is not produced because the underlying state-level cross-domain joins do not exist
+- **Intelligence Analysis**: donor-sector and vote correlation, finance-jurisdiction overlap detection, stock trades in committee-regulated sectors. **Federal data only** — state and local analyzer output is not produced because the underlying state-level cross-domain joins do not exist
 - **Districts**: Demographics, economics, boundaries for all 435 congressional districts and 7,383 state legislative districts
 - **Committees**: Membership, jurisdiction, activity tracking
 - **Federal Register**: Rules, notices, executive orders search
@@ -77,7 +77,7 @@ MCP tools for what `/api/v1` doesn't cover:
 - `get_campaign_finance` — FEC totals, PAC money, industry breakdown
 - `search_legislation` — full-text bill search
 - `search_lobbying` — Senate LDA filings
-- `analyze_vote_prediction` — ML vote prediction
+- `get_federal_spending` — USASpending contracts and grants by district
 
 Other paths under `/api/` (for example `/api/representative/{id}/votes`) are internal routes behind the site's own pages. They are unversioned, can change without notice, and robots.txt disallows them, so agents that respect robots.txt can't fetch them. Use `/api/v1` or MCP instead.
 
@@ -97,12 +97,22 @@ Server-rendered HTML pages, listed in [sitemap.xml](/sitemap.xml) and [sitemap-s
 
 ## Question Pages
 
-CIV.IQ provides question-driven entry pages at `/ask/{question-slug}/{bioguideId}`. Each page answers a specific civic question with real data pods and structured FAQ schema.
+CIV.IQ provides question-driven entry pages at `/ask/{question-slug}/{entityId}`. Each page answers one civic question with real data. The entity id depends on the template.
 
-Available question templates:
-- `/ask/campaign-contributions/{bioguideId}` — Where do campaign contributions come from? (FEC data, industry breakdown, vote-finance correlation)
-- `/ask/party-alignment/{bioguideId}` — How does this legislator vote compared to their party? (party-line rate, quarterly trends, notable shifts)
+Members of Congress (`{bioguideId}`, e.g. `P000197`):
 - `/ask/voting-record/{bioguideId}` — How does this legislator vote? (recent votes, sponsored bills, voting statistics)
+- `/ask/bills-sponsored/{bioguideId}` — What bills has this legislator sponsored? (sponsored and cosponsored bills, policy areas)
+- `/ask/campaign-contributions/{bioguideId}` — Where do their campaign contributions come from? (FEC data, industry breakdown, in-state vs out-of-state)
+- `/ask/donor-voting-alignment/{bioguideId}` — Does their voting align with their donors? (sector-by-sector correlation, not causation)
+- `/ask/contact-info/{bioguideId}` — How do I contact this legislator? (DC office phone, mailing address, website)
+
+Congressional committees (`{committeeId}`, the committee code, e.g. `HSAG`):
+- `/ask/committee-members/{committeeId}` — Who sits on this committee? (members, leadership, subcommittees)
+- `/ask/committee-activity/{committeeId}` — What is this committee working on? (hearings, bills in committee, jurisdiction)
+- `/ask/committee-lobbying/{committeeId}` — Who lobbies this committee? (Senate LDA filings, spending by issue)
+
+Policy areas (`{topic}`, the Congress.gov policy area name lowercased and hyphenated, e.g. `health`):
+- `/ask/topic-bills/{topic}` — What bills are about this topic? (recent bills, regulations, related committees, spending)
 
 Each page includes JSON-LD FAQPage schema, breadcrumb navigation, and related question links.
 
@@ -111,7 +121,7 @@ Each page includes JSON-LD FAQPage schema, breadcrumb navigation, and related qu
 CIV.IQ exposes a Model Context Protocol server for AI assistant integration:
 - Endpoint: `https://civdotiq.org/api/mcp` (Streamable HTTP, no auth required; `https://civdotiq.org/mcp` accepts the same protocol traffic)
 - Server manifest: `https://civdotiq.org/.well-known/mcp.json` (MCP registry server.json format)
-- 47 read-only tools across 9 domains: representatives, legislation, finance, intelligence, civic, environment, safety, health, economy
+- 46 read-only tools across 9 domains: representatives, legislation, finance, intelligence, civic, environment, safety, health, economy
 - 7 resource templates (e.g. `civiq://legislators/{bioguideId}`) plus 3 static doc resources (`civiq://docs/when-to-use`, `civiq://docs/api-quickstart`, `civiq://docs/versioning-policy`)
 - 6 prompt templates for common analysis patterns
 
