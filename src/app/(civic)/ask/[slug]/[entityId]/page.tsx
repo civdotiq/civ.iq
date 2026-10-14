@@ -37,6 +37,7 @@ import {
   type CommitteeActivityData,
   type CommitteeLobbyingData,
 } from '@/lib/questions/template-data-fetchers';
+import { fetchStockTradesData, type StockTradesData } from '@/lib/questions/stock-trades';
 import { resolvePolicyAreaSlug } from '@/lib/services/policy-area-search.service';
 import { displaySector } from '@/lib/mesh/sector-display';
 import { FAQPageSchema } from '@/components/seo/JsonLd';
@@ -51,6 +52,7 @@ import {
   DonorVotingAlignmentAnswer,
   DonorVotingAlignmentSkeleton,
 } from '@/components/questions/DonorVotingAlignmentAnswer';
+import { StockTradesAnswer } from '@/components/questions/StockTradesAnswer';
 import { TopicBillsAnswer } from '@/components/questions/TopicBillsAnswer';
 import { CommitteeMembersAnswer } from '@/components/questions/CommitteeMembersAnswer';
 import { CommitteeActivityAnswer } from '@/components/questions/CommitteeActivityAnswer';
@@ -85,6 +87,7 @@ function buildFaqAnswer(
     campaign?: CampaignContributionsData;
     voting?: VotingRecordTemplateData;
     billsSponsored?: BillsSponsoredData;
+    stockTrades?: StockTradesData;
     topicBills?: TopicBillsData;
     committeeMembers?: CommitteeMembersData;
     committeeActivity?: CommitteeActivityData;
@@ -132,6 +135,22 @@ function buildFaqAnswer(
     }
     case 'contact-info':
       return `Contact information for ${repName} is sourced from official congressional records.`;
+    case 'stock-trades': {
+      const trades = data.stockTrades?.trades ?? [];
+      if (trades.length) {
+        const latest = new Date(trades[0]!.transactionDate).toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+          timeZone: 'UTC',
+        });
+        return `${repName} has reported ${trades.length.toLocaleString()} stock trade${trades.length !== 1 ? 's' : ''} in the 119th Congress, most recently on ${latest}, according to STOCK Act periodic transaction reports.`;
+      }
+      if (data.stockTrades && !data.stockTrades.unavailable) {
+        return `CIV.IQ found no stock trades reported by ${repName} in the 119th Congress.`;
+      }
+      return `Stock trade data for ${repName} is sourced from STOCK Act periodic transaction reports.`;
+    }
     case 'donor-voting-alignment':
       return `${repName}'s yea-rate on bills touching top donor industries, based on FEC contributions and Congress.gov roll-call votes.`;
     case 'topic-bills': {
@@ -197,6 +216,7 @@ function computeConfidence(
     campaign?: CampaignContributionsData;
     voting?: VotingRecordTemplateData;
     billsSponsored?: BillsSponsoredData;
+    stockTrades?: StockTradesData;
     topicBills?: TopicBillsData;
     committeeMembers?: CommitteeMembersData;
     committeeActivity?: CommitteeActivityData;
@@ -262,6 +282,23 @@ function computeConfidence(
         score: 0.91,
         basis: 'Directory entry resolved from the canonical congress-legislators record.',
       };
+    case 'stock-trades': {
+      const trades = data.stockTrades?.trades ?? [];
+      if (trades.length) {
+        const filings = new Set(trades.map(t => t.filingId)).size;
+        return {
+          score: 0.91,
+          basis: `Resolved ${trades.length.toLocaleString()} trades from ${filings.toLocaleString()} periodic transaction reports in the 119th Congress.`,
+        };
+      }
+      if (data.stockTrades && !data.stockTrades.unavailable) {
+        return {
+          score: 0.74,
+          basis: 'No periodic transaction reports found for trades in the 119th Congress.',
+        };
+      }
+      return { score: 0.4, basis: 'The financial disclosure source could not be reached.' };
+    }
     case 'donor-voting-alignment':
       return {
         score: 0.74,
@@ -514,6 +551,7 @@ export default async function QuestionPage({ params }: PageProps) {
   let campaign: CampaignContributionsData | undefined;
   let voting: VotingRecordTemplateData | undefined;
   let billsSponsored: BillsSponsoredData | undefined;
+  let stockTrades: StockTradesData | undefined;
 
   switch (slug) {
     case 'campaign-contributions':
@@ -524,6 +562,9 @@ export default async function QuestionPage({ params }: PageProps) {
       break;
     case 'bills-sponsored':
       billsSponsored = await fetchBillsSponsoredData(id);
+      break;
+    case 'stock-trades':
+      stockTrades = await fetchStockTradesData(id, rep.chamber);
       break;
     case 'contact-info':
     case 'donor-voting-alignment':
@@ -536,6 +577,7 @@ export default async function QuestionPage({ params }: PageProps) {
     campaign,
     voting,
     billsSponsored,
+    stockTrades,
   });
 
   const podBody: ReactNode = (
@@ -560,6 +602,14 @@ export default async function QuestionPage({ params }: PageProps) {
           bills={billsSponsored.bills}
           sponsoredCount={billsSponsored.sponsoredCount}
           cosponsoredCount={billsSponsored.cosponsoredCount}
+        />
+      )}
+      {slug === 'stock-trades' && stockTrades && (
+        <StockTradesAnswer
+          trades={stockTrades.trades}
+          unavailable={stockTrades.unavailable}
+          name={name}
+          chamber={rep.chamber}
         />
       )}
       {slug === 'contact-info' && (
@@ -589,6 +639,7 @@ export default async function QuestionPage({ params }: PageProps) {
       campaign,
       voting,
       billsSponsored,
+      stockTrades,
     });
     const earliestTerm = rep.terms?.[0]?.startYear;
     const tenureCaption = earliestTerm ? `In office since ${earliestTerm}` : undefined;

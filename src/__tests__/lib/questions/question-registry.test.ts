@@ -42,7 +42,7 @@ describe('question-registry', () => {
   describe('getTemplatesByEntityType', () => {
     it('returns only representative templates (5)', () => {
       const reps = getTemplatesByEntityType('representative');
-      expect(reps.length).toBe(5);
+      expect(reps).toHaveLength(6);
       expect(reps.every(t => t.entityType === 'representative')).toBe(true);
     });
 

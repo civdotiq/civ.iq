@@ -20,6 +20,7 @@ import { EDUCATION_CURRICULUM } from '@/lib/data/education-curriculum';
 import { getTemplatesByEntityType, slugifyPolicyArea } from '@/lib/questions/question-registry';
 import { getAllPolicyAreas } from '@/lib/connections/policy-area-map';
 import { getBillsByPolicyArea } from '@/lib/data-sources/bill-policy-areas/load';
+import { getMembersWithStockTrades } from '@/lib/questions/stock-trades';
 import { firstDistrictPerChamber } from '@/lib/sitemap/state-district-urls';
 import { houseDistrictIds } from '@/lib/districts/known-districts';
 import { buildBillUrl } from '@/lib/helpers/url-builders';
@@ -158,11 +159,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }
       }
 
-      // Question pages: representative templates × all representatives
+      // Question pages: representative templates × all representatives.
+      // stock-trades is listed only for members with 119th-Congress trades;
+      // the rest render an empty, noindexed page. A cold trades cache can take
+      // tens of seconds, so past the timeout those entries are skipped this
+      // run (the lookup keeps warming the cache for the next one).
       const repSlugs = getTemplatesByEntityType('representative').map(t => t.slug);
+      const tradeMembers = await Promise.race([
+        getMembersWithStockTrades().catch(() => null),
+        new Promise<null>(resolve => setTimeout(() => resolve(null), 10_000)),
+      ]);
+      const hasTrades = (rep: { bioguideId: string; chamber?: string }): boolean =>
+        (rep.chamber === 'Senate' ? tradeMembers?.senate : tradeMembers?.house)?.includes(
+          rep.bioguideId
+        ) ?? false;
       for (const rep of representatives) {
         if (rep.bioguideId) {
           for (const qSlug of repSlugs) {
+            if (qSlug === 'stock-trades' && !hasTrades(rep)) continue;
             entries.push({
               url: `${BASE_URL}/ask/${qSlug}/${rep.bioguideId}`,
               lastModified: now,
