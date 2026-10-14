@@ -13,6 +13,11 @@ import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { isServedCongress } from '@/lib/data/congressional-constants';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
+import {
+  CongressRateLimitError,
+  isCongressRateLimited,
+  throwIfCongressRateLimited,
+} from './congress-rate-limit';
 import type { Bill, BillStatus, BillVote } from '@/types/bill';
 import { parseBillNumber } from '@/types/bill';
 import { formatBillNumber } from '@/lib/bill-label';
@@ -190,6 +195,7 @@ async function fetchBillText(
         },
       }
     );
+    await throwIfCongressRateLimited(textVersionsResponse);
 
     if (!textVersionsResponse.ok) {
       logger.warn('Failed to fetch text versions', { congress, type, number });
@@ -296,6 +302,7 @@ async function fetchBillText(
       date: latestVersion.date,
     };
   } catch (error) {
+    if (error instanceof CongressRateLimitError) throw error;
     logger.error('Error fetching bill text', error as Error, { congress, type, number });
     return null;
   }
@@ -406,6 +413,7 @@ async function fetchBillList<T>(
       }
     );
     const monitor = monitorExternalApi('congress', `bill-${path}`, response.url);
+    await throwIfCongressRateLimited(response);
     if (!response.ok) {
       monitor.end(false, response.status);
       logger.warn(`Failed to fetch bill ${path}`, {
@@ -420,6 +428,7 @@ async function fetchBillList<T>(
     monitor.end(true, 200);
     return data[key] ?? [];
   } catch (error) {
+    if (error instanceof CongressRateLimitError) throw error;
     logger.error(`Error fetching bill ${path}`, error as Error, { congress, type, number });
     return [];
   }
@@ -456,6 +465,8 @@ async function fetchBillDetails(
       }
     );
 
+    await throwIfCongressRateLimited(subjectsResponse);
+
     let subjects: { legislativeSubjects: CongressSubject[] } | undefined;
     let policyArea: CongressPolicyArea | undefined;
 
@@ -480,6 +491,8 @@ async function fetchBillDetails(
       }
     );
 
+    await throwIfCongressRateLimited(textResponse);
+
     let textVersions: CongressTextVersion[] | undefined;
     if (textResponse.ok) {
       const textData = await textResponse.json();
@@ -488,6 +501,7 @@ async function fetchBillDetails(
 
     return { subjects, policyArea, textVersions };
   } catch (error) {
+    if (error instanceof CongressRateLimitError) throw error;
     logger.error('Error fetching bill details', error as Error, { congress, type, number });
     return {};
   }
@@ -514,6 +528,7 @@ async function fetchBillCosponsors(
     );
 
     const monitor = monitorExternalApi('congress', 'bill-cosponsors', cosponsorsResponse.url);
+    await throwIfCongressRateLimited(cosponsorsResponse);
 
     if (!cosponsorsResponse.ok) {
       monitor.end(false, cosponsorsResponse.status);
@@ -539,6 +554,7 @@ async function fetchBillCosponsors(
 
     return cosponsors;
   } catch (error) {
+    if (error instanceof CongressRateLimitError) throw error;
     logger.error('Error fetching bill cosponsors', error as Error, { congress, type, number });
     return [];
   }
@@ -565,6 +581,7 @@ async function fetchBillActions(
     );
 
     const monitor = monitorExternalApi('congress', 'bill-actions', actionsResponse.url);
+    await throwIfCongressRateLimited(actionsResponse);
 
     if (!actionsResponse.ok) {
       monitor.end(false, actionsResponse.status);
@@ -591,6 +608,7 @@ async function fetchBillActions(
 
     return actions;
   } catch (error) {
+    if (error instanceof CongressRateLimitError) throw error;
     logger.error('Error fetching bill actions', error as Error, { congress, type, number });
     return [];
   }
@@ -853,6 +871,11 @@ export async function lookupBill(billId: string): Promise<BillLookup> {
   const result = await cachedFetch<Bill | BillMiss>(
     cacheKey,
     async () => {
+      // The key is out of requests: don't spend calls that will all 429.
+      if (await isCongressRateLimited()) {
+        logger.warn('Skipping Congress.gov bill fetch while rate limited', { billId });
+        return 'unavailable';
+      }
       try {
         logger.info('Fetching bill data from Congress.gov', {
           billId,
@@ -873,6 +896,10 @@ export async function lookupBill(billId: string): Promise<BillLookup> {
         );
 
         const monitor = monitorExternalApi('congress', 'bill-detail', billResponse.url);
+        // A 429 here or in any sub-request below lands in the catch as
+        // 'unavailable', so a half-fetched bill (no cosponsors, no actions)
+        // is never cached as if it were complete.
+        await throwIfCongressRateLimited(billResponse);
 
         if (!billResponse.ok) {
           monitor.end(false, billResponse.status);
