@@ -8,7 +8,7 @@
  *
  * Analyzes a legislator's party-alignment voting shifts over calendar quarters
  * of the 119th Congress. Separate endpoint from the main intelligence route
- * because temporal analysis is expensive (fetches many roll call XMLs).
+ * because temporal analysis reads the full chamber roll-call corpus.
  *
  * Endpoint: GET /api/intelligence/representative/[bioguideId]/temporal
  */
@@ -22,10 +22,14 @@ import {
   type ApiError,
 } from '@/lib/api/error-responses';
 import { analyzeTemporalVotes } from '@/lib/intelligence/analyzers/temporal-vote-analyzer';
+import { withTimeout } from '@/lib/intelligence/analyzers/shared';
 import type { TemporalVoteInsight, InsightError } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
+
+/** Leaves headroom under maxDuration to answer with an honest 503. */
+const ANALYZER_TIMEOUT_MS = 50_000;
 
 export async function GET(
   _request: NextRequest,
@@ -42,7 +46,11 @@ export async function GET(
   try {
     logger.info('[Intelligence] Temporal vote insights request', { bioguideId: upperId });
 
-    const insight = await analyzeTemporalVotes(upperId);
+    const insight = await withTimeout(
+      analyzeTemporalVotes(upperId),
+      ANALYZER_TIMEOUT_MS,
+      `TemporalVotes:${upperId}`
+    );
 
     if (!insight) {
       return createErrorResponse(
@@ -61,6 +69,14 @@ export async function GET(
       }
     );
   } catch (error) {
+    if (error instanceof Error && /timed out/i.test(error.message)) {
+      logger.warn('[Intelligence] Temporal vote insights timed out', { bioguideId: upperId });
+      return createErrorResponse(
+        ErrorCodes.SERVICE_UNAVAILABLE,
+        'Temporal analysis is temporarily unavailable. Try again shortly.',
+        503
+      );
+    }
     logger.error('[Intelligence] Temporal vote insights error', error as Error, {
       bioguideId: upperId,
     });

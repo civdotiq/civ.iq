@@ -454,6 +454,44 @@ Education, healthcare, and public health data.
 
 Statistical analysis endpoints. All insights carry: confidence (0-1), dataAsOf, methodology, disclaimer.
 
+### GET /api/intelligence/representative/{bioguideId}/influence-chain
+
+Association chains for one legislator: an organization lobbied the member's committees, people who list that organization as their employer gave to the member's campaign (FEC itemized contributions aggregated by employer), and the member voted on bills in the sectors the organization lobbied on. Patterns, not causation. Returns 404 when no chain reaches 0.5 confidence, for example a member with no committee seats.
+
+**Response shape:**
+```json
+{
+  "bioguideId": "C001035",
+  "chains": [
+    {
+      "organization": "GENERAL DYNAMICS",
+      "registrantId": "string (optional)",
+      "lobbyingSpending": 500000,
+      "contributionAmount": 26287,
+      "billId": "HR7008-119",
+      "billTitle": "string",
+      "vote": "yea | nay | not_voting",
+      "textSimilarity": null,
+      "links": [{ "type": "lobbying | contribution | committee | bill_match | vote", "label": "string", "confidence": 0.9, "data": {} }],
+      "chainConfidence": 0.7,
+      "hasContributionEvidence": true
+    }
+  ],
+  "totalChainsDetected": 276,
+  "chainsDropped": 266,
+  "peerComparison": null,
+  "peerComparisonUnavailableReason": "string (when peerComparison is null)",
+  "narrative": "string",
+  "confidence": 0.6,
+  "dataAsOf": "ISO date",
+  "methodology": "string",
+  "disclaimer": "string",
+  "sources": [{ "name": "string", "coverage": "string", "recordCount": 200 }],
+  "errors": [],
+  "status": "complete | partial"
+}
+```
+
 ### GET /api/intelligence/representative/{bioguideId}/finance-jurisdiction
 
 Overlap between campaign donors' industry sectors and committee jurisdictions.
@@ -461,6 +499,34 @@ Overlap between campaign donors' industry sectors and committee jurisdictions.
 ### GET /api/intelligence/representative/{bioguideId}/vote-finance
 
 Correlation between campaign donors (by sector) and voting record.
+
+### GET /api/intelligence/representative/{bioguideId}/temporal
+
+Party-line voting alignment per calendar quarter of the current Congress, computed from every roll call in the chamber. Flags quarters more than 10 percentage points from the trailing 4-quarter average and compares overall alignment with other members of the same party in the chamber. Needs at least 4 quarters of votes; returns 404 for independents or when the roll-call corpus is incomplete, 503 if the analysis times out.
+
+**Response shape:**
+```json
+{
+  "bioguideId": "P000197",
+  "quarters": [
+    { "quarter": "2025-Q1", "alignmentScore": 1, "voteCount": 51, "rollingAverage": null }
+  ],
+  "shifts": [],
+  "overallTrend": "stable",
+  "peerComparison": {
+    "value": 0.992,
+    "peerAverage": 0.964,
+    "peerCount": 222,
+    "peerGroupLabel": "other House Democrats",
+    "percentileRank": 99
+  },
+  "narrative": "string",
+  "confidence": 1,
+  "dataAsOf": "2026-09-16T19:05:00-04:00",
+  "methodology": "string",
+  "disclaimer": "string"
+}
+```
 
 ### GET /api/intelligence/committee/{committeeId}
 
