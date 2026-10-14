@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateAtomFeed } from '@/lib/feeds/atom-generator';
 import type { AtomFeedConfig, AtomEntry } from '@/lib/feeds/atom-generator';
 import { parseBillNumber } from '@/types/bill';
+import { isServedCongress } from '@/lib/data/congressional-constants';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
@@ -51,6 +52,12 @@ export async function GET(
     }
 
     const { type, number: billNumber, congress } = parsed;
+
+    // Older Congresses are out of scope: no bill page, so no feed either.
+    if (!isServedCongress(Number(congress))) {
+      return new NextResponse('Bill not found', { status: 404 });
+    }
+
     const baseUrl = 'https://civdotiq.org';
 
     // Fetch bill info

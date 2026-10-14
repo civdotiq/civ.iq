@@ -118,4 +118,13 @@ describe('GET /api/feed/bill/[billId]', () => {
     expect(xml.match(/<entry>/g)).toHaveLength(2);
     expect(xml).not.toContain('undefined');
   });
+
+  it('404s an old-Congress bill without calling Congress.gov', async () => {
+    const fetchMock = jest.spyOn(global, 'fetch');
+
+    const res = await getBillFeed(req, { params: Promise.resolve({ billId: '118-hr-3413' }) });
+
+    expect(res.status).toBe(404);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });
