@@ -51,6 +51,8 @@ jobs:
         env:
           BASE_URL: ${{ inputs.base_url || 'https://civdotiq.org' }}
           PARALLEL: ${{ inputs.concurrency || '4' }}
+          # Skips the Vercel Bot Protection challenge on page routes (firewall bypass rule).
+          FIREWALL_BYPASS_TOKEN: ${{ secrets.FIREWALL_BYPASS_TOKEN }}
         run: |
           set -uo pipefail
 
@@ -69,7 +71,8 @@ jobs:
           # Cold renders can take 40s+; allow 120s each, one retry.
           # xargs -P keeps a steady window without hammering upstream APIs.
           xargs -P "$PARALLEL" -n 1 -I {} sh -c '
-            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 120 --retry 1 "{}")
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 120 --retry 1 \
+              -H "x-civiq-bypass: $FIREWALL_BYPASS_TOKEN" "{}")
             if [ "$code" != "200" ]; then echo "FAIL $code {}"; fi
           ' < urls.txt > failures.txt || true
 
