@@ -51,7 +51,7 @@ Honest coverage matrix: [docs/COVERAGE.md](docs/COVERAGE.md). It is the canonica
 | [@civiq/sdk](packages/sdk)                               | Zero-dependency TypeScript client (`npm install @civiq/sdk`)    |
 | [MCP server](https://civdotiq.org/api/mcp)               | 46 tools for AI assistants (Claude, Cursor, etc.)               |
 | [Atom feeds](https://civdotiq.org/api/feed/bills/latest) | RSS-compatible feeds for bills, members, districts, committees  |
-| [Embeddable widgets](https://civdotiq.org/open/embeds)   | Drop-in HTML for legislator cards, district lookup, bill status |
+| [Embeddable widgets](https://civdotiq.org/embed-docs)    | Drop-in HTML for legislator cards, district lookup, bill status |
 | [llms.txt](public/llms.txt)                              | AI-discoverable documentation                                   |
 
 ## Data sources
