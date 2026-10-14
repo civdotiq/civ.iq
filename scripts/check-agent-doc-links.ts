@@ -92,8 +92,6 @@ const ENTITY_FILL: Record<QuestionTemplate['entityType'], string> = {
   topic: slugifyPolicyArea('Health'),
 };
 
-type Source = string;
-
 function parseArgs(): { base: string; listOnly: boolean } {
   const args = process.argv.slice(2);
   const baseIdx = args.indexOf('--base');
@@ -128,13 +126,24 @@ function expandAskPattern(path: string): string[] | null {
 /** Fill placeholders; null when a placeholder has no known value. */
 function fillPath(path: string): string | null {
   if (PATTERN_OVERRIDES[path]) return PATTERN_OVERRIDES[path]!;
-  let unknown = false;
-  const filled = path.replace(/\{([^}]+)\}/g, (_, name: string) => {
-    const v = FILL[name];
-    if (v === undefined) unknown = true;
-    return v ?? '';
-  });
-  return unknown ? null : filled;
+  let filled = '';
+  let rest = path;
+  for (let open = rest.indexOf('{'); open >= 0; open = rest.indexOf('{')) {
+    const close = rest.indexOf('}', open);
+    if (close < 0) break;
+    const value = FILL[rest.slice(open + 1, close)];
+    if (value === undefined) return null;
+    filled += rest.slice(0, open) + value;
+    rest = rest.slice(close + 1);
+  }
+  return filled + rest;
+}
+
+/** An OpenAPI example usable in a URL, or null when absent/empty/non-scalar. */
+function scalarExample(example: unknown): string | null {
+  if (typeof example === 'string') return example === '' ? null : example;
+  if (typeof example === 'number' || typeof example === 'boolean') return String(example);
+  return null;
 }
 
 function extractFromOpenApi(): string[] {
@@ -164,16 +173,14 @@ function extractFromOpenApi(): string[] {
     let filled = path;
     const query = new URLSearchParams();
     for (const p of get.parameters ?? []) {
-      const example = p.example ?? p.schema?.example ?? p.schema?.enum?.[0];
-      if (p.in === 'path' && example !== undefined && example !== '') {
-        filled = filled.replace(`{${p.name}}`, String(example));
-      } else if (p.in === 'query' && p.required && example !== undefined && example !== '') {
-        query.set(p.name, String(example));
-      }
+      const example = scalarExample(p.example ?? p.schema?.example ?? p.schema?.enum?.[0]);
+      if (example === null) continue;
+      if (p.in === 'path') filled = filled.replace(`{${p.name}}`, example);
+      else if (p.in === 'query' && p.required) query.set(p.name, example);
     }
     for (const [k, v] of Object.entries(QUERY_OVERRIDES[path] ?? {})) query.set(k, v);
     const qs = query.toString();
-    out.push(`${prefix}${filled}${qs ? `?${qs}` : ''}`);
+    out.push(prefix + filled + (qs ? '?' + qs : ''));
   }
   return out;
 }
@@ -201,7 +208,7 @@ interface Result {
   url: string;
   status: number | string;
   note: string;
-  sources: Source[];
+  sources: string[];
 }
 
 async function check(
@@ -223,36 +230,39 @@ async function check(
   }
 }
 
-async function main(): Promise<void> {
-  const { base, listOnly } = parseArgs();
-  const targets = new Map<string, Set<Source>>();
-  const skipped: Array<{ path: string; source: Source; reason: string }> = [];
+interface Targets {
+  /** URL path → the docs that mention it */
+  targets: Map<string, Set<string>>;
+  skipped: Array<{ path: string; source: string; reason: string }>;
+}
 
+async function collectTargets(base: string, includeLivePages: boolean): Promise<Targets> {
+  const targets = new Map<string, Set<string>>();
+  const skipped: Targets['skipped'] = [];
   const skippedKeys = new Set<string>();
-  const skip = (path: string, source: Source, reason: string): void => {
+
+  const skip = (path: string, source: string, reason: string): void => {
     const key = `${path}|${source}`;
     if (skippedKeys.has(key)) return;
     skippedKeys.add(key);
     skipped.push({ path, source, reason });
   };
 
-  const add = (raw: string, source: Source): void => {
+  const addFilled = (path: string, source: string): void => {
+    if (SKIP_PATHS.has(path)) return skip(path, source, 'JSON-RPC POST endpoint');
+    const sources = targets.get(path) ?? new Set<string>();
+    sources.add(source);
+    targets.set(path, sources);
+  };
+
+  const add = (raw: string, source: string): void => {
     const path = raw.split('#')[0]!;
     if (path === '/api/' || path.endsWith('/...')) return; // prose, not a URL
     const expanded = expandAskPattern(path);
-    const paths = expanded ?? [fillPath(path)];
-    for (const p of paths) {
-      if (p === null) {
-        skip(path, source, 'no fill value for placeholder');
-        continue;
-      }
-      if (SKIP_PATHS.has(p)) {
-        skip(p, source, 'JSON-RPC POST endpoint');
-        continue;
-      }
-      if (!targets.has(p)) targets.set(p, new Set());
-      targets.get(p)!.add(source);
-    }
+    if (expanded) return expanded.forEach(p => addFilled(p, source));
+    const filled = fillPath(path);
+    if (filled === null) return skip(path, source, 'no fill value for placeholder');
+    addFilled(filled, source);
   };
 
   for (const file of ['llms.txt', 'llms-full.txt']) {
@@ -260,31 +270,46 @@ async function main(): Promise<void> {
   }
   for (const p of extractFromOpenApi()) add(p, 'openapi.json');
   for (const p of extractFromMcpManifest()) add(p, 'mcp.json');
-  if (!listOnly) {
+  if (includeLivePages) {
     for (const p of await extractFromAskPage(base)) add(p, '/ask page');
   }
+  return { targets, skipped };
+}
 
-  const paths = [...targets.keys()].sort();
+/** Request every path, CONCURRENCY at a time. */
+async function checkAll(base: string, targets: Targets['targets']): Promise<Result[]> {
+  const paths = [...targets.keys()];
+  const results: Result[] = [];
+  const worker = async (): Promise<void> => {
+    const path = paths.shift();
+    if (path === undefined) return;
+    const { status, note } = await check(base, path);
+    results.push({ url: path, status, note, sources: [...(targets.get(path) ?? [])] });
+    return worker();
+  };
+  await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+  return results.sort((a, b) => a.url.localeCompare(b.url));
+}
+
+function printSkipped(skipped: Targets['skipped']): void {
+  if (skipped.length === 0) return;
+  console.log('\nSkipped:');
+  for (const s of skipped) console.log(`  ${s.path}  [${s.source}] ${s.reason}`);
+}
+
+async function main(): Promise<void> {
+  const { base, listOnly } = parseArgs();
+  const { targets, skipped } = await collectTargets(base, !listOnly);
+
   if (listOnly) {
+    const paths = [...targets.keys()].sort((a, b) => a.localeCompare(b));
     for (const p of paths) console.log(`${p}  [${[...targets.get(p)!].join(', ')}]`);
-    for (const s of skipped) console.log(`SKIP ${s.path}  [${s.source}] ${s.reason}`);
+    printSkipped(skipped);
     return;
   }
 
-  console.log(`Checking ${paths.length} URLs against ${base} …\n`);
-  const results: Result[] = [];
-  let next = 0;
-  await Promise.all(
-    Array.from({ length: CONCURRENCY }, async () => {
-      while (next < paths.length) {
-        const path = paths[next++]!;
-        const { status, note } = await check(base, path);
-        results.push({ url: path, status, note, sources: [...targets.get(path)!] });
-      }
-    })
-  );
-
-  results.sort((a, b) => a.url.localeCompare(b.url));
+  console.log(`Checking ${targets.size} URLs against ${base} …\n`);
+  const results = await checkAll(base, targets);
   const isOk = (r: Result): boolean => r.status === (EXPECTED_STATUS[r.url] ?? 200);
   const bad = results.filter(r => !isOk(r));
   for (const r of results) {
@@ -292,10 +317,7 @@ async function main(): Promise<void> {
     const note = r.note ? ` (${r.note})` : '';
     console.log(`${mark} ${String(r.status).padEnd(5)} ${r.url}${note}  [${r.sources.join(', ')}]`);
   }
-  if (skipped.length) {
-    console.log('\nSkipped:');
-    for (const s of skipped) console.log(`  ${s.path}  [${s.source}] ${s.reason}`);
-  }
+  printSkipped(skipped);
   console.log(`\n${results.length - bad.length}/${results.length} returned their expected status.`);
   if (bad.length) process.exitCode = 1;
 }

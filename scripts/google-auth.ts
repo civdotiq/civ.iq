@@ -25,11 +25,7 @@ export function readServiceAccount(): ServiceAccount | null {
 }
 
 function base64url(input: string | Buffer): string {
-  return Buffer.from(input)
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
+  return Buffer.from(input).toString('base64url');
 }
 
 /** Build and RS256-sign the service-account assertion. */
