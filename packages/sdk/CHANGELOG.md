@@ -2,6 +2,16 @@
 
 All notable changes to `@civiq/sdk` are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/).
 
+## [0.4.0] — Unreleased
+
+### Changed (breaking)
+
+- `SectorLeaderboardResponse` now matches the live `/intelligence/sector/{sector}/leaderboard` response. The endpoint no longer reports money or ranks (civ.iq #241): it returns each House member's yes-vote rate on bills in the sector. `legislators[]` (`totalFromSector`, `percentOfTotal`) and `metadata` are gone. New fields: `sectorLabel`, `chamber`, `party`, `coverageNote`, `entries[]` (`chamber`, `sectorAlignmentScore`, `billsVotedOn`), `stats`, `dataAvailability`, `generatedAt`, `dataAsOf`. The old type never matched what the API returned.
+
+### Added
+
+- `SectorLeaderboardEntry` type export.
+
 ## [0.3.1] — 2026-10-08
 
 ### Fixed
