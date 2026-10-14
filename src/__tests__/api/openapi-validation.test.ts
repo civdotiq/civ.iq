@@ -164,7 +164,7 @@ describe('OpenAPI Specification', () => {
     }
 
     it('should have 36 paths total', () => {
-      expect(Object.keys(spec.paths).length).toBe(36);
+      expect(Object.keys(spec.paths).length).toBe(37);
     });
 
     const ALLOWED_METHODS = ['get', 'post', 'delete'];

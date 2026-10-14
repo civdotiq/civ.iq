@@ -2,13 +2,12 @@
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  *
- * Pure helpers for the IssueTopic redesigned page (PR 16). Slug map,
- * formatters, and party-bucket helpers. No data fetching here — SWR
+ * Pure helpers for the IssueTopic redesigned page (PR 16). Slug map
+ * and formatters. No data fetching here — SWR
  * lives in the client component.
  */
 
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
-import type { LeaderboardEntry } from './types';
 
 /**
  * Slug → Congress.gov policyArea string.
@@ -115,49 +114,9 @@ export function sectorToIndustrySlug(sector: IndustrySector): string {
   return SECTOR_TO_LEADERBOARD_SLUG[sector];
 }
 
-export function formatCompactDollars(n: number | null | undefined): string {
-  if (n === null || n === undefined || !Number.isFinite(n)) return '—';
-  if (n === 0) return '$0';
-  const abs = Math.abs(n);
-  if (abs >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
-  if (abs >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
-  if (abs >= 1e3) return `$${Math.round(n / 1e3).toLocaleString()}K`;
-  return `$${n.toLocaleString('en-US')}`;
-}
-
 export function formatCount(n: number | null | undefined): string {
   if (n === null || n === undefined || !Number.isFinite(n)) return '—';
   return n.toLocaleString('en-US');
-}
-
-export function partyKey(party: string): 'd' | 'r' | 'i' {
-  const upper = (party ?? '').toUpperCase();
-  if (upper === 'D' || upper === 'DEM' || upper === 'DEMOCRAT') return 'd';
-  if (upper === 'R' || upper === 'REP' || upper === 'REPUBLICAN') return 'r';
-  return 'i';
-}
-
-export interface PartyTotals {
-  d: number;
-  r: number;
-  i: number;
-  total: number;
-}
-
-export function computePartyTotals(entries: LeaderboardEntry[]): PartyTotals {
-  const totals: PartyTotals = { d: 0, r: 0, i: 0, total: 0 };
-  for (const entry of entries) {
-    const k = partyKey(entry.party);
-    totals[k] += entry.sectorDonationAmount;
-    totals.total += entry.sectorDonationAmount;
-  }
-  return totals;
-}
-
-export function topRecipients(entries: LeaderboardEntry[], limit = 6): LeaderboardEntry[] {
-  return [...entries]
-    .sort((a, b) => b.sectorDonationAmount - a.sectorDonationAmount)
-    .slice(0, limit);
 }
 
 /** Format a Congress.gov bill id ("119-hr-1234") as ("H.R. 1234"). */

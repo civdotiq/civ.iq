@@ -5,7 +5,6 @@
 
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import {
@@ -17,21 +16,14 @@ import {
   CqStat,
 } from '@/components/cq';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
-import { RecipientsTable } from './RecipientsTable';
+import { SectorLeaderboard } from '@/components/intelligence/SectorLeaderboard';
 import { ContributorsTable } from './ContributorsTable';
 import { BillsTable } from './BillsTable';
-import {
-  combinedContributors,
-  computePartyTotals,
-  formatCompactDollars,
-  sectorToLeaderboardSlug,
-  topRecipients,
-} from './data';
+import { combinedContributors, formatCompactDollars, sectorToLeaderboardSlug } from './data';
 import type {
   IndustryConnectionsResponse,
   IndustryOrganizationsResponse,
   IndustrySectorPageProps,
-  SectorLeaderboardResponse,
 } from './types';
 
 const fetcher = async <T,>(url: string): Promise<T | null> => {
@@ -66,13 +58,6 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
   const leaderboardSlug = sectorToLeaderboardSlug(sector);
   const encodedIndustrySlug = encodeURIComponent(sectorSlug);
 
-  const { data: leaderboard, isLoading: leaderboardLoading } =
-    useSWR<SectorLeaderboardResponse | null>(
-      `/api/intelligence/sector/${leaderboardSlug}/leaderboard?limit=100`,
-      fetcher,
-      { revalidateOnFocus: false }
-    );
-
   const { data: orgs, isLoading: orgsLoading } = useSWR<IndustryOrganizationsResponse | null>(
     `/api/industry/${encodedIndustrySlug}/organizations`,
     fetcher,
@@ -86,24 +71,10 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
       { revalidateOnFocus: false }
     );
 
-  const [showAllRecipients, setShowAllRecipients] = useState(false);
-
-  const partyTotals = leaderboard ? computePartyTotals(leaderboard.entries) : null;
-  const totalDonations = partyTotals?.total ?? 0;
-  const recipients = leaderboard
-    ? showAllRecipients
-      ? leaderboard.entries
-      : topRecipients(leaderboard.entries, 8)
-    : [];
   const contributorRows = combinedContributors(orgs ?? undefined, 8);
   const bills = connections?.recentBills ?? [];
-  const dataAsOf =
-    leaderboard?.dataAsOf ?? orgs?.metadata?.generatedAt ?? connections?.metadata?.generatedAt;
-
-  const dPct = partyTotals && partyTotals.total > 0 ? (partyTotals.d / partyTotals.total) * 100 : 0;
-  const rPct = partyTotals && partyTotals.total > 0 ? (partyTotals.r / partyTotals.total) * 100 : 0;
-  const otherPct =
-    partyTotals && partyTotals.total > 0 ? (partyTotals.other / partyTotals.total) * 100 : 0;
+  const dataAsOf = orgs?.metadata?.generatedAt ?? connections?.metadata?.generatedAt;
+  const corpusLobbying = orgs?.corpusLobbying;
 
   return (
     <div
@@ -258,9 +229,6 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
             }}
           >
             {[
-              ['Total to legislators', formatCompactDollars(totalDonations)],
-              ['To Democrats', formatCompactDollars(partyTotals?.d ?? 0)],
-              ['To Republicans', formatCompactDollars(partyTotals?.r ?? 0)],
               [
                 'Lobbying organizations',
                 orgs?.corpusLobbying
@@ -302,15 +270,6 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
       {(() => {
         const corpusSpend = orgs?.corpusLobbying;
         const stats = [
-          {
-            key: 'cycle-contribs',
-            label: 'Cycle contributions',
-            value: formatCompactDollars(totalDonations),
-            caption: leaderboard
-              ? `${leaderboard.entries.length} legislator${leaderboard.entries.length === 1 ? '' : 's'} included`
-              : 'Loading…',
-            color: 'blue' as const,
-          },
           ...(corpusSpend
             ? [
                 {
@@ -372,157 +331,9 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
         );
       })()}
 
-      {/* Party split bar */}
-      <section style={{ marginTop: 28 }}>
-        <CqLabel>Party split · cycle contributions</CqLabel>
-        {partyTotals && partyTotals.total > 0 ? (
-          <>
-            <div
-              role="img"
-              aria-label={`${dPct.toFixed(0)} percent to Democrats, ${rPct.toFixed(0)} percent to Republicans`}
-              style={{
-                display: 'flex',
-                height: 36,
-                border: '2px solid var(--ink)',
-                marginTop: 8,
-                overflow: 'hidden',
-              }}
-            >
-              {dPct > 0 && (
-                <div
-                  style={{
-                    width: `${dPct}%`,
-                    background: 'var(--civiq-green)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRight: rPct > 0 || otherPct > 0 ? '2px solid var(--ink)' : 'none',
-                  }}
-                >
-                  {dPct >= 14 && (
-                    <span
-                      style={{
-                        color: '#fff',
-                        fontSize: 12,
-                        fontWeight: 700,
-                        fontFamily: 'var(--font-mono)',
-                        fontVariantNumeric: 'tabular-nums',
-                      }}
-                    >
-                      {dPct.toFixed(0)}% · {formatCompactDollars(partyTotals.d)} to D
-                    </span>
-                  )}
-                </div>
-              )}
-              {rPct > 0 && (
-                <div
-                  style={{
-                    width: `${rPct}%`,
-                    background: 'var(--civiq-red)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRight: otherPct > 0 ? '2px solid var(--ink)' : 'none',
-                  }}
-                >
-                  {rPct >= 14 && (
-                    <span
-                      style={{
-                        color: '#fff',
-                        fontSize: 12,
-                        fontWeight: 700,
-                        fontFamily: 'var(--font-mono)',
-                        fontVariantNumeric: 'tabular-nums',
-                      }}
-                    >
-                      {rPct.toFixed(0)}% · {formatCompactDollars(partyTotals.r)} to R
-                    </span>
-                  )}
-                </div>
-              )}
-              {otherPct > 0 && (
-                <div
-                  style={{
-                    width: `${otherPct}%`,
-                    background: 'var(--fg3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                />
-              )}
-            </div>
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 11,
-                color: 'var(--fg3)',
-                fontFamily: 'var(--font-mono)',
-              }}
-            >
-              D · {formatCompactDollars(partyTotals.d)} · {dPct.toFixed(1)}% &nbsp; R ·{' '}
-              {formatCompactDollars(partyTotals.r)} · {rPct.toFixed(1)}% &nbsp; Other ·{' '}
-              {formatCompactDollars(partyTotals.other)} · {otherPct.toFixed(1)}%
-            </div>
-          </>
-        ) : (
-          <div
-            style={{
-              marginTop: 8,
-              border: '2px solid var(--ink)',
-              padding: '16px 18px',
-              background: 'var(--bg2)',
-              fontSize: 13,
-              color: 'var(--fg2)',
-              lineHeight: 1.55,
-            }}
-          >
-            Party-split data not yet available. Splits compute as legislator vote-finance
-            correlations populate the cache.
-          </div>
-        )}
-      </section>
-
-      {/* Recipients + Contributors */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-          gap: 32,
-          marginTop: 32,
-        }}
-      >
-        <section>
-          <div style={{ marginBottom: 14 }}>
-            <CqLabel>Top recipients · cycle contributions</CqLabel>
-            <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}>
-              Lawmakers receiving the most
-            </div>
-          </div>
-          <RecipientsTable entries={recipients} loading={leaderboardLoading} />
-          {leaderboard && leaderboard.entries.length > 8 && (
-            <div style={{ marginTop: 12 }}>
-              <button
-                type="button"
-                onClick={() => setShowAllRecipients(prev => !prev)}
-                style={{
-                  fontSize: 11,
-                  color: 'var(--civiq-blue-active)',
-                  textDecoration: 'underline',
-                  textUnderlineOffset: 3,
-                  fontFamily: 'var(--font-mono)',
-                  background: 'none',
-                  border: 'none',
-                  padding: 0,
-                  cursor: 'pointer',
-                }}
-              >
-                {showAllRecipients ? 'Show fewer ↑' : `View all ${leaderboard.entries.length} →`}
-              </button>
-            </div>
-          )}
-        </section>
-
+      {/* Contributors. Per-member sector money is not shown: the only
+          per-member figure is a 250-contribution sample, not a total. */}
+      <div style={{ marginTop: 32 }}>
         <section>
           <div style={{ marginBottom: 14 }}>
             <CqLabel>Top contributors · firms + PACs</CqLabel>
@@ -531,6 +342,11 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
           <ContributorsTable rows={contributorRows} loading={orgsLoading} />
         </section>
       </div>
+
+      {/* House vote rates on the sector's bills (unranked, money-free) */}
+      <section style={{ marginTop: 32 }}>
+        <SectorLeaderboard initialSector={sector} />
+      </section>
 
       {/* Bills */}
       <section style={{ marginTop: 32 }}>
@@ -571,9 +387,9 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
 
       <div style={{ marginTop: 24 }}>
         <CqPlainReading>
-          {leaderboard && partyTotals && partyTotals.total > 0
-            ? `${displayName} contributions split ${dPct.toFixed(0)}% to Democrats and ${rPct.toFixed(0)}% to Republicans across ${leaderboard.entries.length} legislators in the current cycle.`
-            : `${displayName} sector data is still warming. Sector-aligned legislator data populates as individual representative profiles compute their vote-finance correlations.`}
+          {corpusLobbying
+            ? `${corpusLobbying.organizationCount.toLocaleString()} organizations reported ${formatCompactDollars(corpusLobbying.windowTotal)} in lobbying on ${displayName.toLowerCase()} issue areas from ${corpusLobbying.quarters[0]} to ${corpusLobbying.quarters[corpusLobbying.quarters.length - 1]}, across ${corpusLobbying.filingCount.toLocaleString()} filings.`
+            : `${displayName} lobbying figures are loading or unavailable right now.`}
         </CqPlainReading>
       </div>
 
@@ -585,8 +401,8 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
         >
           {' '}
           Industry roll-up combines FEC PAC classifications with LDA registrant filings and
-          Congress.gov bill matches. Sector contributions reflect cached vote-finance insights;
-          totals grow as more representative profiles are analyzed.
+          Congress.gov bill matches. Per-member sector contribution totals are not shown: the
+          available figures are contribution samples, not totals.
         </CqDisclaimer>
       </div>
     </div>

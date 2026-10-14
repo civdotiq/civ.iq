@@ -731,16 +731,20 @@ export interface MoneyReportCardInsight extends InsightBase {
 
 // ── Sector Leaderboard ──────────────────────────────────────────────
 
+/**
+ * One member's yes-vote rate on bills classified to a sector. No dollar
+ * figure and no rank: the only per-member money number available is a
+ * 250-contribution sample, and rate gaps are too small to rank on.
+ */
 export interface SectorLeaderboardEntry {
   bioguideId: string;
   name: string;
   party: string;
   state: string;
   chamber: 'House' | 'Senate';
+  /** Yea votes / (yea + nay votes) on sector-classified bills, 0-1. */
   sectorAlignmentScore: number;
-  sectorDonationAmount: number;
   billsVotedOn: number;
-  rank: number;
 }
 
 export interface SectorLeaderboardResponse {
@@ -748,6 +752,9 @@ export interface SectorLeaderboardResponse {
   sectorLabel: string;
   chamber: 'house' | 'senate' | 'all';
   party: string | null;
+  /** Plain-language coverage caveat (House only; how the rate is computed). */
+  coverageNote: string;
+  /** Ordered by state, then name. */
   entries: SectorLeaderboardEntry[];
   stats: {
     mean: number;

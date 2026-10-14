@@ -11,38 +11,6 @@ export interface IndustrySectorPageProps {
   displayName: string;
 }
 
-export interface SectorLeaderboardResponse {
-  sector: string;
-  sectorLabel: string;
-  chamber: 'house' | 'senate' | 'all';
-  party: string | null;
-  entries: Array<{
-    bioguideId: string;
-    name: string;
-    party: string;
-    state: string;
-    chamber: 'House' | 'Senate';
-    sectorAlignmentScore: number;
-    sectorDonationAmount: number;
-    billsVotedOn: number;
-    rank: number;
-  }>;
-  stats: {
-    mean: number;
-    median: number;
-    standardDeviation: number;
-    includedMembers: number;
-    excludedMembers: number;
-  };
-  dataAvailability: {
-    cachedInsights: number;
-    minimumRequired: number;
-    status: 'sufficient' | 'partial' | 'empty';
-  };
-  generatedAt: string;
-  dataAsOf: string;
-}
-
 export interface IndustryOrganizationsResponse {
   topPACs: Array<{
     committeeId: string;
@@ -99,7 +67,6 @@ export interface IndustryConnectionsResponse {
   };
 }
 
-export type LeaderboardEntry = SectorLeaderboardResponse['entries'][number];
 export type ContributorRow = {
   kind: 'lobby';
   // null when a corpus-merged org spans multiple registrants (no single link).

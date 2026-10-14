@@ -95,6 +95,7 @@ const reps: Record<string, { name: string; party: string; state: string; chamber
   B000002: { name: 'Bob Sen', party: 'R', state: 'TX', chamber: 'Senate' },
   C000003: { name: 'Carol Rep', party: 'D', state: 'NY', chamber: 'House' },
   D000004: { name: 'Dan Rep', party: 'R', state: 'FL', chamber: 'House' },
+  E000005: { name: 'Eve Rep', party: 'R', state: 'TX', chamber: 'House' },
 };
 
 function setupRepMock() {
@@ -131,6 +132,7 @@ describe('buildSectorLeaderboard', () => {
       sectorLabel: 'Health',
       chamber: 'all',
       party: null,
+      coverageNote: 'House members only.',
       entries: [],
       stats: {
         mean: 0.5,
@@ -161,36 +163,42 @@ describe('buildSectorLeaderboard', () => {
     expect(result).toBeNull();
   });
 
-  it('ranks members by sector alignment score', async () => {
-    const insightA = makeInsight('A000001', 0.8);
-    const insightB = makeInsight('B000002', 0.6);
-    const insightC = makeInsight('C000003', 0.9);
+  it('orders members by state then name, not by score, with no rank or money', async () => {
+    const insightA = makeInsight('A000001', 0.8); // CA
+    const insightC = makeInsight('C000003', 0.9); // NY
+    const insightD = makeInsight('D000004', 0.6); // FL
 
-    setupInsightKeys('A000001', 'B000002', 'C000003');
-    setupMget(insightA, insightB, insightC);
+    setupInsightKeys('A000001', 'C000003', 'D000004');
+    setupMget(insightA, insightC, insightD);
 
     const result = await buildSectorLeaderboard(SECTOR);
 
     expect(result).not.toBeNull();
-    expect(result!.entries).toHaveLength(3);
-    expect(result!.entries[0].bioguideId).toBe('C000003');
-    expect(result!.entries[0].sectorAlignmentScore).toBe(0.9);
-    expect(result!.entries[0].rank).toBe(1);
-    expect(result!.entries[1].bioguideId).toBe('A000001');
-    expect(result!.entries[1].sectorAlignmentScore).toBe(0.8);
-    expect(result!.entries[1].rank).toBe(2);
-    expect(result!.entries[2].bioguideId).toBe('B000002');
-    expect(result!.entries[2].sectorAlignmentScore).toBe(0.6);
-    expect(result!.entries[2].rank).toBe(3);
+    expect(result!.entries.map(e => e.bioguideId)).toEqual(['A000001', 'D000004', 'C000003']);
+    for (const entry of result!.entries) {
+      expect(entry).not.toHaveProperty('rank');
+      expect(entry).not.toHaveProperty('sectorDonationAmount');
+    }
+    expect(result!.coverageNote).toMatch(/House members only/);
+  });
+
+  it('leaves out senators (vote-finance is House only)', async () => {
+    setupInsightKeys('A000001', 'B000002');
+    setupMget(makeInsight('A000001', 0.8), makeInsight('B000002', 0.9));
+
+    const result = await buildSectorLeaderboard(SECTOR);
+
+    expect(result!.entries.map(e => e.bioguideId)).toEqual(['A000001']);
+    expect(await buildSectorLeaderboard(SECTOR, { chamber: 'senate' })).toBeNull();
   });
 
   it('excludes members where sector meetsSampleSize is false', async () => {
     const insightA = makeInsight('A000001', 0.8, true);
-    const insightB = makeInsight('B000002', 0.9, false);
+    const insightD = makeInsight('D000004', 0.9, false);
     const insightC = makeInsight('C000003', 0.7, true);
 
-    setupInsightKeys('A000001', 'B000002', 'C000003');
-    setupMget(insightA, insightB, insightC);
+    setupInsightKeys('A000001', 'D000004', 'C000003');
+    setupMget(insightA, insightD, insightC);
 
     const result = await buildSectorLeaderboard(SECTOR);
 
@@ -198,7 +206,7 @@ describe('buildSectorLeaderboard', () => {
     expect(result!.entries).toHaveLength(2);
 
     const ids = result!.entries.map(e => e.bioguideId);
-    expect(ids).not.toContain('B000002');
+    expect(ids).not.toContain('D000004');
     expect(ids).toContain('A000001');
     expect(ids).toContain('C000003');
 
@@ -223,29 +231,39 @@ describe('buildSectorLeaderboard', () => {
 
   it('filters by party', async () => {
     const insightA = makeInsight('A000001', 0.8); // D
-    const insightB = makeInsight('B000002', 0.9); // R
+    const insightE = makeInsight('E000005', 0.9); // R
     const insightC = makeInsight('C000003', 0.7); // D
 
-    setupInsightKeys('A000001', 'B000002', 'C000003');
-    setupMget(insightA, insightB, insightC);
+    setupInsightKeys('A000001', 'E000005', 'C000003');
+    setupMget(insightA, insightE, insightC);
 
     const result = await buildSectorLeaderboard(SECTOR, { party: 'R' });
 
     expect(result).not.toBeNull();
     expect(result!.entries).toHaveLength(1);
-    expect(result!.entries[0].bioguideId).toBe('B000002');
+    expect(result!.entries[0].bioguideId).toBe('E000005');
     expect(result!.entries[0].party).toBe('R');
     expect(result!.party).toBe('R');
   });
 
+  it('matches a party code against full roster party names', async () => {
+    reps.F000006 = { name: 'Fay Rep', party: 'Republican', state: 'OH', chamber: 'House' };
+    reps.G000007 = { name: 'Gus Rep', party: 'Democrat', state: 'OH', chamber: 'House' };
+    setupInsightKeys('F000006', 'G000007');
+    setupMget(makeInsight('F000006', 0.5), makeInsight('G000007', 0.6));
+
+    const result = await buildSectorLeaderboard(SECTOR, { party: 'R' });
+
+    expect(result!.entries.map(e => e.bioguideId)).toEqual(['F000006']);
+  });
+
   it('computes correct statistics (mean, median, std dev)', async () => {
-    // Scores: 0.9, 0.8, 0.6 => sorted descending
     const insightA = makeInsight('A000001', 0.8);
-    const insightB = makeInsight('B000002', 0.6);
+    const insightD = makeInsight('D000004', 0.6);
     const insightC = makeInsight('C000003', 0.9);
 
-    setupInsightKeys('A000001', 'B000002', 'C000003');
-    setupMget(insightA, insightB, insightC);
+    setupInsightKeys('A000001', 'D000004', 'C000003');
+    setupMget(insightA, insightD, insightC);
 
     const result = await buildSectorLeaderboard(SECTOR);
 
@@ -264,23 +282,24 @@ describe('buildSectorLeaderboard', () => {
     expect(stats.excludedMembers).toBe(0);
   });
 
-  it('respects limit parameter', async () => {
-    const insightA = makeInsight('A000001', 0.8);
-    const insightB = makeInsight('B000002', 0.6);
-    const insightC = makeInsight('C000003', 0.9);
+  it('returns every included member by default and treats limit as a cap', async () => {
+    const insights = [
+      makeInsight('A000001', 0.8),
+      makeInsight('D000004', 0.6),
+      makeInsight('C000003', 0.9),
+    ];
+    setupInsightKeys('A000001', 'D000004', 'C000003');
+    setupMget(...insights);
 
-    setupInsightKeys('A000001', 'B000002', 'C000003');
-    setupMget(insightA, insightB, insightC);
+    const all = await buildSectorLeaderboard(SECTOR);
+    expect(all!.entries).toHaveLength(3);
 
-    const result = await buildSectorLeaderboard(SECTOR, { limit: 2 });
-
-    expect(result).not.toBeNull();
-    expect(result!.entries).toHaveLength(2);
-    // Should be the top 2 by alignment score
-    expect(result!.entries[0].sectorAlignmentScore).toBe(0.9);
-    expect(result!.entries[1].sectorAlignmentScore).toBe(0.8);
-    // Stats still reflect all included members (3), not just the limited entries
-    expect(result!.stats.includedMembers).toBe(3);
+    setupMget(...insights);
+    mockRedisGet.mockResolvedValue(null);
+    const capped = await buildSectorLeaderboard(SECTOR, { limit: 2 });
+    expect(capped!.entries.map(e => e.bioguideId)).toEqual(['A000001', 'D000004']);
+    // Stats still reflect all included members (3), not just the capped entries
+    expect(capped!.stats.includedMembers).toBe(3);
   });
 
   it('returns null and logs warning when Redis has no cached insights', async () => {
