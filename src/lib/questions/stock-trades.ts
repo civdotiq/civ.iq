@@ -77,7 +77,7 @@ export async function getMembersWithStockTrades(): Promise<MembersWithStockTrade
         [...byMember]
           .filter(([, trades]) => currentCongressTrades(trades).length > 0)
           .map(([id]) => id)
-          .sort();
+          .sort((a, b) => a.localeCompare(b));
       return { house: withTrades(house), senate: withTrades(senate) };
     },
     6 * 60 * 60, // 6 hours (seconds)

@@ -28,7 +28,7 @@ const TOP_ASSETS_LIMIT = 5;
 function formatDate(isoDate: string): string {
   if (!isoDate) return 'Unknown';
   const date = new Date(isoDate);
-  if (isNaN(date.getTime())) return isoDate;
+  if (Number.isNaN(date.getTime())) return isoDate;
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -49,7 +49,7 @@ function sourceName(chamber: 'House' | 'Senate'): string {
   return chamber === 'Senate' ? 'Senate eFD' : 'House Clerk';
 }
 
-function RecentTradesPod({ trades, unavailable, name, chamber }: StockTradesAnswerProps) {
+function RecentTradesPod({ trades, unavailable, name, chamber }: Readonly<StockTradesAnswerProps>) {
   if (unavailable) {
     return (
       <div className="border-2 border-black bg-white p-4 sm:p-6 lg:col-span-2">
@@ -133,7 +133,7 @@ function RecentTradesPod({ trades, unavailable, name, chamber }: StockTradesAnsw
   );
 }
 
-function TradeSummaryPod({ trades }: { trades: StockTrade[] }) {
+function TradeSummaryPod({ trades }: Readonly<{ trades: StockTrade[] }>) {
   if (!trades.length) return null;
 
   const purchases = trades.filter(t => t.transactionType === 'Purchase').length;
@@ -172,7 +172,7 @@ function TradeSummaryPod({ trades }: { trades: StockTrade[] }) {
   );
 }
 
-function MostTradedPod({ trades }: { trades: StockTrade[] }) {
+function MostTradedPod({ trades }: Readonly<{ trades: StockTrade[] }>) {
   if (!trades.length) return null;
 
   const counts = new Map<string, { label: string; count: number }>();
@@ -204,7 +204,7 @@ function MostTradedPod({ trades }: { trades: StockTrade[] }) {
   );
 }
 
-function SourcesPod({ chamber }: { chamber: 'House' | 'Senate' }) {
+function SourcesPod({ chamber }: Readonly<{ chamber: 'House' | 'Senate' }>) {
   const official =
     chamber === 'Senate'
       ? { href: 'https://efdsearch.senate.gov', label: 'Senate eFD' }
@@ -237,7 +237,7 @@ function SourcesPod({ chamber }: { chamber: 'House' | 'Senate' }) {
   );
 }
 
-export function StockTradesAnswer(props: StockTradesAnswerProps) {
+export function StockTradesAnswer(props: Readonly<StockTradesAnswerProps>) {
   return (
     <>
       <TradeSummaryPod trades={props.trades} />

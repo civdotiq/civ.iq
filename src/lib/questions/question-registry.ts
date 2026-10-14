@@ -167,6 +167,11 @@ export function getTemplate(slug: string): QuestionTemplate | undefined {
   return TEMPLATE_MAP.get(slug);
 }
 
+/** `<title>` pattern: the search phrase when set, otherwise the question. */
+export function getTitlePattern(template: QuestionTemplate): string {
+  return template.titlePattern ?? template.questionPattern;
+}
+
 export function getAllTemplates(): QuestionTemplate[] {
   return [...QUESTION_TEMPLATES];
 }
