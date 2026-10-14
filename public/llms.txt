@@ -161,4 +161,5 @@ All data comes from official government sources:
 
 ## License
 
-MIT. Open source at github.com/civdotiq/civ.iq
+Code: Apache-2.0, open source at github.com/civdotiq/civ.iq. The @civiq/* npm packages are MIT.
+Data: the U.S. government data the API serves is in the public domain.

@@ -72,8 +72,8 @@ describe('OpenAPI Specification', () => {
       expect(spec.info.version).toMatch(/^\d+\.\d+\.\d+$/);
     });
 
-    it('should include MIT license', () => {
-      expect(spec.info.license.name).toBe('MIT');
+    it('should include Apache-2.0 license', () => {
+      expect(spec.info.license.name).toBe('Apache-2.0');
     });
   });
 

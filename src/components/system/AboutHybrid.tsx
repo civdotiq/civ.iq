@@ -9,7 +9,7 @@
  *   commitments grid, ledger-style coverage table). The reference's fake
  *   staff roster and funding ledger are dropped — CIV.IQ doesn't have a
  *   501(c)(3) yet, no audited financials, no staff names to publish.
- *   Real CIV.IQ stats stay (535 reps, 50 states, MIT/CC-BY).
+ *   Real CIV.IQ stats stay (535 reps, 50 states, Apache-2.0 code).
  */
 
 import Link from 'next/link';
@@ -39,9 +39,9 @@ const COMMITMENTS: ReadonlyArray<{
   {
     n: '03',
     title: 'Open by default',
-    body: 'Source code is MIT-licensed on GitHub. Data is reproducible from public APIs. Both are inspectable; neither is locked behind a vendor.',
-    stat: 'MIT',
-    cap: 'License · code + data',
+    body: 'Source code is Apache-2.0 licensed on GitHub. Data is public-domain government data, reproducible from public APIs. Both are inspectable; neither is locked behind a vendor.',
+    stat: 'Apache-2.0',
+    cap: 'License · code',
   },
 ] as const;
 
@@ -580,7 +580,7 @@ export function AboutHybrid() {
           >
             github.com/civdotiq/civ.iq
           </a>
-          {' · MIT-licensed'}.
+          {' · Apache-2.0 licensed'}.
         </CqDisclaimer>
       </div>
     </div>

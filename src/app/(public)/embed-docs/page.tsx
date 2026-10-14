@@ -245,7 +245,7 @@ export default function EmbedDocsPage() {
             <code>{`<a href="https://civdotiq.org" rel="dofollow">Powered by CIV.IQ</a>`}</code>
           </pre>
           <p className="text-xs text-gray-500">
-            All data is sourced from official government APIs. MIT licensed.
+            All data is sourced from official government APIs. Open source (Apache-2.0).
           </p>
         </section>
       </div>

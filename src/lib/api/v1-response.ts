@@ -50,7 +50,7 @@ function buildMeta(source: string): V1Meta {
     apiVersion: 'v1',
     timestamp: new Date().toISOString(),
     source,
-    license: 'MIT',
+    license: 'Public Domain',
     documentation: 'https://civdotiq.org/docs/api',
   };
 }

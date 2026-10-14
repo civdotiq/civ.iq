@@ -198,7 +198,7 @@ const FAQS: FAQ[] = [
   },
   {
     q: 'Can I use this in production?',
-    a: "Yes. CIV.IQ serves real government data with no usage restrictions. MIT licensed. We appreciate attribution but don't require it.",
+    a: "Yes. CIV.IQ serves real government data with no usage restrictions. The data is public domain and the code is Apache-2.0. We appreciate attribution but don't require it.",
   },
   {
     q: 'What if I need photos and social media links?',

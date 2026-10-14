@@ -54,9 +54,9 @@ describe('V1 Response Envelope', () => {
       expect(result.meta.apiVersion).toBe('v1');
     });
 
-    it('should set license to MIT', () => {
+    it('should set license to Public Domain', () => {
       const result = v1Success(null, 'test');
-      expect(result.meta.license).toBe('MIT');
+      expect(result.meta.license).toBe('Public Domain');
     });
 
     it('should set documentation URL', () => {
@@ -187,7 +187,7 @@ describe('V1 Response Envelope', () => {
       const result = v1Error(500, 'test');
 
       expect(result.meta.apiVersion).toBe('v1');
-      expect(result.meta.license).toBe('MIT');
+      expect(result.meta.license).toBe('Public Domain');
       expect(result.meta.documentation).toBe('https://civdotiq.org/docs/api');
       expect(result.meta.timestamp).toBeTruthy();
     });

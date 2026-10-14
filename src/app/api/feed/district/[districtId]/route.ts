@@ -103,7 +103,7 @@ export async function GET(
       updated: entries.length > 0 && entries[0] ? entries[0].updated : now,
       author: { name: 'CIV.IQ', uri: baseUrl },
       icon: `${baseUrl}/favicon.ico`,
-      rights: 'Data sourced from Congress.gov. MIT License.',
+      rights: 'Data sourced from Congress.gov. Public domain.',
     };
 
     const xml = generateAtomFeed(feedConfig, entries);

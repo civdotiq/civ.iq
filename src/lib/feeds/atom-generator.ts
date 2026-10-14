@@ -214,7 +214,7 @@ export function createRepresentativeFeedConfig(
     },
     icon: `${baseUrl}/favicon.ico`,
     logo: `${baseUrl}/images/civiq-logo.png`,
-    rights: 'Data sourced from Congress.gov, FEC, and other government APIs. MIT License.',
+    rights: 'Data sourced from Congress.gov, FEC, and other government APIs. Public domain.',
   };
 }
 
@@ -237,7 +237,7 @@ export function createBillsFeedConfig(): AtomFeedConfig {
     },
     icon: `${baseUrl}/favicon.ico`,
     logo: `${baseUrl}/images/civiq-logo.png`,
-    rights: 'Data sourced from Congress.gov. MIT License.',
+    rights: 'Data sourced from Congress.gov. Public domain.',
   };
 }
 
@@ -260,7 +260,7 @@ export function createFloorFeedConfig(): AtomFeedConfig {
     },
     icon: `${baseUrl}/favicon.ico`,
     logo: `${baseUrl}/images/civiq-logo.png`,
-    rights: 'Data sourced from Congress.gov. MIT License.',
+    rights: 'Data sourced from Congress.gov. Public domain.',
   };
 }
 
@@ -283,7 +283,7 @@ export function createStateBillsFeedConfig(state: string, stateName: string): At
     },
     icon: `${baseUrl}/favicon.ico`,
     logo: `${baseUrl}/images/civiq-logo.png`,
-    rights: 'Data sourced from OpenStates.org. MIT License.',
+    rights: 'Data sourced from OpenStates.org.',
   };
 }
 
@@ -310,6 +310,6 @@ export function createStateLegislatorFeedConfig(
     },
     icon: `${baseUrl}/favicon.ico`,
     logo: `${baseUrl}/images/civiq-logo.png`,
-    rights: 'Data sourced from OpenStates.org. MIT License.',
+    rights: 'Data sourced from OpenStates.org.',
   };
 }

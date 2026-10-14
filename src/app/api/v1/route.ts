@@ -23,7 +23,7 @@ export async function GET(): Promise<NextResponse> {
     description:
       'Open REST API for normalized U.S. government data. No API key required. Rate limited to 60 requests per minute.',
     documentation: 'https://civdotiq.org/docs/api',
-    license: 'MIT',
+    license: 'Public Domain',
     source: 'https://github.com/civdotiq/civ.iq',
     endpoints: {
       representatives: {

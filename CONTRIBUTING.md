@@ -371,7 +371,7 @@ Look for issues labeled `good-first-issue` or `help-wanted` in the GitHub issue 
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT License with attribution requirements. See [LICENSE](LICENSE) for details.
+By contributing, you agree that your contributions will be licensed under the Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE) for details.
 
 ---
 

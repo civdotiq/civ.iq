@@ -201,7 +201,7 @@ const CITATIONS: ReadonlyArray<{ id: string; n: number; cite: string; url: strin
 const PAGE_META: ReadonlyArray<readonly [string, string]> = [
   ['Effective', 'Apr 2026'],
   ['Sources', `${CORE_SOURCES.length} core · 18 supplementary`],
-  ['Code', 'MIT licensed'],
+  ['Code', 'Apache-2.0 licensed'],
   ['Citations', `${CITATIONS.length} peer-reviewed`],
 ] as const;
 

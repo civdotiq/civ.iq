@@ -18,6 +18,13 @@ export const dynamic = 'force-dynamic';
 
 const CHANGELOG = [
   {
+    version: '1.2.2',
+    date: '2026-10-14',
+    changes: [
+      'meta.license now reads "Public Domain" (was "MIT"): it describes the U.S. government data in the response. The CIV.IQ source code is Apache-2.0',
+    ],
+  },
+  {
     version: '1.2.1',
     date: '2026-08-24',
     changes: [

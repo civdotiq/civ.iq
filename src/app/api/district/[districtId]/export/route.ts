@@ -122,7 +122,7 @@ export async function GET(
         exportedAt: new Date().toISOString(),
         version: '1.0',
         sources,
-        license: 'MIT',
+        license: 'Public Domain',
         platform: 'CIV.IQ',
         districtId: districtId.toUpperCase(),
         congress: '119th Congress (2025-2027)',

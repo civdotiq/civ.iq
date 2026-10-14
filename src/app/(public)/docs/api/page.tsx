@@ -258,7 +258,7 @@ export default function ApiDocsPage() {
                     apiVersion: 'v1',
                     timestamp: '2025-01-15T12:00:00.000Z',
                     source: 'congress.gov',
-                    license: 'MIT',
+                    license: 'Public Domain',
                     documentation: 'https://civdotiq.org/docs/api',
                   },
                 },
