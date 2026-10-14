@@ -714,94 +714,6 @@
         }
       }
     },
-    "/intelligence/representative/{bioguideId}/influence-chain": {
-      "get": {
-        "summary": "Influence chain analysis",
-        "description": "Traces lobbying money through contributions, committee assignments, and votes. Shows the path from lobbying organizations to legislative outcomes.",
-        "operationId": "getInfluenceChain",
-        "tags": ["Intelligence"],
-        "parameters": [
-          {
-            "name": "bioguideId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Bioguide ID",
-            "example": "P000197"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Influence chain insight",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IntelligenceInsightResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ApiBadRequest"
-          },
-          "404": {
-            "$ref": "#/components/responses/ApiNotFound"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          },
-          "500": {
-            "$ref": "#/components/responses/ApiInternalError"
-          }
-        }
-      }
-    },
-    "/intelligence/representative/{bioguideId}/temporal": {
-      "get": {
-        "summary": "Temporal voting analysis",
-        "description": "Quarterly voting pattern shifts over time. Shows how a legislator's alignment has changed across quarters.",
-        "operationId": "getTemporalAnalysis",
-        "tags": ["Intelligence"],
-        "parameters": [
-          {
-            "name": "bioguideId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Bioguide ID",
-            "example": "P000197"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Temporal voting insight",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IntelligenceInsightResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ApiBadRequest"
-          },
-          "404": {
-            "$ref": "#/components/responses/ApiNotFound"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          },
-          "500": {
-            "$ref": "#/components/responses/ApiInternalError"
-          }
-        }
-      }
-    },
     "/intelligence/representative/{bioguideId}/finance-jurisdiction": {
       "get": {
         "summary": "Finance-jurisdiction overlap",
@@ -836,75 +748,6 @@
           },
           "404": {
             "$ref": "#/components/responses/ApiNotFound"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          },
-          "500": {
-            "$ref": "#/components/responses/ApiInternalError"
-          }
-        }
-      }
-    },
-    "/intelligence/sector/{sector}/leaderboard": {
-      "get": {
-        "summary": "Sector donation leaderboard",
-        "description": "Top recipients of campaign contributions from a specific industry sector.",
-        "operationId": "getSectorLeaderboard",
-        "tags": ["Intelligence"],
-        "parameters": [
-          {
-            "name": "sector",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Industry sector slug (e.g., defense, health, energy-natural-resources)",
-            "example": "defense"
-          },
-          {
-            "name": "chamber",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": ["house", "senate"]
-            },
-            "description": "Filter by chamber"
-          },
-          {
-            "name": "party",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": ["D", "R", "I"]
-            },
-            "description": "Filter by party"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 20,
-              "maximum": 50
-            },
-            "description": "Number of results"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Sector leaderboard",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SectorLeaderboardResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ApiBadRequest"
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
@@ -1162,56 +1005,6 @@
           },
           "400": {
             "$ref": "#/components/responses/ApiBadRequest"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          },
-          "500": {
-            "$ref": "#/components/responses/ApiInternalError"
-          }
-        }
-      }
-    },
-    "/intelligence/influence-clusters": {
-      "get": {
-        "summary": "Influence clusters",
-        "description": "Legislators grouped by shared funding patterns. Reveals cross-party clusters with similar donor profiles.",
-        "operationId": "getInfluenceClusters",
-        "tags": ["Intelligence"],
-        "parameters": [
-          {
-            "name": "bioguideId",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Optional: get cluster for a specific legislator"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Influence clusters",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "clusters": {
-                      "type": "array",
-                      "items": {
-                        "type": "object"
-                      }
-                    },
-                    "crossPartyHighlights": {
-                      "type": "array",
-                      "items": {
-                        "type": "object"
-                      }
-                    }
-                  }
-                }
-              }
-            }
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
@@ -3449,43 +3242,6 @@
           }
         ]
       },
-      "SectorLeaderboardResponse": {
-        "type": "object",
-        "properties": {
-          "sector": {
-            "type": "string"
-          },
-          "legislators": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "bioguideId": {
-                  "type": "string"
-                },
-                "name": {
-                  "type": "string"
-                },
-                "party": {
-                  "type": "string"
-                },
-                "state": {
-                  "type": "string"
-                },
-                "totalFromSector": {
-                  "type": "number"
-                },
-                "percentOfTotal": {
-                  "type": "number"
-                }
-              }
-            }
-          },
-          "metadata": {
-            "type": "object"
-          }
-        }
-      },
       "MoneyReportResponse": {
         "type": "object",
         "properties": {
@@ -4037,7 +3793,7 @@
     },
     {
       "name": "Intelligence",
-      "description": "Statistical analysis — donor-vote correlation, influence chains, temporal shifts"
+      "description": "Statistical analysis — donor-sector and committee-jurisdiction overlap, money-in-politics reports by address"
     },
     {
       "name": "Search",

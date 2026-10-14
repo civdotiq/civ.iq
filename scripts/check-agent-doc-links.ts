@@ -110,6 +110,19 @@ function readPublic(file: string): string {
   return readFileSync(join(ROOT, 'public', file), 'utf8');
 }
 
+// `- Base URL: https://civdotiq.org/api` is a prefix for building requests, not
+// an endpoint — nothing is served at bare /api.
+const BASE_URL_LINE = /^\s*[-*]\s*Base URL:/;
+
+/** Split an llms*.txt file into its "Base URL:" lines and everything else. */
+function splitBaseUrlLines(text: string): { body: string; baseUrlLines: string } {
+  const lines = text.split('\n');
+  return {
+    body: lines.filter(l => !BASE_URL_LINE.test(l)).join('\n'),
+    baseUrlLines: lines.filter(l => BASE_URL_LINE.test(l)).join('\n'),
+  };
+}
+
 /** Paths and absolute civdotiq.org URLs mentioned in an llms*.txt file. */
 function extractFromLlmsText(text: string): string[] {
   const found: string[] = [];
@@ -273,7 +286,9 @@ async function collectTargets(base: string, includeLivePages: boolean): Promise<
   };
 
   for (const file of ['llms.txt', 'llms-full.txt']) {
-    for (const p of extractFromLlmsText(readPublic(file))) add(p, file);
+    const { body, baseUrlLines } = splitBaseUrlLines(readPublic(file));
+    for (const p of extractFromLlmsText(baseUrlLines)) skip(p, file, 'Base URL, not an endpoint');
+    for (const p of extractFromLlmsText(body)) add(p, file);
   }
   for (const p of extractFromOpenApi()) add(p, 'openapi.json');
   for (const p of extractFromMcpManifest()) add(p, 'mcp.json');

@@ -6,7 +6,7 @@
 
 ## Base URLs
 
-- Production: `https://civdotiq.org/api`
+- Base URL: `https://civdotiq.org/api`
 - Versioned: `https://civdotiq.org/api/v1`
 - OpenAPI 3.0 spec: `https://civdotiq.org/openapi.json`
 
@@ -454,30 +454,6 @@ Education, healthcare, and public health data.
 
 Statistical analysis endpoints. All insights carry: confidence (0-1), dataAsOf, methodology, disclaimer.
 
-### GET /api/intelligence/representative/{bioguideId}/influence-chain
-
-Traces lobbying money through contributions, committee assignments, and votes.
-
-**Response shape:**
-```json
-{
-  "bioguideId": "string",
-  "chains": [
-    {
-      "organization": "string",
-      "lobbyingSpending": 500000,
-      "contributionAmount": 25000,
-      "billId": "string",
-      "billTitle": "string",
-      "vote": "yea",
-      "textSimilarity": 0.72,
-      "chainConfidence": 0.65
-    }
-  ],
-  "totalChainsDetected": 12
-}
-```
-
 ### GET /api/intelligence/representative/{bioguideId}/finance-jurisdiction
 
 Overlap between campaign donors' industry sectors and committee jurisdictions.
@@ -485,10 +461,6 @@ Overlap between campaign donors' industry sectors and committee jurisdictions.
 ### GET /api/intelligence/representative/{bioguideId}/vote-finance
 
 Correlation between campaign donors (by sector) and voting record.
-
-### GET /api/intelligence/representative/{bioguideId}/temporal
-
-Temporal shifts in party-line voting alignment over calendar quarters.
 
 ### GET /api/intelligence/committee/{committeeId}
 
@@ -501,15 +473,6 @@ Stock trades in sectors regulated by the legislator's committees. House members 
 ### GET /api/intelligence/bill/{billId}
 
 Sponsor/cosponsor funding analysis and related lobbying for a bill.
-
-### GET /api/intelligence/sector/{sector}/leaderboard
-
-Legislators ranked by voting alignment with a specific industry sector.
-
-**Parameters:**
-- `sector` (path): industry sector slug, e.g. `defense`, `health`, `finance-insurance-real-estate`
-- `chamber` (query, optional): "house" or "senate"
-- `party` (query, optional): "D", "R", or "I"
 
 ### POST /api/intelligence/address/money-report
 
