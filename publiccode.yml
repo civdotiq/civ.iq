@@ -46,7 +46,7 @@ description:
       - Embeddable widgets and Atom feeds
 
 legal:
-  license: MIT-0
+  license: Apache-2.0
   mainCopyrightOwner: Mark Sandford
   repoOwner: civdotiq
   authorsFile: NOTICE

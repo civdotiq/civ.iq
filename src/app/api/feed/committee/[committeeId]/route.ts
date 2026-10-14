@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -87,7 +87,7 @@ export async function GET(
       updated: entries.length > 0 && entries[0] ? entries[0].updated : now,
       author: { name: 'CIV.IQ', uri: baseUrl },
       icon: `${baseUrl}/favicon.ico`,
-      rights: 'Data sourced from Congress.gov. MIT License.',
+      rights: 'Data sourced from Congress.gov. Public domain.',
     };
 
     const xml = generateAtomFeed(feedConfig, entries);

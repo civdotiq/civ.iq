@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -122,7 +122,7 @@ const ABOUT_MARKDOWN = `# About CIV.IQ
 CIV.IQ is a nonpartisan civic intelligence platform: factual profiles of U.S. representatives built only from official government sources — Congress.gov, the FEC, Senate lobbying disclosures, USASpending, the Federal Register, and the Census Bureau. It never uses mock or fabricated data; where data is unavailable it says so.
 
 - Live site: ${SITE}
-- Open source: https://github.com/civdotiq/civ.iq (MIT)
+- Open source: https://github.com/civdotiq/civ.iq (Apache-2.0)
 - Contact: contact@civdotiq.org · ${SITE}/support
 - For agents and developers: ${SITE}/llms.txt · ${SITE}/developers
 `;

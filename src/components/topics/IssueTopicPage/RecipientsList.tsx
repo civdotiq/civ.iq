@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * "Most-active money recipients" panel — replaces the reference
  * IssueTopic.jsx "Most-active sponsors" panel which would require a

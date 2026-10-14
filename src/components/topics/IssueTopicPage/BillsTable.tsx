@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Bills table for IssueTopic. Note: co-sponsor counts are NOT in the
  * /api/search/policy-area response, so the Co-sp. column from the

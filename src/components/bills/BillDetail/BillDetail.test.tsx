@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2026 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Redesigned bill page: every count and entity must drill into its data —
  * no "and N more" the reader can't open, no names that don't link.

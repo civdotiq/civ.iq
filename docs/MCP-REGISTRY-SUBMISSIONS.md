@@ -64,7 +64,7 @@ PulseMCP. Also auto-indexes popular registries.
 > bills (full-text keyword search), campaign finance by industry,
 > lobbying filings, federal spending, and district profiles
 > (environment, health, safety, economy). Every answer cites its
-> government source. Free, no API key, MIT-licensed.
+> government source. Free, no API key, open source (Apache-2.0).
 
 ## After submitting
 

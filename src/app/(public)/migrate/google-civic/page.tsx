@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Google Civic Info API Migration Guide
  * SEO-optimized page targeting developers searching for replacements
@@ -198,7 +198,7 @@ const FAQS: FAQ[] = [
   },
   {
     q: 'Can I use this in production?',
-    a: "Yes. CIV.IQ serves real government data with no usage restrictions. MIT licensed. We appreciate attribution but don't require it.",
+    a: "Yes. CIV.IQ serves real government data with no usage restrictions. The data is public domain and the code is Apache-2.0. We appreciate attribution but don't require it.",
   },
   {
     q: 'What if I need photos and social media links?',

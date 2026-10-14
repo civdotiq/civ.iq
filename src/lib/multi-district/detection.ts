@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Types for /api/representatives-multi-district (a ZIP-based API kept for
  * outside developers). The client-side ZIP checks that used to live here went

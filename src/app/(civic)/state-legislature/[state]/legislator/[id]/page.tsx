@@ -2,7 +2,7 @@
  * State Legislator Profile Page
  * Displays detailed information about an individual state legislator
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Crawl-safe by construction: the member comes from the committed roster
  * corpus and nothing on the server path calls OpenStates, so Googlebot walking
