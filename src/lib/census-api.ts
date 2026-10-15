@@ -354,8 +354,8 @@ export const getCongressionalDistrictFromAddress = async (
 
     const url = `https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?${params}`;
 
+    // Privacy: never log the address (PRIVACY.md "Address lookups").
     logger.info('Geocoding address via Census API', {
-      address: cleanAddress,
       url: url.replace(/address=[^&]+/, 'address=REDACTED'),
     });
 
@@ -431,7 +431,6 @@ export const getCongressionalDistrictFromAddress = async (
     logger.error('Error geocoding address', {
       component: 'censusApi',
       error: error as Error,
-      metadata: { address },
     });
 
     // Fallback: try to extract ZIP and use ZIP lookup

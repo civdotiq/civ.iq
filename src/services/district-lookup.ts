@@ -388,7 +388,6 @@ class DistrictLookupService {
       };
     } catch (error) {
       logger.error('Error in district address lookup', error as Error, {
-        address,
         service: 'DistrictLookupService',
       });
 
@@ -469,7 +468,6 @@ class DistrictLookupService {
       };
     } catch (error) {
       logger.error('Geocoding failed', error as Error, {
-        address,
         service: 'DistrictLookupService',
       });
       return null;
