@@ -19,7 +19,7 @@
  * `npm run smoke:embedding` to confirm whether the underlying
  * `@huggingface/transformers` WASM pipeline still works in pure Node.
  * (Historical note: 3.8.1 was silently broken on Node 25 — see
- * `docs/EMBEDDING-PIPELINE-BROKEN-2026-04.md`; resolved by 4.1.0 upgrade.)
+ * `docs/archive/EMBEDDING-PIPELINE-BROKEN-2026-04.md`; resolved by 4.1.0 upgrade.)
  */
 
 import { NextResponse } from 'next/server';

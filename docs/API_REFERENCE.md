@@ -21,9 +21,9 @@ CIV.IQ provides a Model Context Protocol server for AI assistant integration.
 
 - **Endpoint**: `POST /api/mcp` (streamable HTTP transport)
 - **Spec**: [modelcontextprotocol.io](https://modelcontextprotocol.io)
-- **15 tools**: representative lookup, bill search, campaign finance, lobbying, spending, intelligence analysis
-- **3 resources**: `civiq://legislators/{bioguideId}`, `civiq://bills/{congress}/{type}/{number}`, `civiq://districts/{stateCode}/{districtNumber}`
-- **3 prompts**: `legislator_accountability`, `bill_impact_analysis`, `policy_comparison`
+- **46 tools** (defined in `src/lib/mcp/tools/`): representative lookup, bill search, campaign finance, lobbying, spending, intelligence analysis
+- **Resources**: `civiq://legislators/{bioguideId}`, `civiq://bills/{congress}/{type}/{number}`, `civiq://districts/{stateCode}/{districtNumber}` (plus `/economy`, `/environment`, `/health`, `/safety`), and three docs: `civiq://docs/api-quickstart`, `civiq://docs/versioning-policy`, `civiq://docs/when-to-use`
+- **6 prompts**: `legislator_accountability`, `bill_impact_analysis`, `policy_comparison`, `district_deep_dive`, `industry_investigation`, `environmental_justice`
 
 ### Connecting
 
@@ -930,10 +930,6 @@ curl "http://localhost:3000/api/state-legislature/MI?chamber=lower"
 curl "http://localhost:3000/api/state-legislature/MI/legislator/ocd-person-dc6ff9c0-f2b1-433d-a96b-292cf05bcb50"
 ```
 
-**Migration Note:**
-
-The deprecated endpoint `/api/state-legislator/[state]/[id]` will redirect to this canonical endpoint with a 301 status.
-
 #### GET /api/state-legislature/[state]/legislator/[id]/bills
 
 Get bills sponsored by a specific state legislator.
@@ -1061,28 +1057,84 @@ curl "http://localhost:3000/api/state-legislators-by-address?street=1200%20N%20T
 
 #### GET /api/search
 
-Advanced search across representatives, bills, and committees.
+Comprehensive representative search with multiple filtering criteria.
 
-**Query Parameters:**
+```http
+GET /api/search?q={searchTerm}&party={party}&chamber={chamber}&state={state}&committee={committee}
+```
 
-- `q` (required): Search query
-- `type` (optional): "representatives" | "bills" | "committees" | "all"
-- `filters` (optional): JSON object with filter criteria
+**Parameters:**
+
+- `q` (optional, alias `query`): Search term for name, state, or keywords
+- `party` (optional): `D`, `R`, `I`, or `all`
+- `chamber` (optional): `House`, `Senate`, or `all`
+- `state` (optional): State abbreviation (e.g., "CA")
+- `committee` (optional): Committee name or keyword
+- `experienceYearsMin` (optional): Minimum years in office
+- `experienceYearsMax` (optional): Maximum years in office
+- `billsIntroducedMin` (optional): Minimum bills and resolutions introduced this Congress
+- `billsIntroducedMax` (optional): Maximum bills and resolutions introduced this Congress
+- `raisedMin` (optional): Minimum FEC receipts this cycle, in whole dollars
+- `raisedMax` (optional): Maximum FEC receipts this cycle, in whole dollars
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Results per page (max: 100, default: 20)
+- `sort` (optional): Sort field (`name`, `state`, `party`, `yearsInOffice`, `billsIntroduced`, `raised`; unknown values sort last)
+- `order` (optional): Sort order (`asc`, `desc`)
 
 **Response:**
 
+`billsIntroduced` counts every bill and resolution (hr, s, hjres, sjres, hres,
+sres, hconres, sconres; amendments excluded) the member sponsored in the current
+Congress — the same definition as the Record Card's "introduced". It comes from
+GovInfo BILLSTATUS bulk data mirrored weekly into
+`data/member-sponsored-counts.json`, so it is as of
+`metadata.billsIntroducedAsOf`. It is `null` when that corpus is unavailable;
+a member with `null` never matches a `billsIntroducedMin`/`Max` filter.
+
+`raisedThisCycle` is the Record Card's "Total raised this cycle": FEC total
+receipts for the current 2-year cycle (`/candidate/{id}/totals/?cycle=N`). The
+FEC returns the 2-year row for senators too, so both chambers cover the same
+window. Senators not on the ballot file semiannually, so `raisedThroughDate`
+(the end of the latest report period) can trail House members by a quarter.
+Values come from an index the `warm-record-money` cron refreshes about every
+14h per member. `null` means no FEC receipts or not yet indexed, never $0, and
+never matches a `raisedMin`/`Max` filter. `metadata.fundraising` reports the
+cycle and how many sitting members the index covers; it is `null` when the
+index could not be read.
+
 ```json
 {
-  "representatives": [...],
-  "bills": [...],
-  "committees": [...],
-  "totalResults": "number",
-  "facets": {
-    "party": {...},
-    "state": {...},
-    "chamber": {...},
-    "committees": {...}
-  }
+  "data": {
+    "results": [
+      {
+        "bioguideId": "P000595",
+        "name": "Gary Peters",
+        "party": "D",
+        "state": "MI",
+        "chamber": "Senate",
+        "yearsInOffice": 12,
+        "billsIntroduced": 58,
+        "raisedThisCycle": 248405.08,
+        "raisedThroughDate": "2026-06-30",
+        "committees": ["Armed Services", "Commerce"]
+      }
+    ],
+    "totalResults": 45,
+    "page": 1,
+    "totalPages": 3,
+    "filters": { "party": "D", "chamber": "Senate" },
+    "metadata": {
+      "dataSource": "congress-legislators",
+      "billsIntroducedAsOf": "2026-09-25T18:21:46.475Z",
+      "fundraising": {
+        "source": "FEC",
+        "cycle": 2026,
+        "membersCovered": 531,
+        "totalMembers": 535
+      }
+    }
+  },
+  "dataQuality": "complete"
 }
 ```
 
@@ -1536,14 +1588,13 @@ Fetch multiple data types for a representative in one request.
 
 - `bioguideId`: Congress bioguide identifier
 
-**Request Body:**
+**Request Body:** `endpoints` accepts `bills`, `votes`, `finance` and `committees`.
 
 ```json
 {
-  "endpoints": ["votes", "bills", "finance", "news", "party-alignment"],
+  "endpoints": ["votes", "bills", "finance", "committees"],
   "options": {
-    "votes": { "limit": 10 },
-    "news": { "days": 7 }
+    "votes": { "limit": 10 }
   }
 }
 ```
@@ -1552,15 +1603,23 @@ Fetch multiple data types for a representative in one request.
 
 ```json
 {
-  "votes": {...},
-  "bills": {...},
-  "finance": {...},
-  "news": {...},
-  "partyAlignment": {...},
-  "timing": {
-    "total": "number",
-    "endpoints": {...}
-  }
+  "success": true,
+  "data": {
+    "votes": {...},
+    "bills": {...},
+    "finance": {...},
+    "committees": {...}
+  },
+  "metadata": {
+    "bioguideId": "string",
+    "requestedEndpoints": ["string"],
+    "successfulEndpoints": ["string"],
+    "failedEndpoints": ["string"],
+    "executionTime": "number",
+    "cached": "boolean",
+    "timestamp": "string"
+  },
+  "errors": { "endpoint": { "code": "string", "message": "string" } }
 }
 ```
 
@@ -2007,11 +2066,15 @@ Intelligence summary for all representatives in a district.
 
 ## Rate Limiting
 
-API endpoints implement intelligent rate limiting:
+Limits are per client IP, per route group, over a sliding one-minute window (`src/middleware.ts`):
 
-- Public endpoints: 100 requests per minute
-- Batch endpoints: 20 requests per minute
-- Search endpoints: 50 requests per minute
+| Route group             | Requests per minute |
+| ----------------------- | ------------------- |
+| `/api/v1/*`             | 60                  |
+| `/api/feed/*`           | 60                  |
+| `/api/district-map*`    | 120                 |
+| `/api/representatives*` | 240                 |
+| All other `/api/*`      | 600                 |
 
 ## Caching
 

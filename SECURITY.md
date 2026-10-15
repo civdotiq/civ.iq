@@ -59,28 +59,33 @@ npm run security:emergency
 
 #### API Security
 
-- **Redis-based rate limiting**: Production-ready rate limiting with Redis persistence (falls back to in-memory if Redis unavailable)
-- **Input validation**: Comprehensive validation against malicious patterns (XSS, SQL injection, path traversal)
-- **CORS configuration**: Properly configured cross-origin resource sharing
-- **Authentication**: Required for sensitive operations
-- **API key validation**: Automated validation of API keys for format and security issues
+- **Rate limiting** (`src/middleware.ts`): per-IP sliding windows per route group, from 60/min (`/api/v1/*`, `/api/feed/*`) to 600/min (other `/api/*`). It runs on Upstash Redis and falls back to in-memory if Redis is unavailable.
+- **Request screening** (`src/middleware.ts`): URLs over 2,048 characters are rejected. So are paths containing traversal (`..`), `<script`, `eval(`, `union … select`, null bytes or `${`, and request bodies over 10 MB.
+- **Input validation**: the AI and bill-summary routes validate their input with `src/lib/validation/input-validator.ts`.
+- **CORS**: open (`Access-Control-Allow-Origin: *`) on the public read endpoints only: `/api/v1/*`, `/api/feed/*`, `/api/activitypub/*` and `/.well-known/*`.
+- **Admin endpoints**: the cache-management routes need a Bearer token, which `verifyAdminAccess` (`src/lib/security/admin-auth.ts`) checks against `ADMIN_API_KEY` with a timing-safe comparison. If the key isn't configured, access is denied. Cron routes check `CRON_SECRET`.
+- **Signed email links**: alert verification and unsubscribe links carry HMAC-SHA256 tokens signed with `ALERT_TOKEN_SECRET` (`src/lib/alerts/token.ts`).
 
 #### Data Protection
 
-- No storage of personally identifiable information (PII)
-- All API keys stored as environment variables
-- Secure communication with government APIs
-- XSS protection through proper sanitization
+- **No accounts.** CIV.IQ keeps no user profiles or passwords.
+- **Address lookup.** The address you enter is sent to the U.S. Census Geocoder to find your district. CIV.IQ does not write it to a database. The district result is cached for up to 7 days under a one-way hash of the address, and the address is never logged (see [PRIVACY.md](PRIVACY.md)).
+- **Email subscriptions.** If you subscribe to the digest or to alerts, CIV.IQ stores your email address in Redis, keyed by its SHA-256 hash. That record is used only to send what you signed up for. Subscriptions are double opt-in, unverified sign-ups expire after 48 hours, and every email carries a signed unsubscribe link.
+- **Secrets.** All API keys are environment variables and are never committed.
+- **Untrusted HTML.** HTML from third parties (Wikipedia bios, bill text) is sanitized with isomorphic-dompurify (`src/utils/sanitize.ts`) before it is rendered.
 
 #### Client-Side Security
 
-- **Content Security Policy (CSP)**: Environment-aware CSP headers
-  - Production: Strict policy without `unsafe-inline` or `unsafe-eval`
-  - Development: Permissive policy for hot reload compatibility
-  - Includes `upgrade-insecure-requests`, `base-uri`, and `form-action` directives
-- **Strict Transport Security (HSTS)**: Max-age 31536000 with includeSubDomains
-- **X-Frame-Options**: DENY to prevent clickjacking
-- **X-Content-Type-Options**: nosniff to prevent MIME sniffing
+Headers are set in `src/middleware.ts`:
+
+- **Content Security Policy (CSP)**, which depends on the environment:
+  - Production allows `'unsafe-inline'` for scripts and styles, because Next.js App Router hydration needs it. It does not allow `'unsafe-eval'`. A nonce-based CSP is a planned hardening step.
+  - Development also allows `'unsafe-eval'` and WebSocket connections for hot reload.
+  - Production sets `frame-ancestors 'none'`, `base-uri 'self'`, `form-action 'self'` and `upgrade-insecure-requests`.
+- **Strict Transport Security (HSTS)**: max-age 31536000 with includeSubDomains.
+- **X-Frame-Options**: DENY, to prevent clickjacking.
+- **X-Content-Type-Options**: nosniff, to prevent MIME sniffing.
+- **Referrer-Policy** and **Permissions-Policy**: `strict-origin-when-cross-origin`. Microphone, camera and payment are disabled; geolocation is limited to this site.
 - **Automated dependency updates**: Dependabot configured for weekly security updates
 
 ### Development Security
@@ -112,7 +117,7 @@ These were missed in the initial Phase 1 hardening pass (commits `7bdcae97`–`7
 
 **Status (2026-04-16 update):** `@huggingface/transformers` upgraded `3.8.1 → 4.1.0` after the deferral was reversed. Closes the `@huggingface/transformers → onnxruntime-node → tar` chain. The two remaining tar chains (npm's own `cacache`; `sqlite3 → node-gyp → make-fetch-happen → cacache`) are still accepted under the same install-time-only reasoning below.
 
-**Why the deferral was reversed:** Phase 2 calibration work uncovered that the `3.8.1` runtime was silently broken on Node 25 — `embedText()` returned `null` in production while every mocked test passed (`docs/EMBEDDING-PIPELINE-BROKEN-2026-04.md`). That made the upgrade an integrity fix, not just a security fix. SECURITY.md previously required a non-mocked pipeline smoke test before upgrading; that test now exists at `scripts/smoke-embedding-pipeline.ts` (`npm run smoke:embedding`, exit 0 on success) and is wired into `validate:all` as a critical task. The script covers all four ML runtime entry points used in production (feature-extraction, zero-shot, NER, onnxruntime-web). The 4.1.0 install was verified by: smoke script PASS for all 4 pipelines (warm 3.8 s / cold 9.9 s, see `docs/EMBEDDING-PIPELINE-BROKEN-2026-04.md` for per-pipeline timings), 86 ML test suite passes (`embedding-classifier`, `embed-text`, `cosine-similarity`, `civic-ner`, `zero-shot-classifier`, `vote-predictor`, `bill-lobbying-similarity`), `npm run validate:all` green.
+**Why the deferral was reversed:** Phase 2 calibration work uncovered that the `3.8.1` runtime was silently broken on Node 25 — `embedText()` returned `null` in production while every mocked test passed (`docs/archive/EMBEDDING-PIPELINE-BROKEN-2026-04.md`). That made the upgrade an integrity fix, not just a security fix. SECURITY.md previously required a non-mocked pipeline smoke test before upgrading; that test now exists at `scripts/smoke-embedding-pipeline.ts` (`npm run smoke:embedding`, exit 0 on success) and is wired into `validate:all` as a critical task. The script covers all four ML runtime entry points used in production (feature-extraction, zero-shot, NER, onnxruntime-web). The 4.1.0 install was verified by: smoke script PASS for all 4 pipelines (warm 3.8 s / cold 9.9 s, see `docs/archive/EMBEDDING-PIPELINE-BROKEN-2026-04.md` for per-pipeline timings), 86 ML test suite passes (`embedding-classifier`, `embed-text`, `cosine-similarity`, `civic-ner`, `zero-shot-classifier`, `vote-predictor`, `bill-lobbying-similarity`), `npm run validate:all` green.
 
 **Advisories** (still applicable to remaining chains): GHSA-83g3-92jg-28cx, GHSA-qffp-2rhf-9h96, GHSA-9ppj-qmqm-q256 — path traversal in `tar` extraction via hardlink, symlink, and drive-relative linkpath attacks. After the upgrade these now reach CIV.IQ through two chains:
 

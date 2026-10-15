@@ -438,5 +438,3 @@ Validation runs on every push: lint, type-check, test, build. Deployment to Verc
 
 - [DATA_NETWORK.md](./DATA_NETWORK.md) — Cross-domain join layer documentation
 - [API_REFERENCE.md](./API_REFERENCE.md) — Complete API endpoint documentation
-- [PHASE_TRACKER.md](./PHASE_TRACKER.md) — Feature completion tracking
-- [ROADMAP-ai-layer.md](../ROADMAP-ai-layer.md) — Intelligence layer roadmap

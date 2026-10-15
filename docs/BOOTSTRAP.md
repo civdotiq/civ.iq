@@ -246,7 +246,7 @@ npm audit --audit-level=high   # security only
 | `diagnose:apis` shows Congress.gov red             | Typo in `CONGRESS_API_KEY` or trailing whitespace | Re-paste the key from the email — no quotes, no spaces.                                 |
 | Build fails with `Cannot find module '@civiq/...'` | `npm ci` didn't link workspace packages           | `rm -rf node_modules && npm ci`.                                                        |
 | `Redis connection refused`                         | You set `REDIS_HOST` but Redis isn't running      | Either start Redis or leave `REDIS_HOST` blank — the app falls back to in-memory cache. |
-| Embeddings fail with "ONNX session error"          | Node version mismatch (pipeline needs 20+)        | `nvm use` and rerun. See `docs/EMBEDDING-PIPELINE-BROKEN-2026-04.md`.                   |
+| Embeddings fail with "ONNX session error"          | Node version mismatch (pipeline needs 20+)        | `nvm use` and rerun. See `docs/archive/EMBEDDING-PIPELINE-BROKEN-2026-04.md`.           |
 | `/api/representative/.../finance` returns empty    | FEC key unset or bioguide→FEC mapping stale       | Check `FEC_API_KEY` is in `.env.local`; rerun `npm run sync:bioguide-fec`.              |
 | Next.js says port 3000 in use                      | Another dev server is running                     | `PORT=3001 npm run dev` or `lsof -i :3000` and kill the offender.                       |
 
