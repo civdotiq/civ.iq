@@ -19,8 +19,7 @@
  *        npx tsx scripts/collect-training-data.ts --with-bill-text
  */
 
-import * as dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
+import './load-env';
 
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
