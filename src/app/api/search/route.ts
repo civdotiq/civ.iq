@@ -3,6 +3,7 @@
  * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
+import { createHash } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   getAllEnhancedRepresentatives,
@@ -235,10 +236,8 @@ async function performAddressSearch(filters: SearchFilters): Promise<SearchOutco
     const geocodeResult = await geocodeAddress(filters.query);
 
     if ('error' in geocodeResult) {
-      logger.warn('Address geocoding failed', {
-        query: filters.query,
-        error: geocodeResult.error,
-      });
+      // Privacy: the query here is an address, so it is never logged.
+      logger.warn('Address geocoding failed', { error: geocodeResult.error });
       return none();
     }
 
@@ -282,7 +281,7 @@ async function performAddressSearch(filters: SearchFilters): Promise<SearchOutco
 
     return outcome(results);
   } catch (error) {
-    logger.error('Address search error', error as Error, { query: filters.query });
+    logger.error('Address search error', error as Error);
     return none();
   }
 }
@@ -315,7 +314,12 @@ function transformToSearchResult(
 async function performSearch(filters: SearchFilters): Promise<SearchOutcome> {
   try {
     const startTime = Date.now();
-    logger.info('Performing representative search', { filters });
+    // Privacy: the query may be a home address, so it is never logged.
+    const { query, ...loggableFilters } = filters;
+    logger.info('Performing representative search', {
+      filters: loggableFilters,
+      hasQuery: Boolean(query),
+    });
 
     // Check if query is an address
     if (filters.query && isAddressQuery(filters.query)) {
@@ -616,7 +620,10 @@ export async function GET(request: NextRequest) {
     // v2: results no longer carry placeholder bills/voting/finance zeros.
     // v3: results carry billsIntroduced from the BILLSTATUS corpus.
     // v4: results carry raisedThisCycle from the fundraising index.
-    const cacheKey = `search:v4:${JSON.stringify(filters)}`;
+    // v5: the filters (which may hold a home address) are hashed, so no
+    //     address is stored in a Redis key or printed by cache logging.
+    const filtersHash = createHash('sha256').update(JSON.stringify(filters)).digest('hex');
+    const cacheKey = `search:v5:${filtersHash}`;
 
     // Read cache directly — and treat zero-result hits as a miss. Zero is
     // almost always an upstream failure (the dataset has ~535 reps), so a
@@ -629,8 +636,9 @@ export async function GET(request: NextRequest) {
       if (searchResults.results && searchResults.results.length > 0) {
         await cache.set(cacheKey, searchResults, 300); // 5 minutes
       } else {
+        // Privacy: the query may be a home address, so log only that one was given.
         logger.warn('Search returned zero results; skipping cache write', {
-          query: filters.query,
+          hasQuery: Boolean(filters.query),
         });
       }
     }

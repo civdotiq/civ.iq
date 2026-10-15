@@ -6,7 +6,7 @@ import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 export const metadata: Metadata = {
   title: 'Privacy policy',
   description:
-    'CIV.IQ privacy policy: no accounts, no tracking, no data sale. What little data the platform handles and how.',
+    'CIV.IQ privacy policy: no accounts, no data sale, and addresses are never logged. What data the site handles and who else sees it.',
   alternates: { canonical: 'https://civdotiq.org/privacy' },
 };
 
@@ -52,127 +52,135 @@ export default function PrivacyPage() {
               Privacy Policy
             </h1>
 
-            <p className="text-sm text-gray-500 mb-grid-4">
-              Last Updated:{' '}
-              {new Date().toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-            </p>
+            <p className="text-sm text-gray-500 mb-grid-4">Last updated: October 15, 2026</p>
 
             <div className="prose prose-gray max-w-none">
               <section className="mb-grid-4">
                 <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
-                  Our Commitment to Privacy
+                  Our commitment
                 </h2>
                 <p className="text-gray-700 leading-relaxed">
-                  CIV.IQ is a free, open-source civic utility. We are committed to protecting your
-                  privacy and minimizing data collection. This policy explains what data we handle
-                  and how.
+                  CIV.IQ is a free, open-source civic utility. It exists to make government data
+                  easy to use, not to collect data about you. This page lists everything the site
+                  handles, and who else sees it.
                 </p>
               </section>
-
               <section className="mb-grid-4">
                 <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
-                  What We DO NOT Collect or Store
+                  What we do not collect
                 </h2>
                 <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2">
                   <li>
-                    <strong>No user accounts</strong> - We do not require registration or login
+                    <strong>No accounts.</strong> There is no registration, login or user profile.
                   </li>
                   <li>
-                    <strong>No stored addresses</strong> - Your address is never saved to any
-                    database
+                    <strong>No address database.</strong> Your address is never saved with anything
+                    that identifies you, and it is never written to our logs.
                   </li>
                   <li>
-                    <strong>No email addresses</strong> - We have no newsletter or mailing list
-                  </li>
-                  <li>
-                    <strong>No selling of data</strong> - We will never sell any information
+                    <strong>No selling or sharing of data</strong> for advertising or any other
+                    purpose.
                   </li>
                 </ul>
               </section>
-
               <section className="mb-grid-4">
                 <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
-                  How Address Lookups Work
+                  Address lookups
                 </h2>
                 <p className="text-gray-700 leading-relaxed mb-grid-2">
-                  When you search by address to find your representatives:
+                  When you enter your address to find your representatives:
                 </p>
                 <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2">
-                  <li>Your address is sent directly to the U.S. Census Bureau Geocoding API</li>
                   <li>
-                    The Census API converts your address to geographic coordinates
-                    (latitude/longitude)
+                    As you type, the address box sends what you have typed to Radar.io to suggest
+                    complete addresses.
                   </li>
-                  <li>We use those coordinates to identify your congressional district</li>
                   <li>
-                    <strong>Your address is never stored by us</strong> - it exists only in memory
-                    during the request
+                    When you search, your address goes to the U.S. Census Bureau Geocoder, which
+                    returns your congressional and state legislative districts.
+                  </li>
+                  <li>
+                    Our servers log at most the city and state of a lookup, never the street
+                    address.
+                  </li>
+                  <li>
+                    To make repeat lookups fast, the district result is cached for up to 7 days
+                    under a one-way hash of the address. The cache is not linked to you, because
+                    CIV.IQ has no accounts or user IDs.
                   </li>
                 </ul>
               </section>
-
               <section className="mb-grid-4">
                 <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
-                  Temporary Server Logs
+                  Site search
+                </h2>
+                <p className="text-gray-700 leading-relaxed">
+                  Text you type into the site search boxes is sent as part of the page address (the
+                  URL). Our hosting provider’s request logs record URLs, so a search you type there
+                  can appear in those logs. To keep a home address out of them, use the address
+                  lookup on the home page instead.
+                </p>
+              </section>
+              <section className="mb-grid-4">
+                <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
+                  Email alerts and the weekly digest
                 </h2>
                 <p className="text-gray-700 leading-relaxed mb-grid-2">
-                  Our hosting provider (Vercel) maintains temporary server logs that may include:
+                  These are the only features that store personal information. If you sign up:
                 </p>
                 <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2 mb-grid-2">
-                  <li>IP addresses</li>
-                  <li>Geographic coordinates from searches (not full addresses)</li>
-                  <li>Timestamps and pages visited</li>
-                  <li>Browser type and device information</li>
+                  <li>
+                    We store your email address, what you chose to follow and when you signed up.
+                    Records are kept in our database (Upstash Redis) under a one-way hash of your
+                    email.
+                  </li>
+                  <li>
+                    You must confirm by email. If you don’t confirm within 48 hours, the sign-up is
+                    deleted.
+                  </li>
+                  <li>
+                    Emails are sent through Resend. Every email has a one-click unsubscribe link,
+                    and unsubscribing deletes your record.
+                  </li>
                 </ul>
                 <p className="text-gray-700 leading-relaxed">
-                  These logs are automatically deleted after 24 hours and are only used for
-                  debugging and security purposes.
+                  We use your email address only to send what you signed up for.
                 </p>
               </section>
-
               <section className="mb-grid-4">
                 <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
-                  Third-Party Services
+                  Server logs and hosting
                 </h2>
                 <p className="text-gray-700 leading-relaxed mb-grid-2">
-                  CIV.IQ retrieves public data from the following government sources:
+                  CIV.IQ runs on Vercel. Like any web host, Vercel keeps request logs for a limited
+                  time. They may include:
                 </p>
                 <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2 mb-grid-2">
-                  <li>Congress.gov API (Library of Congress)</li>
-                  <li>Federal Election Commission (FEC) API</li>
-                  <li>U.S. Census Bureau Geocoding API</li>
-                  <li>OpenStates API (state legislatures)</li>
+                  <li>Your IP address</li>
+                  <li>The pages and URLs requested, and when</li>
+                  <li>Your browser and device type</li>
                 </ul>
-                <p className="text-gray-700 leading-relaxed mb-grid-2">
-                  Your domain registrar (e.g., Cloudflare) may collect analytics data. Please review
-                  their privacy policies for details.
+                <p className="text-gray-700 leading-relaxed">
+                  To prevent abuse, our rate limiter counts requests per IP address. Each count
+                  expires after one minute. We also use Vercel Web Analytics, which counts page
+                  views without cookies.
                 </p>
               </section>
-
               <section className="mb-grid-4">
                 <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
                   Analytics (Google Analytics)
                 </h2>
                 <p className="text-gray-700 leading-relaxed mb-grid-2">
-                  We use <strong>Google Analytics</strong> to understand how visitors use CIV.IQ.
-                  This helps us improve the site and ensure it serves citizens effectively.
-                </p>
-                <p className="text-gray-700 leading-relaxed mb-grid-2">
-                  Google Analytics may collect:
+                  We use <strong>Google Analytics</strong> to see how the site is used in aggregate.
+                  Google Analytics sets cookies and may collect:
                 </p>
                 <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2 mb-grid-2">
-                  <li>Pages you visit and how long you stay</li>
-                  <li>Your approximate geographic location (city/region level)</li>
-                  <li>Device type, browser, and operating system</li>
-                  <li>How you arrived at the site (search engine, direct link, etc.)</li>
+                  <li>The pages you visit and how long you stay</li>
+                  <li>Your approximate location (city or region)</li>
+                  <li>Your device type, browser and operating system</li>
+                  <li>How you arrived at the site</li>
                 </ul>
-                <p className="text-gray-700 leading-relaxed mb-grid-2">
-                  Google Analytics uses cookies to track this information. You can opt out by:
-                </p>
+                <p className="text-gray-700 leading-relaxed mb-grid-2">You can opt out by:</p>
                 <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2 mb-grid-2">
                   <li>
                     Installing the{' '}
@@ -182,11 +190,13 @@ export default function PrivacyPage() {
                       rel="noopener noreferrer"
                       className="text-civiq-blue hover:underline"
                     >
-                      Google Analytics Opt-out Browser Add-on
+                      Google Analytics opt-out browser add-on
                     </a>
                   </li>
-                  <li>Using your browser&apos;s &ldquo;Do Not Track&rdquo; setting</li>
-                  <li>Blocking cookies in your browser settings</li>
+                  <li>
+                    Blocking cookies or analytics scripts in your browser. The site works the same
+                    without them.
+                  </li>
                 </ul>
                 <p className="text-gray-700 leading-relaxed">
                   For more information, see{' '}
@@ -196,61 +206,66 @@ export default function PrivacyPage() {
                     rel="noopener noreferrer"
                     className="text-civiq-blue hover:underline"
                   >
-                    Google&apos;s Privacy Policy
+                    Google’s privacy policy
                   </a>
                   .
                 </p>
               </section>
-
               <section className="mb-grid-4">
                 <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
-                  Data Security
+                  Stored on your device
                 </h2>
                 <p className="text-gray-700 leading-relaxed">
-                  All connections to CIV.IQ use HTTPS encryption. Since we do not store personal
-                  data, there is minimal risk of data breach. However, no internet transmission is
-                  100% secure.
+                  Your browser saves a few things locally: your light or dark theme, your recent
+                  searches, your last-viewed district, and error details if a page breaks. They stay
+                  on your device and are never sent to us. Clearing your browser’s site data removes
+                  them.
                 </p>
               </section>
-
               <section className="mb-grid-4">
                 <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
-                  Your Rights
+                  Data security
                 </h2>
                 <p className="text-gray-700 leading-relaxed">
-                  Since we do not collect or store personal information, there is no data to access,
-                  correct, or delete. If you have concerns about temporary server logs, please
-                  contact us.
+                  All connections to CIV.IQ use HTTPS. The only personal data we keep is subscriber
+                  email addresses. No system is perfectly secure, but there is very little here to
+                  expose.
                 </p>
               </section>
-
               <section className="mb-grid-4">
                 <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
-                  Children&apos;s Privacy
+                  Your rights
                 </h2>
                 <p className="text-gray-700 leading-relaxed">
-                  CIV.IQ is a public civic information utility suitable for all ages. We do not
-                  knowingly collect any personal information from anyone, including children.
+                  If you subscribed to alerts or the digest, the unsubscribe link deletes your
+                  record. You can also email us to have it deleted. For anything else, including
+                  questions about server logs, contact us.
                 </p>
               </section>
-
               <section className="mb-grid-4">
                 <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
-                  Changes to This Policy
+                  Children’s privacy
                 </h2>
                 <p className="text-gray-700 leading-relaxed">
-                  We may update this Privacy Policy from time to time. Changes will be posted on
-                  this page with an updated date. Continued use of CIV.IQ after changes constitutes
-                  acceptance of the updated policy.
+                  CIV.IQ is a public civic information site, suitable for all ages. We do not
+                  knowingly collect personal information from children.
                 </p>
               </section>
-
+              <section className="mb-grid-4">
+                <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
+                  Changes to this policy
+                </h2>
+                <p className="text-gray-700 leading-relaxed">
+                  When this policy changes, we post the new version here and update the date at the
+                  top.
+                </p>
+              </section>
               <section>
                 <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
-                  Contact Us
+                  Contact us
                 </h2>
                 <p className="text-gray-700 leading-relaxed mb-grid-2">
-                  If you have questions about this Privacy Policy, please contact us:
+                  Questions about this policy:
                 </p>
                 <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2">
                   <li>By email: contact@civdotiq.org</li>

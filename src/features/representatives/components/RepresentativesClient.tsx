@@ -335,7 +335,7 @@ export function RepresentativesClient({
         throw new Error(data.error?.message || 'Could not determine district from address');
       }
     } catch (error) {
-      logger.error('Address geocoding failed', error as Error, { address });
+      logger.error('Address geocoding failed', error as Error);
       setSearchState(prev => ({
         ...prev,
         isLoading: false,

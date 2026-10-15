@@ -209,10 +209,8 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
       url = `https://geocoding.geo.census.gov/geocoder/geographies/address?${params}`;
     }
 
-    logger.info('Census Geocoder API request', {
-      address: cleanedAddress,
-      url,
-    });
+    // Privacy: never log the address or the URL that carries it (PRIVACY.md).
+    logger.info('Census Geocoder API request');
 
     const response = await fetch(url, {
       signal: AbortSignal.timeout(10000), // 10 second timeout
@@ -268,7 +266,6 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
     });
 
     logger.info('Census Geocoder success', {
-      address: cleanedAddress,
       matchCount: validMatches.length,
       districts: validMatches
         .map(m => {
