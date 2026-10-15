@@ -561,16 +561,43 @@ function computeAggregateStats(recipients: PACRecipientVoteRecord[]): AggregateS
 
 // ── Peer Comparison ──────────────────────────────────────────────────
 
+/**
+ * One Redis hash per sector, one row per analyzed PAC: committeeId →
+ * {yeaRate, asOf}. PAC IDs have no roster to build exact keys from, and KEYS
+ * is disabled in prod (it silently returned [], so every PAC lacked peers).
+ * Hash fields can't expire, so readers drop rows older than the insight TTL.
+ */
+function peerIndexKey(sector: IndustrySector): string {
+  return `pac-alignment-index:v1:${sector}`;
+}
+
+interface PeerIndexRow {
+  yeaRate: number;
+  asOf: string;
+}
+
 async function cacheAggregateYeaRate(
   committeeId: string,
   sector: IndustrySector,
   yeaRate: number
 ): Promise<void> {
-  const key = `pac-alignment:${sector}:${committeeId}`;
+  const row: PeerIndexRow = { yeaRate, asOf: new Date().toISOString() };
   try {
-    await getRedisCache().set(key, yeaRate, CACHE_TTL);
+    await getRedisCache().hashSet(peerIndexKey(sector), committeeId, JSON.stringify(row));
   } catch {
     // Non-fatal
+  }
+}
+
+function parsePeerRow(raw: string, oldestAllowedMs: number): number | null {
+  try {
+    const row = JSON.parse(raw) as Partial<PeerIndexRow>;
+    if (typeof row.yeaRate !== 'number' || typeof row.asOf !== 'string') return null;
+    const at = Date.parse(row.asOf);
+    if (Number.isNaN(at) || at < oldestAllowedMs) return null;
+    return row.yeaRate;
+  } catch {
+    return null;
   }
 }
 
@@ -579,15 +606,15 @@ async function computePeerComparison(
   sector: IndustrySector,
   aggregateYeaRate: number
 ): Promise<PeerComparison | null> {
-  const pattern = `pac-alignment:${sector}:*`;
-
   try {
-    const keys = await getRedisCache().keys(pattern);
-    const peerKeys = keys.filter(k => !k.endsWith(`:${committeeId}`));
-    if (peerKeys.length < MIN_PEERS) return null;
+    const rows = await getRedisCache().hashGetAll(peerIndexKey(sector));
+    if (!rows) return null;
 
-    const values = await getRedisCache().mget<number>(peerKeys);
-    const peerScores = values.filter((v): v is number => v !== null && typeof v === 'number');
+    const oldestAllowedMs = Date.now() - CACHE_TTL * 1000;
+    const peerScores = Object.entries(rows)
+      .filter(([id]) => id !== committeeId)
+      .map(([, raw]) => parsePeerRow(raw, oldestAllowedMs))
+      .filter((v): v is number => v !== null);
 
     if (peerScores.length < MIN_PEERS) return null;
 
