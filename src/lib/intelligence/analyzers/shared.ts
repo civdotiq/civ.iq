@@ -133,6 +133,32 @@ export async function withTimeout<T>(
   return Promise.race([promise, timeout]);
 }
 
+// ── Peer Score Reads ────────────────────────────────────────────────
+
+/** Upstash MGET batch size for peer reads. */
+const PEER_MGET_CHUNK_SIZE = 100;
+
+/**
+ * Read cached peer scores by exact key. Returns only keys that hold a number,
+ * in input order. Callers build the keys from a known list (the roster, the
+ * sector enum, the state list): a KEYS pattern match is disabled in prod and
+ * silently returns [], which left every peer comparison empty.
+ */
+export async function readPeerScores(
+  keys: string[]
+): Promise<Array<{ key: string; value: number }>> {
+  const found: Array<{ key: string; value: number }> = [];
+  for (let i = 0; i < keys.length; i += PEER_MGET_CHUNK_SIZE) {
+    const chunkKeys = keys.slice(i, i + PEER_MGET_CHUNK_SIZE);
+    const values = await getRedisCache().mget<number>(chunkKeys);
+    chunkKeys.forEach((key, j) => {
+      const value = values[j];
+      if (typeof value === 'number') found.push({ key, value });
+    });
+  }
+  return found;
+}
+
 // ── Bounded Concurrency ─────────────────────────────────────────────
 
 // Extracted to a dependency-free module (this file's import graph includes

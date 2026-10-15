@@ -37,7 +37,9 @@ import {
   classifySignal,
   SourceCollector,
   peerComparisonUnavailable,
+  readPeerScores,
 } from './shared';
+import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { analyzeInfluenceChains } from './influence-chain-analyzer';
 import { analyzeEnforcement } from './enforcement-analyzer';
 import { findRegulationsForBill } from '@/lib/data-sources/federal-register-service';
@@ -416,15 +418,14 @@ async function computePeerComparison(
   chainCount: number
 ): Promise<PeerComparison | null> {
   try {
-    const pattern = 'graph-score:*';
-    const keys = await getRedisCache().keys(pattern);
-    const myKey = graphScoreCacheKey(bioguideId);
-    const peerKeys = keys.filter(k => k !== myKey);
+    const roster = await getAllEnhancedRepresentatives();
+    const chamber = roster.find(r => r.bioguideId === bioguideId)?.chamber;
+    if (!chamber) return null;
 
-    if (peerKeys.length < MIN_PEERS) return null;
-
-    const values = await getRedisCache().mget<number>(peerKeys);
-    const peerScores = values.filter((v): v is number => v !== null && typeof v === 'number');
+    const peerKeys = roster
+      .filter(r => r.chamber === chamber && r.bioguideId !== bioguideId)
+      .map(r => graphScoreCacheKey(r.bioguideId));
+    const peerScores = (await readPeerScores(peerKeys)).map(p => p.value);
 
     if (peerScores.length < MIN_PEERS) return null;
 
