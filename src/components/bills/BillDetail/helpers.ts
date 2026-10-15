@@ -1,4 +1,4 @@
-import type { Bill, BillStatus, BillVote } from '@/types/bill';
+import type { Bill, BillStatus } from '@/types/bill';
 import { formatDateOnly } from '@/lib/utils/date-only';
 import type { CqChipVariant } from '@/components/cq';
 
@@ -46,30 +46,7 @@ export function getStatusBadge(status: BillStatus): StatusBadge {
   }
 }
 
-/** Find the latest decisive floor vote for the bill. */
-/**
- * Clerk questions that decide a measure itself, not an amendment or motion:
- * "On Passage of the Bill", "On Motion to Suspend the Rules and Pass",
- * "On Motion to Concur in the Senate Amendment", "On Agreeing to the
- * Resolution", "On the Concurrent Resolution", "On Agreeing to the Conference Report".
- */
-const DECISIVE_QUESTION =
-  /passage|suspend the rules and (pass|agree)|\bconcur|agreeing to the (resolution|concurrent resolution|joint resolution|conference report)|^on the (concurrent |joint )?resolution\b|conference report/i;
-
-export function findFinalPassageVote(votes: BillVote[]): BillVote | null {
-  if (!votes || votes.length === 0) return null;
-  const decisive = votes.filter(
-    v =>
-      v.votes &&
-      (v.result === 'Passed' || v.result === 'Failed' || v.result === 'Agreed to') &&
-      DECISIVE_QUESTION.test(v.question ?? '')
-  );
-  const pool = decisive.length > 0 ? decisive : votes.filter(v => v.votes);
-  if (pool.length === 0) return null;
-  return pool.reduce((latest, v) =>
-    new Date(v.date).getTime() > new Date(latest.date).getTime() ? v : latest
-  );
-}
+export { findFinalPassageVote } from '@/lib/votes/final-passage-vote';
 
 /** Format an ISO/loose date as "Jun 4, 2021" or fallback. */
 export function formatDate(value?: string | null): string {

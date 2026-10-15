@@ -28,6 +28,7 @@ import { analyzeLobbyingPipeline } from './lobbying-pipeline-analyzer';
 import { computeBillLobbyingSimilarity } from '../embeddings/bill-lobbying-similarity';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
 import { reportedFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
+import { findFinalPassageVote } from '@/lib/votes/final-passage-vote';
 import {
   getCurrentElectionCycle,
   findCommitteeMapping,
@@ -77,7 +78,8 @@ export async function analyzeBillIntelligence(
   billId: string
 ): Promise<BillIntelligenceInsight | null> {
   // v2: v1 sponsor/cosponsor money came from a 250-contribution sample.
-  const cacheKey = `insight:bill_intelligence:v2:${billId}`;
+  // v3: v2 described the oldest roll call, so enacted bills read as "failed".
+  const cacheKey = `insight:bill_intelligence:v3:${billId}`;
 
   // 1. Check cache
   try {
@@ -314,17 +316,19 @@ async function computeAndCache(
 // ── Story Context Extraction ──────────────────────────────────────
 
 function computeStoryContext(bill: Bill, topOrgNames: string[]): StoryContext {
-  // Vote outcome — pick the most recent recorded vote
+  // Vote outcome: the newest decisive vote (passage, concurrence, conference
+  // report). /api/bill returns votes newest-first, so the last element was the
+  // oldest vote, and enacted bills read as "failed" on an early motion.
   let voteOutcome: StoryContext['voteOutcome'];
-  const lastVote = bill.votes.length > 0 ? bill.votes[bill.votes.length - 1] : undefined;
-  if (lastVote?.votes && !lastVote.votesUnavailable) {
+  const outcomeVote = findFinalPassageVote(bill.votes.filter(v => !v.votesUnavailable));
+  if (outcomeVote?.votes) {
     voteOutcome = {
-      chamber: lastVote.chamber,
-      result: lastVote.result,
-      yea: lastVote.votes.yea,
-      nay: lastVote.votes.nay,
-      partyLine: isPartyLineVote(lastVote),
-      bipartisan: isBipartisanVote(lastVote),
+      chamber: outcomeVote.chamber,
+      result: outcomeVote.result,
+      yea: outcomeVote.votes.yea,
+      nay: outcomeVote.votes.nay,
+      partyLine: isPartyLineVote(outcomeVote),
+      bipartisan: isBipartisanVote(outcomeVote),
     };
   }
 
