@@ -17,7 +17,10 @@
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
-import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import {
+  getAllEnhancedRepresentatives,
+  getEnhancedRepresentative,
+} from '@/features/representatives/services/congress.service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { aggregateByIndustrySector, IndustrySector } from '@/lib/fec/industry-taxonomy';
@@ -39,6 +42,7 @@ import {
   classifySignal,
   SourceCollector,
   peerComparisonUnavailable,
+  readPeerScores,
 } from './shared';
 import type { FinanceJurisdictionInsight, PeerComparison } from '../types';
 
@@ -452,13 +456,14 @@ async function computePeerComparison(
 
   // Look up cached peer scores (batch)
   try {
-    const pattern = `overlap-score:${primaryCommittee}:*`;
-    const keys = await getRedisCache().keys(pattern);
-    const peerKeys = keys.filter(k => !k.endsWith(`:${bioguideId}`));
-    if (peerKeys.length < MIN_PEERS) return null;
-
-    const values = await getRedisCache().mget<number>(peerKeys);
-    const peerScores = values.filter((v): v is number => v !== null && typeof v === 'number');
+    // A member has an overlap key only for committees they sit on, so trying
+    // every roster member finds exactly the committee's cached peers.
+    const roster = await getAllEnhancedRepresentatives();
+    const peerIds = roster.map(r => r.bioguideId).filter(id => id !== bioguideId);
+    const found = await readPeerScores(
+      peerIds.map(id => overlapScoreCacheKey(primaryCommittee, id))
+    );
+    const peerScores = found.map(p => p.value);
 
     if (peerScores.length < MIN_PEERS) {
       return null;
@@ -474,8 +479,8 @@ async function computePeerComparison(
 
     if (subjectSectorDonations && subjectSectorDonations.size > 0) {
       // Extract peer bioguide IDs from cache keys (pattern: overlap-score:{committee}:{bioguideId})
-      const peerBioguideIds = peerKeys
-        .map(k => k.split(':').pop())
+      const peerBioguideIds = found
+        .map(p => p.key.split(':').pop())
         .filter((id): id is string => Boolean(id));
 
       const peerSectorData = await collectPeerSectorData(peerBioguideIds);

@@ -29,12 +29,14 @@ import {
   classifySignal,
   SourceCollector,
   peerComparisonUnavailable,
+  readPeerScores,
 } from './shared';
 import { epaEchoService } from '@/lib/data-sources/epa-echo-service';
 import { oshaService } from '@/lib/data-sources/osha-service';
 import { cfpbComplaintService } from '@/lib/data-sources/cfpb-complaint-service';
 import { sicToSector, sectorToSicRanges, resolveCompanyName } from '@civiq/entity-resolution';
-import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
+import { IndustrySector } from '@/lib/fec/industry-taxonomy';
+import { getStatesOnly } from '@/lib/data/us-states';
 import { peerComparison, confidenceScore, MIN_PEERS } from '../statistics/civic-stats';
 import type { EnforcementAction, EnforcementInsight, PeerComparison } from '../types';
 
@@ -510,18 +512,20 @@ async function computePeerComparison(
   scope: EnforcementScope,
   actionCount: number
 ): Promise<PeerComparison | null> {
-  // For now, peer comparison is limited to same-type scopes
-  // This will be populated as more analyses are cached
+  // Peers are other scopes of the same type that have been analyzed and
+  // cached. Organizations are free text with no list to build keys from, so
+  // they get no peer comparison.
+  if (scope.type === 'organization') return null;
+
   try {
-    const pattern = `enforcement-score:${scope.type}:*`;
-    const keys = await getRedisCache().keys(pattern);
+    const peerScopes: EnforcementScope[] =
+      scope.type === 'sector'
+        ? Object.values(IndustrySector).map(sector => ({ type: 'sector', sector }))
+        : getStatesOnly().map(state => ({ type: 'state', state }));
     const myKey = enforcementScoreCacheKey(scope);
-    const peerKeys = keys.filter(k => k !== myKey);
+    const peerKeys = peerScopes.map(enforcementScoreCacheKey).filter(k => k !== myKey);
 
-    if (peerKeys.length < MIN_PEERS) return null;
-
-    const values = await getRedisCache().mget<number>(peerKeys);
-    const peerScores = values.filter((v): v is number => v !== null && typeof v === 'number');
+    const peerScores = (await readPeerScores(peerKeys)).map(p => p.value);
 
     if (peerScores.length < MIN_PEERS) return null;
 
