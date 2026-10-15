@@ -1,5 +1,7 @@
 # Civic Intel Hub: Project Philosophy
 
+> **Historical note (2025-08):** this is the original vision statement, written when the project was called Civic Intel Hub. Some of the ideas here were never built (there is no "CivicRank"). For what CIV.IQ does today, see the [README](../../README.md) and [COVERAGE.md](../COVERAGE.md).
+
 ## Vision
 
 Transform civic data into a navigable web of connections that reveals how power flows in democracy, inspired by PageRank's insight that connections reveal importance and Tim Berners-Lee's vision that information should be universally linked and accessible.
