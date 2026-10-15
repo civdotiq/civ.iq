@@ -11,13 +11,13 @@
  *   npx tsx scripts/warm-intelligence-cache.ts --incremental
  */
 
-import * as dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
+import './load-env';
 
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { analyzeFinanceJurisdiction } from '@/lib/intelligence/analyzers/finance-jurisdiction-analyzer';
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
 import { analyzeInfluenceChains } from '@/lib/intelligence/analyzers/influence-chain-analyzer';
+import { voteFinanceCacheKey } from '@/lib/intelligence/insight-cache-keys';
 import { getRedisCache } from '@/lib/cache/redis-client';
 
 // ── Configuration ────────────────────────────────────────────────────
@@ -77,7 +77,7 @@ async function warmIntelligenceCache() {
         if (isIncremental) {
           const cached = await Promise.all([
             redis.get(`insight:finance_jurisdiction:${bioguideId}`),
-            redis.get(`insight:vote_finance:${bioguideId}`),
+            redis.get(voteFinanceCacheKey(bioguideId)),
             redis.get(`insight:influence_chain:v4:${bioguideId}`),
           ]);
           if (cached.every(c => c !== null)) {

@@ -19,8 +19,7 @@
  * member's cached insight first so every run recomputes.
  */
 
-import * as dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
+import './load-env';
 
 import { ALL_COMMITTEE_MAPPINGS, normalizeCompanyName } from '@civiq/entity-resolution';
 import {
