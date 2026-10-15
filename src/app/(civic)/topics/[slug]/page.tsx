@@ -71,7 +71,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
   const title = `${policyArea} — Federal policy file`;
-  const description = `Bills, regulations, oversight committees, and industry contributions tied to ${policyArea} in the current Congress.`;
+  const description = `Bills, regulations, and oversight committees tied to ${policyArea} in the current Congress.`;
   return {
     title,
     description,

@@ -416,13 +416,11 @@ export function billIntelligenceKeyStats(insight: BillIntelligenceInsight): KeyS
     });
   }
 
-  // Sponsor sector funding
+  // Sponsor sector funding: a share of itemized individual donations, not of
+  // total raised, so the label doesn't pair it with the receipts total.
   if (insight.sponsorAnalysis) {
-    const totalCtx = insight.sponsorFundingContext
-      ? ` of ${formatCompact(insight.sponsorFundingContext.totalRaised)}`
-      : '';
     candidates.push({
-      label: `Sponsor industry funding${totalCtx}`,
+      label: 'Sponsor itemized donations from related industries',
       value: `${insight.sponsorAnalysis.sectorDonationPercentage.toFixed(1)}%`,
       priority: 8,
     });

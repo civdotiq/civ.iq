@@ -714,6 +714,50 @@
         }
       }
     },
+    "/intelligence/representative/{bioguideId}/influence-chain": {
+      "get": {
+        "summary": "Influence chain analysis",
+        "description": "Association chains for one legislator: an organization lobbied the member's committees, people who list that organization as their employer gave to the member's campaign (FEC itemized contributions aggregated by employer), and the member voted on bills in the sectors the organization lobbied on. Describes patterns, not causation. 404 when no chain reaches 0.5 confidence, for example a member with no committee seats.",
+        "operationId": "getInfluenceChain",
+        "tags": ["Intelligence"],
+        "parameters": [
+          {
+            "name": "bioguideId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Bioguide ID",
+            "example": "C001035"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Influence chain insight",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntelligenceInsightResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/ApiNotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
+          }
+        }
+      }
+    },
     "/intelligence/representative/{bioguideId}/finance-jurisdiction": {
       "get": {
         "summary": "Finance-jurisdiction overlap",
@@ -754,6 +798,136 @@
           },
           "500": {
             "$ref": "#/components/responses/ApiInternalError"
+          }
+        }
+      }
+    },
+    "/intelligence/sector/{sector}/leaderboard": {
+      "get": {
+        "summary": "House yes-vote rates on a sector's bills",
+        "description": "Each House member's yes-vote rate on bills classified to an industry sector: yea votes / (yea + nay votes) on recent House roll calls, as a 0-1 fraction. Members with fewer than 10 such votes are excluded and counted in stats.excludedMembers. Entries are ordered by state, then name; there is no rank and no dollar figure. stats.mean is the House average to compare against. House only: vote-finance data is not computed for senators, so chamber=senate returns 404. Rates describe voting patterns only, not support for or opposition to the industry.",
+        "operationId": "getSectorLeaderboard",
+        "tags": ["Intelligence"],
+        "parameters": [
+          {
+            "name": "sector",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "agribusiness",
+                "communications-electronics",
+                "construction",
+                "defense",
+                "energy-natural-resources",
+                "finance-insurance-real-estate",
+                "health",
+                "lawyers-lobbyists",
+                "transportation",
+                "misc-business",
+                "labor",
+                "ideology-single-issue",
+                "other"
+              ]
+            },
+            "description": "Industry sector slug",
+            "example": "defense"
+          },
+          {
+            "name": "chamber",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["house", "senate"]
+            },
+            "description": "Filter by chamber. Only House members have data."
+          },
+          {
+            "name": "party",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["D", "R", "I"]
+            },
+            "description": "Filter by party"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Optional cap on the number of entries. Omit to get every included member."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Per-member sector yes-vote rates with the House baseline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SectorLeaderboardResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/ApiNotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
+          }
+        }
+      }
+    },
+    "/intelligence/representative/{bioguideId}/temporal": {
+      "get": {
+        "summary": "Temporal voting analysis",
+        "description": "Party-line voting alignment per calendar quarter of the current Congress, computed from every roll call in the chamber. Flags quarters that move more than 10 percentage points from the trailing 4-quarter average, and compares overall alignment with other members of the same party in the chamber. Requires at least 4 quarters of votes; independents and members of an incomplete roll-call corpus return 404.",
+        "operationId": "getTemporalAnalysis",
+        "tags": ["Intelligence"],
+        "parameters": [
+          {
+            "name": "bioguideId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Bioguide ID",
+            "example": "P000197"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Temporal voting insight",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemporalVoteInsightResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/ApiNotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ApiServiceUnavailable"
           }
         }
       }
@@ -3289,6 +3463,261 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/IntelligenceMetadata"
+          }
+        ]
+      },
+      "SectorLeaderboardResponse": {
+        "type": "object",
+        "required": [
+          "sector",
+          "chamber",
+          "coverageNote",
+          "entries",
+          "stats",
+          "dataAvailability",
+          "generatedAt",
+          "dataAsOf"
+        ],
+        "properties": {
+          "sector": {
+            "type": "string",
+            "description": "Sector name, e.g. Defense"
+          },
+          "sectorLabel": {
+            "type": "string"
+          },
+          "chamber": {
+            "type": "string",
+            "enum": ["house", "senate", "all"]
+          },
+          "party": {
+            "type": "string",
+            "nullable": true
+          },
+          "coverageNote": {
+            "type": "string",
+            "description": "Plain-language scope caveat (House only; how the rate is computed)"
+          },
+          "entries": {
+            "type": "array",
+            "description": "Every included member, ordered by state then name. Not a ranking.",
+            "items": {
+              "type": "object",
+              "required": [
+                "bioguideId",
+                "name",
+                "party",
+                "state",
+                "chamber",
+                "sectorAlignmentScore",
+                "billsVotedOn"
+              ],
+              "properties": {
+                "bioguideId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "party": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "chamber": {
+                  "type": "string",
+                  "enum": ["House", "Senate"]
+                },
+                "sectorAlignmentScore": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Yea votes / (yea + nay votes) on bills classified to this sector"
+                },
+                "billsVotedOn": {
+                  "type": "integer",
+                  "description": "Yea + nay votes counted for this sector"
+                }
+              }
+            }
+          },
+          "stats": {
+            "type": "object",
+            "description": "Peer baseline across all included members (not just returned entries)",
+            "properties": {
+              "mean": {
+                "type": "number",
+                "description": "House average rate, 0-1"
+              },
+              "median": {
+                "type": "number"
+              },
+              "standardDeviation": {
+                "type": "number"
+              },
+              "includedMembers": {
+                "type": "integer"
+              },
+              "excludedMembers": {
+                "type": "integer",
+                "description": "Members with fewer than 10 yea/nay votes on this sector's bills"
+              }
+            }
+          },
+          "dataAvailability": {
+            "type": "object",
+            "properties": {
+              "cachedInsights": {
+                "type": "integer"
+              },
+              "minimumRequired": {
+                "type": "integer"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["sufficient", "partial", "empty"]
+              }
+            }
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dataAsOf": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "TemporalVoteInsightResponse": {
+        "description": "Quarterly party-alignment insight",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/IntelligenceMetadata"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "bioguideId": {
+                "type": "string"
+              },
+              "quarters": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "quarter": {
+                      "type": "string",
+                      "example": "2025-Q1"
+                    },
+                    "alignmentScore": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Share of Yea/Nay votes cast with the party majority"
+                    },
+                    "voteCount": {
+                      "type": "integer"
+                    },
+                    "rollingAverage": {
+                      "type": "number",
+                      "nullable": true,
+                      "description": "Average of the 4 prior quarters; null for the first 4"
+                    }
+                  }
+                }
+              },
+              "shifts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "quarter": {
+                      "type": "string"
+                    },
+                    "magnitude": {
+                      "type": "number",
+                      "description": "Percentage points from the trailing average"
+                    },
+                    "direction": {
+                      "type": "string",
+                      "enum": ["increase", "decrease"]
+                    },
+                    "context": {
+                      "type": "object",
+                      "properties": {
+                        "newCommittees": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "largeContributions": {
+                          "type": "integer"
+                        },
+                        "electionProximity": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "overallTrend": {
+                "type": "string",
+                "enum": ["stable", "increasing", "decreasing", "volatile"]
+              },
+              "peerComparison": {
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "value": {
+                    "type": "number"
+                  },
+                  "peerAverage": {
+                    "type": "number"
+                  },
+                  "peerCount": {
+                    "type": "integer"
+                  },
+                  "peerGroupLabel": {
+                    "type": "string",
+                    "example": "other House Democrats"
+                  },
+                  "percentileRank": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "peerComparisonUnavailableReason": {
+                "type": "string"
+              },
+              "narrative": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["complete"]
+              }
+            },
+            "required": [
+              "bioguideId",
+              "quarters",
+              "shifts",
+              "overallTrend",
+              "peerComparison",
+              "narrative"
+            ]
           }
         ]
       },

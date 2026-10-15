@@ -56,6 +56,7 @@ export type {
   // Intelligence
   IntelligenceInsight,
   SectorLeaderboardResponse,
+  SectorLeaderboardEntry,
   MoneyReportResponse,
   AddressRepresentativesResponse,
   InfluenceClustersResponse,

@@ -413,9 +413,15 @@ export interface BillIntelligenceInsight extends InsightBase {
     bioguideId: string;
     name: string;
     party: string;
-    /** What % of sponsor's donations come from sectors this bill affects. */
+    /**
+     * What % of the sponsor's itemized individual donations (FEC by-employer
+     * and by-occupation totals, top 100 rows each) come from people working
+     * in sectors this bill affects. Not a share of total raised.
+     */
     sectorDonationPercentage: number;
+    /** Dollars of those itemized donations attributed to the bill's sectors. */
     sectorDonationAmount: number;
+    /** All itemized individual donations FEC groups by employer/occupation. */
     totalDonations: number;
   } | null;
   cosponsorSummary: {
@@ -731,16 +737,20 @@ export interface MoneyReportCardInsight extends InsightBase {
 
 // ── Sector Leaderboard ──────────────────────────────────────────────
 
+/**
+ * One member's yes-vote rate on bills classified to a sector. No dollar
+ * figure and no rank: the only per-member money number available is a
+ * 250-contribution sample, and rate gaps are too small to rank on.
+ */
 export interface SectorLeaderboardEntry {
   bioguideId: string;
   name: string;
   party: string;
   state: string;
   chamber: 'House' | 'Senate';
+  /** Yea votes / (yea + nay votes) on sector-classified bills, 0-1. */
   sectorAlignmentScore: number;
-  sectorDonationAmount: number;
   billsVotedOn: number;
-  rank: number;
 }
 
 export interface SectorLeaderboardResponse {
@@ -748,6 +758,9 @@ export interface SectorLeaderboardResponse {
   sectorLabel: string;
   chamber: 'house' | 'senate' | 'all';
   party: string | null;
+  /** Plain-language coverage caveat (House only; how the rate is computed). */
+  coverageNote: string;
+  /** Ordered by state, then name. */
   entries: SectorLeaderboardEntry[];
   stats: {
     mean: number;

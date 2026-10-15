@@ -73,6 +73,8 @@ const PATTERN_OVERRIDES: Record<string, string> = {
     '/api/intelligence/representative/T000481/finance-jurisdiction',
   '/api/intelligence/representative/{bioguideId}/stock-trades':
     '/api/intelligence/representative/G000583/stock-trades',
+  '/api/intelligence/representative/{bioguideId}/influence-chain':
+    '/api/intelligence/representative/C001035/influence-chain',
 };
 
 // Required query params with no usable example in the OpenAPI spec.

@@ -1918,14 +1918,14 @@ Sponsor/cosponsor funding analysis and related lobbying activity for a bill.
     "bioguideId": "string",
     "name": "string",
     "party": "string",
-    "sectorDonationPercentage": "number (0-1)",
-    "sectorDonationAmount": "number",
-    "totalDonations": "number"
+    "sectorDonationPercentage": "number (0-100): share of totalDonations from the bill's sectors",
+    "sectorDonationAmount": "number: itemized individual donations from people in the bill's sectors",
+    "totalDonations": "number: itemized individual donations FEC groups by employer/occupation (top 100 rows each), not total raised"
   },
   "cosponsorSummary": {
     "totalCosponsors": "number",
     "analyzedCosponsors": "number",
-    "avgSectorDonationPercentage": "number (0-1)"
+    "avgSectorDonationPercentage": "number (0-100)"
   },
   "relatedLobbyingSpending": "number",
   "relatedLobbyingOrgs": "number",

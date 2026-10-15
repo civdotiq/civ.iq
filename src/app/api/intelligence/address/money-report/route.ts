@@ -281,7 +281,8 @@ function computeAggregates(reps: RepMoneyMetrics[]): DistrictAggregates {
  */
 async function buildMoneyReport(resolved: ResolvedDistrict): Promise<MoneyReportBuild> {
   const { state, district, multiDistrict } = resolved;
-  const cacheKey = `insight:money_report:${state}:${district}`;
+  // v2: unversioned entries embed vote-finance results with doubled vote counts.
+  const cacheKey = `insight:money_report:v2:${state}:${district}`;
   const cache = getRedisCache();
 
   // Check cache

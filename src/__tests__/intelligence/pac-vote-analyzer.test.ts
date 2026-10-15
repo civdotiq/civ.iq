@@ -144,12 +144,12 @@ describe('analyzePACVotes', () => {
     expect(mockGetCommitteeInfo).not.toHaveBeenCalled();
   });
 
-  it('fetches both sessions of 119th Congress for each recipient', async () => {
+  it('fetches each recipient once across the whole 119th Congress', async () => {
     await analyzePACVotes('C00123456');
 
-    // Each recipient should get votes from both sessions
-    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith(expect.any(String), 119, 1, 200);
-    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith(expect.any(String), 119, 2, 200);
+    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith(expect.any(String), 119, undefined, 200);
+    expect(mockGetHouseMemberVotes).not.toHaveBeenCalledWith(expect.any(String), 119, 1, 200);
+    expect(mockGetHouseMemberVotes).not.toHaveBeenCalledWith(expect.any(String), 119, 2, 200);
   });
 
   it('returns null when PAC cannot be classified', async () => {

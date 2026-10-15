@@ -78,7 +78,7 @@ async function warmIntelligenceCache() {
           const cached = await Promise.all([
             redis.get(`insight:finance_jurisdiction:${bioguideId}`),
             redis.get(`insight:vote_finance:${bioguideId}`),
-            redis.get(`insight:influence_chain:v2:${bioguideId}`),
+            redis.get(`insight:influence_chain:v4:${bioguideId}`),
           ]);
           if (cached.every(c => c !== null)) {
             skipped++;

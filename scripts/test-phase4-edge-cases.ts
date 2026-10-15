@@ -1,26 +1,25 @@
+#!/usr/bin/env tsx
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
-#!/usr/bin/env tsx
-
 /*
  * CIV.IQ - Civic Information Hub
  * Phase 4: Edge Case Testing
- * 
- * Comprehensive test suite for edge cases including territories, DC, 
+ *
+ * Comprehensive test suite for edge cases including territories, DC,
  * multi-district ZIPs, and other special situations.
  */
 
-import { 
+import {
   getCongressionalDistrictForZip,
   getPrimaryCongressionalDistrictForZip,
   getAllCongressionalDistrictsForZip,
   isZipMultiDistrict,
   getStateFromZip,
   getZipLookupMetrics,
-  resetZipLookupMetrics
+  resetZipLookupMetrics,
 } from '../src/lib/data/zip-district-mapping';
 
 interface TestCase {
@@ -49,14 +48,14 @@ class Phase4EdgeCaseTester {
       expectedState: 'DC',
       expectedDistrict: '00',
       category: 'dc',
-      description: 'Washington D.C. - Non-voting delegate'
+      description: 'Washington D.C. - Non-voting delegate',
     },
     {
       zipCode: '20500',
       expectedState: 'DC',
       expectedDistrict: '00',
       category: 'dc',
-      description: 'White House ZIP code'
+      description: 'White House ZIP code',
     },
 
     // U.S. Territories
@@ -65,21 +64,21 @@ class Phase4EdgeCaseTester {
       expectedState: 'PR',
       expectedDistrict: '00',
       category: 'territory',
-      description: 'Puerto Rico - Non-voting delegate'
+      description: 'Puerto Rico - Non-voting delegate',
     },
     {
       zipCode: '96910',
       expectedState: 'GU',
       expectedDistrict: '00',
       category: 'territory',
-      description: 'Guam - Non-voting delegate'
+      description: 'Guam - Non-voting delegate',
     },
     {
       zipCode: '00801',
       expectedState: 'VI',
       expectedDistrict: '00',
       category: 'territory',
-      description: 'U.S. Virgin Islands - Non-voting delegate'
+      description: 'U.S. Virgin Islands - Non-voting delegate',
     },
 
     // At-Large Districts
@@ -88,42 +87,42 @@ class Phase4EdgeCaseTester {
       expectedState: 'AK',
       expectedDistrict: '00',
       category: 'at-large',
-      description: 'Alaska - At-large district'
+      description: 'Alaska - At-large district',
     },
     {
       zipCode: '82001',
       expectedState: 'WY',
       expectedDistrict: '00',
       category: 'at-large',
-      description: 'Wyoming - At-large district'
+      description: 'Wyoming - At-large district',
     },
     {
       zipCode: '05401',
       expectedState: 'VT',
       expectedDistrict: '00',
       category: 'at-large',
-      description: 'Vermont - At-large district'
+      description: 'Vermont - At-large district',
     },
     {
       zipCode: '19901',
       expectedState: 'DE',
       expectedDistrict: '00',
       category: 'at-large',
-      description: 'Delaware - At-large district'
+      description: 'Delaware - At-large district',
     },
     {
       zipCode: '58001',
       expectedState: 'ND',
       expectedDistrict: '00',
       category: 'at-large',
-      description: 'North Dakota - At-large district'
+      description: 'North Dakota - At-large district',
     },
     {
       zipCode: '57001',
       expectedState: 'SD',
       expectedDistrict: '00',
       category: 'at-large',
-      description: 'South Dakota - At-large district'
+      description: 'South Dakota - At-large district',
     },
 
     // Multi-District ZIP Codes (known from Phase 3 data)
@@ -133,14 +132,14 @@ class Phase4EdgeCaseTester {
       expectedDistrict: '01',
       category: 'multi-district',
       description: 'Massachusetts - Multi-district ZIP',
-      shouldBeMultiDistrict: true
+      shouldBeMultiDistrict: true,
     },
     {
       zipCode: '10001',
       expectedState: 'NY',
       expectedDistrict: '12',
       category: 'multi-district',
-      description: 'Manhattan - Potential multi-district ZIP'
+      description: 'Manhattan - Potential multi-district ZIP',
     },
 
     // Large Urban Areas
@@ -149,21 +148,21 @@ class Phase4EdgeCaseTester {
       expectedState: 'CA',
       expectedDistrict: '30',
       category: 'urban',
-      description: 'Beverly Hills - High-profile ZIP'
+      description: 'Beverly Hills - High-profile ZIP',
     },
     {
       zipCode: '10012',
       expectedState: 'NY',
       expectedDistrict: '10',
       category: 'urban',
-      description: 'SoHo, Manhattan - Dense urban area'
+      description: 'SoHo, Manhattan - Dense urban area',
     },
     {
       zipCode: '60601',
       expectedState: 'IL',
       expectedDistrict: '07',
       category: 'urban',
-      description: 'Chicago Loop - Urban center'
+      description: 'Chicago Loop - Urban center',
     },
 
     // Rural Areas
@@ -172,7 +171,7 @@ class Phase4EdgeCaseTester {
       expectedState: 'MT',
       expectedDistrict: '01',
       category: 'rural',
-      description: 'Montana - Rural district'
+      description: 'Montana - Rural district',
     },
 
     // Edge Cases
@@ -181,15 +180,15 @@ class Phase4EdgeCaseTester {
       expectedState: 'NY',
       expectedDistrict: '20',
       category: 'edge-case',
-      description: 'Schenectady, NY - Sequential ZIP'
+      description: 'Schenectady, NY - Sequential ZIP',
     },
     {
       zipCode: '48221',
       expectedState: 'MI',
       expectedDistrict: '12',
       category: 'urban',
-      description: 'Detroit - Original test ZIP'
-    }
+      description: 'Detroit - Original test ZIP',
+    },
   ];
 
   private results: TestResult[] = [];
@@ -215,7 +214,7 @@ class Phase4EdgeCaseTester {
 
   private async runSingleTest(testCase: TestCase): Promise<void> {
     const startTime = performance.now();
-    
+
     try {
       // Get basic district info
       const primaryDistrict = getPrimaryCongressionalDistrictForZip(testCase.zipCode);
@@ -230,7 +229,7 @@ class Phase4EdgeCaseTester {
         primaryDistrict,
         allDistricts,
         isMultiDistrict,
-        stateFromZip
+        stateFromZip,
       });
 
       this.results.push({
@@ -241,17 +240,16 @@ class Phase4EdgeCaseTester {
           allDistricts,
           isMultiDistrict,
           stateFromZip,
-          districtCount: allDistricts.length
+          districtCount: allDistricts.length,
         },
-        timing
+        timing,
       });
-
     } catch (error) {
       this.results.push({
         testCase,
         passed: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-        timing: performance.now() - startTime
+        timing: performance.now() - startTime,
       });
     }
   }
@@ -288,31 +286,127 @@ class Phase4EdgeCaseTester {
 
   private runComprehensiveAnalysis(): void {
     console.log('\n🔍 Running Comprehensive Analysis...');
-    
+
     // Test all 50 states + territories
     const stateTests = [
-      'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-      'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-      'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-      'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-      'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
-      'DC', 'GU', 'PR', 'VI'
+      'AL',
+      'AK',
+      'AZ',
+      'AR',
+      'CA',
+      'CO',
+      'CT',
+      'DE',
+      'FL',
+      'GA',
+      'HI',
+      'ID',
+      'IL',
+      'IN',
+      'IA',
+      'KS',
+      'KY',
+      'LA',
+      'ME',
+      'MD',
+      'MA',
+      'MI',
+      'MN',
+      'MS',
+      'MO',
+      'MT',
+      'NE',
+      'NV',
+      'NH',
+      'NJ',
+      'NM',
+      'NY',
+      'NC',
+      'ND',
+      'OH',
+      'OK',
+      'OR',
+      'PA',
+      'RI',
+      'SC',
+      'SD',
+      'TN',
+      'TX',
+      'UT',
+      'VT',
+      'VA',
+      'WA',
+      'WV',
+      'WI',
+      'WY',
+      'DC',
+      'GU',
+      'PR',
+      'VI',
     ];
 
     const stateCoverage = new Map<string, number>();
     const sampleZips = [
-      '35004', '99501', '85001', '72201', '90210', '80201', '06101', '19901', '32301', '30301',
-      '96801', '83701', '60601', '46201', '50301', '67201', '40601', '70801', '04101', '21201',
-      '02101', '48201', '55101', '39201', '63101', '59718', '68501', '89501', '03301', '08601',
-      '87501', '10001', '27601', '58501', '43201', '73301', '97201', '19101', '02901', '29201',
-      '57501', '37201', '75201', '84101', '05601', '23219', '98101', '25301', '53201', '82001',
-      '20001', '96910', '00601', '00801'
+      '35004',
+      '99501',
+      '85001',
+      '72201',
+      '90210',
+      '80201',
+      '06101',
+      '19901',
+      '32301',
+      '30301',
+      '96801',
+      '83701',
+      '60601',
+      '46201',
+      '50301',
+      '67201',
+      '40601',
+      '70801',
+      '04101',
+      '21201',
+      '02101',
+      '48201',
+      '55101',
+      '39201',
+      '63101',
+      '59718',
+      '68501',
+      '89501',
+      '03301',
+      '08601',
+      '87501',
+      '10001',
+      '27601',
+      '58501',
+      '43201',
+      '73301',
+      '97201',
+      '19101',
+      '02901',
+      '29201',
+      '57501',
+      '37201',
+      '75201',
+      '84101',
+      '05601',
+      '23219',
+      '98101',
+      '25301',
+      '53201',
+      '82001',
+      '20001',
+      '96910',
+      '00601',
+      '00801',
     ];
 
     for (let i = 0; i < sampleZips.length && i < stateTests.length; i++) {
       const zip = sampleZips[i];
       const expectedState = stateTests[i];
-      
+
       const state = getStateFromZip(zip);
       if (state === expectedState) {
         stateCoverage.set(expectedState, (stateCoverage.get(expectedState) || 0) + 1);
@@ -326,15 +420,15 @@ class Phase4EdgeCaseTester {
         expectedState: 'ALL',
         expectedDistrict: 'ALL',
         category: 'edge-case',
-        description: `State coverage test: ${stateCoverage.size}/54 states/territories`
+        description: `State coverage test: ${stateCoverage.size}/54 states/territories`,
       },
       passed: stateCoverage.size >= 50,
       actualResult: {
         statesCovered: stateCoverage.size,
         totalStates: 54,
-        coveragePercentage: (stateCoverage.size / 54) * 100
+        coveragePercentage: (stateCoverage.size / 54) * 100,
       },
-      timing: 0
+      timing: 0,
     });
   }
 
@@ -358,22 +452,28 @@ class Phase4EdgeCaseTester {
     // Print results by category
     categories.forEach((results, category) => {
       console.log(`\n📁 ${category.toUpperCase().replace('-', ' ')}:`);
-      
+
       results.forEach(result => {
         const status = result.passed ? '✅ PASS' : '❌ FAIL';
         const timing = result.timing.toFixed(2);
-        
-        console.log(`  ${status} ${result.testCase.zipCode} - ${result.testCase.description} (${timing}ms)`);
-        
+
+        console.log(
+          `  ${status} ${result.testCase.zipCode} - ${result.testCase.description} (${timing}ms)`
+        );
+
         if (!result.passed) {
           if (result.error) {
             console.log(`    Error: ${result.error}`);
           } else if (result.actualResult) {
-            console.log(`    Expected: ${result.testCase.expectedState}-${result.testCase.expectedDistrict}`);
-            console.log(`    Actual: ${result.actualResult.primaryDistrict?.state || 'N/A'}-${result.actualResult.primaryDistrict?.district || 'N/A'}`);
+            console.log(
+              `    Expected: ${result.testCase.expectedState}-${result.testCase.expectedDistrict}`
+            );
+            console.log(
+              `    Actual: ${result.actualResult.primaryDistrict?.state || 'N/A'}-${result.actualResult.primaryDistrict?.district || 'N/A'}`
+            );
           }
         }
-        
+
         totalTests++;
         if (result.passed) passedTests++;
       });
@@ -381,8 +481,10 @@ class Phase4EdgeCaseTester {
 
     // Summary
     console.log('='.repeat(60));
-    console.log(`📊 SUMMARY: ${passedTests}/${totalTests} tests passed (${((passedTests/totalTests)*100).toFixed(1)}%)`);
-    
+    console.log(
+      `📊 SUMMARY: ${passedTests}/${totalTests} tests passed (${((passedTests / totalTests) * 100).toFixed(1)}%)`
+    );
+
     // Edge case statistics
     const edgeCaseStats = {
       territories: this.results.filter(r => r.testCase.category === 'territory').length,
@@ -390,7 +492,7 @@ class Phase4EdgeCaseTester {
       atLarge: this.results.filter(r => r.testCase.category === 'at-large').length,
       multiDistrict: this.results.filter(r => r.testCase.category === 'multi-district').length,
       rural: this.results.filter(r => r.testCase.category === 'rural').length,
-      urban: this.results.filter(r => r.testCase.category === 'urban').length
+      urban: this.results.filter(r => r.testCase.category === 'urban').length,
     };
 
     console.log('\n📈 EDGE CASE COVERAGE:');
@@ -415,7 +517,9 @@ class Phase4EdgeCaseTester {
       console.log('✅ Multi-district ZIP codes handled properly');
       console.log('✅ Ready for Phase 5: Testing & Documentation');
     } else {
-      console.log(`\n⚠️  ${totalTests - passedTests} tests failed - Edge case handling needs improvement`);
+      console.log(
+        `\n⚠️  ${totalTests - passedTests} tests failed - Edge case handling needs improvement`
+      );
     }
   }
 }

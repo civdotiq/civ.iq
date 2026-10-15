@@ -271,7 +271,7 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
             const memberVotes = await batchVotingService.getHouseMemberVotes(
               bioguideId,
               119, // 119th Congress
-              1, // Session 1
+              undefined, // newest votes across both sessions
               limit
             );
 

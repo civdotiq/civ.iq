@@ -51,9 +51,9 @@ const reps = await civiq.districts.geocode({
 // What's their voting record?
 const detail = await civiq.representatives.get('P000197');
 
-// What industries fund legislators on this committee?
+// How often do House members vote yes on energy-sector bills?
 const leaderboard = await civiq.intelligence.sectorLeaderboard('Energy', {
-  chamber: 'senate',
+  chamber: 'house',
 });
 ```
 

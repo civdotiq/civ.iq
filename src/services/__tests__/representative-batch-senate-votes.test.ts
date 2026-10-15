@@ -85,8 +85,7 @@ describe('batch votes endpoint (Senate)', () => {
       nomination: { number: 'PN999-1' },
       bill: { type: 'Nomination', title: 'Angela Veronica Colmenero, of Texas…' },
     });
-    // current session, not a hard-coded Session 1
-    const session = new Date().getFullYear() % 2 === 1 ? 1 : 2;
-    expect(mockSenateVotes).toHaveBeenCalledWith('S000033', expect.any(Number), session, 25);
+    // newest votes across both sessions, not a hard-coded Session 1
+    expect(mockSenateVotes).toHaveBeenCalledWith('S000033', expect.any(Number), undefined, 25);
   });
 });

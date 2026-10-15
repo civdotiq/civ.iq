@@ -40,11 +40,13 @@ jest.mock('@/lib/data/bioguide-fec-mapping', () => ({
   getFECIdFromBioguide: (...args: unknown[]) => mockGetFECIdFromBioguide(...args),
 }));
 
-const mockGetSampleContributions = jest.fn();
+const mockGetContributionsByEmployer = jest.fn();
+const mockGetContributionsByOccupation = jest.fn();
 const mockGetFinancialSummary = jest.fn();
 jest.mock('@/lib/fec/fec-api-service', () => ({
   fecApiService: {
-    getSampleContributions: (...args: unknown[]) => mockGetSampleContributions(...args),
+    getContributionsByEmployer: (...args: unknown[]) => mockGetContributionsByEmployer(...args),
+    getContributionsByOccupation: (...args: unknown[]) => mockGetContributionsByOccupation(...args),
     getFinancialSummary: (...args: unknown[]) => mockGetFinancialSummary(...args),
   },
 }));
@@ -131,11 +133,12 @@ const mockBill = {
   cboCostEstimates: [],
 };
 
-const mockContributions = [
-  { contributor_employer: 'Defense Corp Alpha', contribution_receipt_amount: 10000 },
-  { contributor_employer: 'Military Systems LLC', contribution_receipt_amount: 8000 },
-  { contributor_employer: 'Tech Innovations', contribution_receipt_amount: 3000 },
-  { contributor_employer: 'Health Partners', contribution_receipt_amount: 2000 },
+// FEC schedule_a/by_employer rows (aggregate totals, not individual gifts).
+const mockEmployerTotals = [
+  { employer: 'Defense Corp Alpha', total: 10000, count: 4 },
+  { employer: 'Military Systems LLC', total: 8000, count: 3 },
+  { employer: 'Tech Innovations', total: 3000, count: 2 },
+  { employer: 'Health Partners', total: 2000, count: 1 },
 ];
 
 // ── Tests ────────────────────────────────────────────────────────────
@@ -154,7 +157,8 @@ describe('Integration: GET /api/intelligence/bill/[billId]', () => {
 
     mockFetchBillFromCongress.mockResolvedValue(mockBill);
     mockGetFECIdFromBioguide.mockReturnValue('H0XX00001');
-    mockGetSampleContributions.mockResolvedValue(mockContributions);
+    mockGetContributionsByEmployer.mockResolvedValue(mockEmployerTotals);
+    mockGetContributionsByOccupation.mockResolvedValue([]);
     mockGetFinancialSummary.mockResolvedValue(null);
     mockAnalyzeLobbyingPipeline.mockResolvedValue({
       committeeCode: 'HSAS',
