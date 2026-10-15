@@ -330,7 +330,7 @@ describe('analyzeBillIntelligence', () => {
 
     const setCalls = mockRedisSet.mock.calls;
     const insightCall = setCalls.find(
-      (call: unknown[]) => (call[0] as string) === 'insight:bill_intelligence:v2:119-hr-1'
+      (call: unknown[]) => (call[0] as string) === 'insight:bill_intelligence:v3:119-hr-1'
     );
     expect(insightCall).toBeDefined();
     expect(insightCall![2]).toBe(7 * 24 * 60 * 60);
@@ -529,6 +529,79 @@ describe('analyzeBillIntelligence', () => {
 
     expect(result).not.toBeNull();
     expect(result!.sponsorCommitteeConnection).toBeUndefined();
+  });
+
+  it("reports H.R. 1's final House concurrence, not its oldest roll call", async () => {
+    // Real 119th H.R. 1 roll calls, newest first as /api/bill returns them.
+    // The last element is a failed Motion to Recommit; the bill became law.
+    const rollCall = (
+      voteId: string,
+      chamber: 'House' | 'Senate',
+      date: string,
+      question: string,
+      result: 'Passed' | 'Failed' | 'Agreed to',
+      yea: number,
+      nay: number
+    ) => ({
+      voteId,
+      chamber,
+      date,
+      question,
+      result,
+      votes: { yea, nay, present: 0, notVoting: 0 },
+    });
+    mockFetchBillFromCongress.mockResolvedValue({
+      ...mockBill,
+      votes: [
+        rollCall(
+          'h190',
+          'House',
+          '2025-07-03T18:31:38Z',
+          'On Motion to Concur in the Senate Amendment',
+          'Passed',
+          218,
+          214
+        ),
+        rollCall(
+          's372',
+          'Senate',
+          '2025-07-01T16:03:40Z',
+          'On Passage of the Bill',
+          'Passed',
+          50,
+          50
+        ),
+        rollCall('s371', 'Senate', '2025-07-01T06:49:12Z', 'On the Motion', 'Failed', 48, 51),
+        rollCall(
+          's329',
+          'Senate',
+          '2025-06-28T23:47:33Z',
+          'On the Motion to Proceed',
+          'Agreed to',
+          51,
+          49
+        ),
+        rollCall('h145', 'House', '2025-05-22T10:56:37Z', 'On Passage', 'Passed', 215, 214),
+        rollCall(
+          'h144',
+          'House',
+          '2025-05-22T10:48:46Z',
+          'On Motion to Recommit',
+          'Failed',
+          212,
+          216
+        ),
+      ],
+    });
+
+    const result = await analyzeBillIntelligence('119-hr-1');
+
+    expect(result!.voteOutcome).toMatchObject({
+      chamber: 'House',
+      result: 'Passed',
+      yea: 218,
+      nay: 214,
+    });
   });
 
   it('omits voteOutcome when bill has no votes', async () => {
