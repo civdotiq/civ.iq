@@ -16,12 +16,12 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/developers' },
   title: 'CIV.IQ Developer Portal — Free Civic Data API, MCP Server, SDK, CLI & Bulk Data',
   description:
-    'The CIV.IQ (civdotiq.org) developer portal: free REST API (36 documented endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. Open source (Apache-2.0).',
+    'The CIV.IQ (civdotiq.org) developer portal: free REST API (39 documented endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. Open source (Apache-2.0).',
   openGraph: {
     images: SITE_OG_IMAGES,
     title: 'CIV.IQ Developer Portal — Free Civic Data API, MCP Server, SDK, CLI & Bulk Data',
     description:
-      'The CIV.IQ (civdotiq.org) developer portal: free REST API (36 documented endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. Open source (Apache-2.0).',
+      'The CIV.IQ (civdotiq.org) developer portal: free REST API (39 documented endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. Open source (Apache-2.0).',
     type: 'website',
   },
   keywords: [
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
 const INTEGRATION_CARDS = [
   {
     title: 'REST API',
-    detail: '36 endpoints, no auth',
+    detail: '39 endpoints, no auth',
     description: 'Public JSON endpoints for representatives, bills, votes, and districts.',
     href: '/docs/api',
   },
@@ -204,7 +204,7 @@ export default function DevelopersPage() {
         {/* Stat cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-grid-3 mb-grid-8">
           <div className="border-2 border-black p-grid-3">
-            <div className="text-3xl font-bold">36</div>
+            <div className="text-3xl font-bold">39</div>
             <div className="text-sm text-gray-600 uppercase tracking-wider">API Endpoints</div>
           </div>
           <div className="border-2 border-black p-grid-3">

@@ -19,12 +19,12 @@ description:
       CIV.IQ is civic infrastructure that connects official government
       records into a unified, transparent interface for understanding how
       government works. It draws on 29 government data sources and 11 open
-      datasets. Its public API has 36 documented endpoints in an
+      datasets. Its public API has 39 documented endpoints in an
       OpenAPI specification, backed by Congress.gov, FEC, Census Bureau,
       USASpending.gov, LDA (lda.gov), Federal Register, BLS, and more, with
       state legislatures read through OpenStates and STOCK Act trades through
       the Congress Trading Monitor open dataset. The platform includes an
-      intelligence layer of 16 statistical analyzers that detect patterns in
+      intelligence layer of 17 statistical analyzers that detect patterns in
       voting behavior, campaign finance, lobbying-to-legislation pipelines,
       and stock trading by members of Congress. All analysis carries
       confidence scores, methodology documentation, and source citations.
@@ -36,7 +36,7 @@ description:
       - Campaign finance tracking via FEC filings
       - Lobbying disclosure analysis via LDA (lda.gov)
       - Federal spending by congressional district via USASpending
-      - Intelligence layer with 16 statistical analyzers
+      - Intelligence layer with 17 statistical analyzers
       - Bill-lobbying language similarity detection
       - Stock trade-committee jurisdiction overlap analysis
       - State legislature data via OpenStates

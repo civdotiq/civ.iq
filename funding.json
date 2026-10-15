@@ -15,7 +15,7 @@
     {
       "guid": "civiq",
       "name": "CIV.IQ",
-      "description": "Civic intelligence platform with a public API of 36 documented endpoints, built on 29 government data sources and 11 open datasets (Congress.gov, FEC, USASpending, LDA lobbying disclosures, Federal Register, Census Bureau, OpenStates, and more). Covers all 535 federal legislators and 50 states. Influence chain tracing, bill-lobbying similarity, stock-trade and committee overlap, and temporal pattern detection — all from verified public data.",
+      "description": "Civic intelligence platform with a public API of 39 documented endpoints, built on 29 government data sources and 11 open datasets (Congress.gov, FEC, USASpending, LDA lobbying disclosures, Federal Register, Census Bureau, OpenStates, and more). Covers all 535 federal legislators and 50 states. Influence chain tracing, bill-lobbying similarity, stock-trade and committee overlap, and temporal pattern detection — all from verified public data.",
       "webpageUrl": {
         "url": "https://civdotiq.org"
       },

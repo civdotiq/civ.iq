@@ -47,7 +47,7 @@ Honest coverage matrix: [docs/COVERAGE.md](docs/COVERAGE.md). It is the canonica
 
 | Integration                                              | What it provides                                                |
 | -------------------------------------------------------- | --------------------------------------------------------------- |
-| [OpenAPI spec](public/openapi.json)                      | 36 endpoints, 36 schemas — generate clients in any language     |
+| [OpenAPI spec](public/openapi.json)                      | 39 endpoints, 38 schemas — generate clients in any language     |
 | [@civiq/sdk](packages/sdk)                               | Zero-dependency TypeScript client (`npm install @civiq/sdk`)    |
 | [MCP server](https://civdotiq.org/api/mcp)               | 46 tools for AI assistants (Claude, Cursor, etc.)               |
 | [Atom feeds](https://civdotiq.org/api/feed/bills/latest) | RSS-compatible feeds for bills, members, districts, committees  |
@@ -150,7 +150,7 @@ Next.js 16, React 18, TypeScript (strict), Tailwind CSS, SWR, Zustand, MapLibre 
 
 ## Intelligence layer
 
-16 statistical analyzers cross-reference the federal data domains:
+17 statistical analyzers cross-reference the federal data domains:
 
 | Analyzer                     | What it computes                                                                                 |
 | ---------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -163,6 +163,7 @@ Next.js 16, React 18, TypeScript (strict), Tailwind CSS, SWR, Zustand, MapLibre 
 | PAC-to-Vote Tracing          | A PAC's recipients and how they voted on the PAC's issue areas                                   |
 | Stock-Committee Overlap      | STOCK Act trades in sectors a member's committees oversee                                        |
 | Stock Trade Leaderboard      | Members ranked by trade count, trade value, or late filings                                      |
+| Sector Leaderboard           | Each member's yes-vote rate on bills in one donor sector                                         |
 | Influence Chain              | Lobbying → contribution → committee → matching bill → vote pathways                              |
 | Influence Graph              | Influence chains extended with related regulations, enforcement actions, and court cases         |
 | Temporal Proximity           | Timing patterns, such as a contribution within 90 days of a related vote                         |
@@ -171,7 +172,7 @@ Next.js 16, React 18, TypeScript (strict), Tailwind CSS, SWR, Zustand, MapLibre 
 | Federal Register Extraction  | Industries, costs, and timelines extracted from rule preambles                                   |
 | Civic Brief                  | A one-page representative brief: statistics and pattern detection first, then an AI summary      |
 
-Two more analyzers are in the code but not listed because they produce no public output today: the sector leaderboard (it returns no data in production) and the regulation analyzer (nothing calls it).
+One more analyzer, the regulation analyzer, is in the code but not listed because nothing calls it.
 
 Every insight carries: confidence score (0–1), data-as-of timestamp, methodology description, and a disclaimer that correlation does not imply causation.
 

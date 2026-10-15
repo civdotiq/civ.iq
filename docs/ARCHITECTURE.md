@@ -21,7 +21,7 @@ CIV.IQ is a civic intelligence platform built with Next.js 16, using the App Rou
 ### Backend
 
 - **Runtime**: Node.js 20+ LTS
-- **API Routes**: Next.js API Routes; the public contract is `/api/v1` plus the 36 endpoints in `public/openapi.json`
+- **API Routes**: Next.js API Routes; the public contract is `/api/v1` plus the 39 endpoints in `public/openapi.json`
 - **Caching**: Redis via Upstash REST API (production) and ioredis (development), with in-memory LRU fallback
 - **Rate Limiting**: Upstash Ratelimit (production), custom limiter (development)
 - **AI**: Google Gemini Flash (primary), OpenAI (fallback) via Vercel AI SDK
