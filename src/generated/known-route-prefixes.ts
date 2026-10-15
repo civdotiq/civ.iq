@@ -11,6 +11,7 @@ export const KNOWN_ROUTE_PREFIXES: ReadonlySet<string> = new Set([
   '.well-known',
   '_next',
   'about',
+  'accessibility',
   'admin',
   'alerts',
   'android-chrome-192x192.png',

@@ -13,6 +13,16 @@
   <a href="LICENSE">License</a>
 </p>
 
+<p align="center">
+  <a href="https://github.com/civdotiq/civ.iq/actions/workflows/ci.yml"><img src="https://github.com/civdotiq/civ.iq/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI status"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache-2.0"></a>
+  <a href="https://www.npmjs.com/package/@civiq/sdk"><img src="https://img.shields.io/npm/v/@civiq/sdk?label=%40civiq%2Fsdk" alt="@civiq/sdk on npm"></a>
+</p>
+
+<p align="center">
+  <img src="docs/images/representative-profile.png" alt="A CIV.IQ representative profile on civdotiq.org: Senator Gary C. Peters of Michigan, with party, current term, next election, contact details, and counts of roll-call votes, sponsored bills, money raised and committees." width="800">
+</p>
+
 ---
 
 ## What this is
