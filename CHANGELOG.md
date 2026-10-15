@@ -7,11 +7,97 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### In Progress
+## [3.0.0] - 2026-10-15
 
-- State legislature data integration
-- Local government official tracking
-- Push notification system for PWA
+The first app release in thirteen months, and the first one tagged and published as a GitHub Release. It covers the roughly 1,500 commits since 2.1.0, summarized by area rather than listed. Pull request numbers appear where the change went through a PR. The `@civiq/*` npm packages are versioned on their own; see each package's `CHANGELOG.md` under `packages/`.
+
+### Breaking
+
+- **Vote prediction retired (#223).** The XGBoost vote model and the "independence score" built on it are gone. They scored a gap between how members voted and how their donors "predicted" they would, which is a judgment about motive, not public data. Removed: `GET /api/intelligence/representative/{id}/vote-prediction`, the Civic Mesh counterfactual and cascade endpoints, the `analyze_vote_prediction` MCP tool, and `intelligence.votePrediction()` in `@civiq/sdk` 0.3.0. The roll calls and FEC contributions it read stay on the site.
+- **Sector leaderboard (#241).** `/api/intelligence/sector/{sector}/leaderboard` now returns each House member's yes-vote rate on bills in the sector. It no longer reports money totals or ranks. `@civiq/sdk` 0.4.0 matches the new shape.
+
+### Added
+
+#### Address lookup
+
+- One resolver answers both federal and state representatives from a full home address (#190, #191, #192, #193). ZIP input still works but carries an accuracy note: 74% of Americans live in a ZIP that crosses a congressional or state legislative district line (Census ZCTA crosswalks).
+- Address lookups also show the 2026-ballot district where a state redrew its map.
+- DC and territorial delegates.
+
+#### State legislatures
+
+- All 50 states and DC through OpenStates API v3: legislator profiles, committees, bills with full-text search, legislative calendar and vote detail pages.
+- Boundary maps for every state legislative district, rebuilt from TIGER 2025 (#121).
+- Rosters and committees served from committed corpora built from OpenStates data, not live API calls (#109).
+- State pages with governors (NGA), executive officers, judiciary and an elections tab, server-rendered (#201).
+- Wikidata and Wikipedia biographies for state legislators.
+
+#### Federal data
+
+- Bill pages: text, subjects, CBO estimates, amendments, related laws and CRS summaries. Server-rendered, with every count and entity linked (#187, #198).
+- Senate votes served from a mirrored Senate.gov roll-call corpus. Vote pages show the amendment purpose, bill context and CRS summary.
+- Committee directory with subcommittee rosters, floor schedule, witnesses and GovInfo hearings.
+- Federal Register documents, Regulations.gov comment periods and executive orders.
+- District pages: CDC PLACES public health, Census demographics with national comparisons, Medicaid/CHIP enrollment, veteran population, and USASpending awards and infrastructure obligations scoped to the district (#151). Server-rendered; unknown districts return a real 404 (#210).
+- Campaign finance: multi-cycle FEC data, PAC and leadership-PAC money, contributions by employer, organization roll-ups, FEC filing pages and a data-lag notice.
+- Lobbying: the full LDA filing corpus (lda.gov) mirrored for complete totals, a lobbying tab on profiles, and pages for lobbying organizations, PACs and industry sectors.
+- Congressional stock trades for both chambers, from the Congress Trading Monitor dataset of STOCK Act filings, with late-filing flags and a trading leaderboard.
+- Incumbent Record Card for each member: legislation, voting compared with the full chamber, and federal spending, with share image, embed and print versions.
+- Representative search filters for bills introduced and money raised (#141, #142), and a side-by-side compare page.
+- Topic pages and bills by policy area from the GovInfo BILLSTATUS corpus (#112).
+- Detroit city council lookup and roster through Legistar.
+
+#### Elections
+
+- 2026 federal race index and race pages from the FEC candidate corpus. Filed candidates appear on member, district and ballot pages.
+- Hand-verified voter-registration deadlines for the 2026 general election.
+- 2024 results from MIT Election Lab precinct data; 2025 New Jersey and Virginia governor results.
+
+#### Intelligence layer
+
+- 17 statistics-first analyzers: finance and committee jurisdiction overlap, temporal vote shifts, lobbying-to-committee pipeline, PAC vote tracing, stock trades and committee jurisdiction, party-line alignment, bill intelligence and others (see the README table). Every insight carries a confidence score, data date, methodology, disclaimer and peer baseline. None claims causation.
+- Civic Intelligence Brief on representative profiles.
+- Plain-language AI bill summaries (Gemini through the Vercel AI SDK), held to grade-8 reading level.
+
+#### Open data and developer access
+
+- Versioned public API (`/api/v1`) with an OpenAPI spec covering 39 endpoints.
+- MCP server at `/api/mcp` with 46 tools and a registry manifest.
+- npm packages: `@civiq/sdk` (TypeScript client and `civiq` CLI), `@civiq/civic-statistics` and `@civiq/entity-resolution`.
+- Bulk datasets, including the complete lobbying corpus, plus Atom feeds and embeddable widgets.
+- Agent support: `llms.txt`, markdown content negotiation, typed JSON errors and `RateLimit` headers.
+- Nostr: civic events (bills, votes, filings) are signed and published to relays, with read-back verification.
+- ActivityPub: fediverse instances can follow civic updates.
+
+#### Pages and design
+
+- Aicher/Ulm design system site-wide: Braun Linear type, 8px grid, party colors used only for party.
+- A 23-part page redesign, now the default layout everywhere.
+- Weekly per-state digest, `/ask` question pages, glossary, K-12 civics lessons, methodology page, a "What this data cannot tell you" section, corrections and support pages.
+- Share buttons and link-preview images for every page type (#213, #214); Schema.org structured data across the site; IndexNow.
+
+### Changed
+
+- Next.js 15.5 to 16.4.1, ESLint 9 flat config, Node.js 20.
+- Democrat party color is blue (`#2563eb`); green is retired from party use.
+- Code is licensed Apache-2.0 and data is public domain (#245). README and metadata counts now match the code, and tests keep them in sync (#246).
+
+### Removed
+
+- GDELT news integration.
+- Mock, placeholder and estimated data wherever it was found: placeholder votes, estimated district figures, two fake-data vote routes, fabricated FCC metrics, and three scripts that faked their results (#252).
+- Five Legistar pilot cities whose APIs went offline. They now answer "unavailable" instead of an empty roster (#95).
+
+### Fixed
+
+Highlights from about 700 fixes:
+
+- Cache TTLs were passed in milliseconds where seconds were expected, so some cached data stopped refreshing.
+- Pages that showed a fetch limit as if it were a total now show the count each upstream API reports.
+- Member vote records honor the selected session and no longer double-count (#248).
+- Bill sponsor money comes from FEC aggregates, not a sample (#250).
+- A shared FEC rate limiter and circuit breaker; visitor page loads no longer call FEC directly (#181).
+- Security: sanitized bill summaries and Wikipedia HTML, admin auth on cache-mutating endpoints, and Next.js advisory fixes including CVE-2025-55182.
 
 ## [2.1.0] - 2025-09-16
 
@@ -314,12 +400,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v3.0**: State legislatures, address lookup, elections 2026, intelligence layer, open API/MCP/SDK, redesign
 - **v2.x**: District enhancements, campaign finance refactor, geographic features
 - **v1.x**: Data transparency, committee intelligence, performance optimization
 - **v0.x**: Core functionality, MVP verification, foundation building
 
 ## Links
 
-- [Project Repository](https://github.com/civdotiq/civic-intel-hub)
-- [Issue Tracker](https://github.com/civdotiq/civic-intel-hub/issues)
+- [Project Repository](https://github.com/civdotiq/civ.iq)
+- [Releases](https://github.com/civdotiq/civ.iq/releases)
+- [Issue Tracker](https://github.com/civdotiq/civ.iq/issues)
 - [Documentation](docs/)
+
+[Unreleased]: https://github.com/civdotiq/civ.iq/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/civdotiq/civ.iq/releases/tag/v3.0.0

@@ -4,8 +4,8 @@ name: CIV.IQ
 applicationSuite: CIV.IQ
 url: https://github.com/civdotiq/civ.iq
 landingURL: https://civdotiq.org
-releaseDate: '2025-09-02'
-softwareVersion: '2.0.0'
+releaseDate: '2026-10-15'
+softwareVersion: '3.0.0'
 developmentStatus: stable
 softwareType: standalone/web
 
