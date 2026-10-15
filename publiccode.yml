@@ -1,11 +1,11 @@
-publiccodeYmlVersion: "0.4"
+publiccodeYmlVersion: '0.4'
 
 name: CIV.IQ
 applicationSuite: CIV.IQ
 url: https://github.com/civdotiq/civ.iq
 landingURL: https://civdotiq.org
-releaseDate: "2025-09-02"
-softwareVersion: "2.0.0"
+releaseDate: '2025-09-02'
+softwareVersion: '2.0.0'
 developmentStatus: stable
 softwareType: standalone/web
 
@@ -13,16 +13,18 @@ description:
   en:
     localisedName: CIV.IQ
     shortDescription: >-
-      Nonpartisan civic intelligence platform connecting 19 government data
-      sources to provide transparent access to congressional voting records,
-      campaign finance, lobbying, and federal spending.
+      Nonpartisan civic data on Congress and state legislatures: votes,
+      campaign finance, lobbying, and federal spending, from official records.
     longDescription: >-
-      CIV.IQ is civic infrastructure that connects real government data
-      sources into a unified, transparent interface for understanding how
-      government works. It serves 181 API endpoints backed by Congress.gov,
-      FEC, Census Bureau, USASpending.gov, Senate LDA, OpenStates, Federal
-      Register, BLS, SEC EDGAR, Wikidata, and more. The platform includes
-      an intelligence layer with 12 analyzers for detecting patterns in
+      CIV.IQ is civic infrastructure that connects official government
+      records into a unified, transparent interface for understanding how
+      government works. It draws on 29 government data sources and 11 open
+      datasets. Its public API has 39 documented endpoints in an
+      OpenAPI specification, backed by Congress.gov, FEC, Census Bureau,
+      USASpending.gov, LDA (lda.gov), Federal Register, BLS, and more, with
+      state legislatures read through OpenStates and STOCK Act trades through
+      the Congress Trading Monitor open dataset. The platform includes an
+      intelligence layer of 17 statistical analyzers that detect patterns in
       voting behavior, campaign finance, lobbying-to-legislation pipelines,
       and stock trading by members of Congress. All analysis carries
       confidence scores, methodology documentation, and source citations.
@@ -32,15 +34,14 @@ description:
     features:
       - Congressional voting records with roll call detail
       - Campaign finance tracking via FEC filings
-      - Lobbying disclosure analysis via Senate LDA
+      - Lobbying disclosure analysis via LDA (lda.gov)
       - Federal spending by congressional district via USASpending
-      - Intelligence layer with 12 cross-domain analyzers
-      - Vote prediction using ML (XGBoost/ONNX)
+      - Intelligence layer with 17 statistical analyzers
       - Bill-lobbying language similarity detection
       - Stock trade-committee jurisdiction overlap analysis
       - State legislature data via OpenStates
       - District demographics via Census ACS
-      - MCP server with 16 civic data tools
+      - MCP server with 46 tools
       - Nostr signed event publishing
       - OpenAPI specification and TypeScript SDK
       - Embeddable widgets and Atom feeds
@@ -49,7 +50,6 @@ legal:
   license: Apache-2.0
   mainCopyrightOwner: Mark Sandford
   repoOwner: civdotiq
-  authorsFile: NOTICE
 
 maintenance:
   type: internal
@@ -64,7 +64,7 @@ platforms:
 categories:
   - data-visualization
   - digital-citizenship
-  - government
+  - data-analytics
 
 usedBy:
   - CIV.IQ (civdotiq.org)
@@ -74,9 +74,9 @@ roadmap: https://github.com/civdotiq/civ.iq/blob/main/CHANGELOG.md
 dependsOn:
   open:
     - name: Node.js
-      versionMin: "20.0.0"
+      versionMin: '20.0.0'
     - name: Next.js
-      versionMin: "16.0.0"
+      versionMin: '16.0.0'
 
 localisation:
   localisationReady: false

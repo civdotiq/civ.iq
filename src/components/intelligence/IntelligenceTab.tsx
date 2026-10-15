@@ -324,8 +324,6 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
             {influenceGraph && <InfluenceGraphCard insight={influenceGraph} />}
             {influenceGraphLoading && !influenceGraph && <InsightPlaceholder tall />}
 
-            {/* Vote Prediction */}
-
             {/* Stock Trades */}
             {stock && (
               <>

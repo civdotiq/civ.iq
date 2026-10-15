@@ -21,7 +21,7 @@ CIV.IQ is a civic intelligence platform built with Next.js 16, using the App Rou
 ### Backend
 
 - **Runtime**: Node.js 20+ LTS
-- **API Routes**: Next.js API Routes (181 endpoints)
+- **API Routes**: Next.js API Routes; the public contract is `/api/v1` plus the 39 endpoints in `public/openapi.json`
 - **Caching**: Redis via Upstash REST API (production) and ioredis (development), with in-memory LRU fallback
 - **Rate Limiting**: Upstash Ratelimit (production), custom limiter (development)
 - **AI**: Google Gemini Flash (primary), OpenAI (fallback) via Vercel AI SDK
@@ -30,8 +30,7 @@ CIV.IQ is a civic intelligence platform built with Next.js 16, using the App Rou
 ### Intelligence Layer
 
 - **Statistics**: simple-statistics (wrapped by @civiq/civic-statistics)
-- **ML Inference**: XGBoost model exported to ONNX, loaded in TypeScript
-- **Embeddings**: HuggingFace Transformers (all-MiniLM-L6-v2, nli-deberta-v3-xsmall, bert-base-NER)
+- **Embeddings**: HuggingFace Transformers (all-MiniLM-L6-v2, nli-deberta-v3-xsmall, distilbert-NER)
 - **Entity Resolution**: @civiq/entity-resolution (committee aliases, ticker-industry mapping, FEC deduplication)
 
 ### Decentralized Publishing
@@ -41,6 +40,8 @@ CIV.IQ is a civic intelligence platform built with Next.js 16, using the App Rou
 
 ### Data Sources
 
+Primary sources below. The full list (40: 29 government, 11 open datasets) and the counting rule are in [COVERAGE.md](./COVERAGE.md).
+
 | API                        | Domain                                                     | Auth              |
 | -------------------------- | ---------------------------------------------------------- | ----------------- |
 | Congress.gov v3            | Bills, representatives, committees, votes                  | API key           |
@@ -49,17 +50,16 @@ CIV.IQ is a civic intelligence platform built with Next.js 16, using the App Rou
 | Federal Register API       | Regulations (proposed rules, final rules, comment periods) | None              |
 | GovInfo API                | Congressional hearings, government documents               | API key           |
 | Census API                 | Demographics, boundaries, geocoding                        | API key           |
-| OpenStates GraphQL         | State legislators, bills, committees, votes                | API key           |
+| OpenStates API v3          | State legislators, bills, committees (open dataset)        | API key           |
 | Senate.gov XML             | Senate voting records                                      | None              |
 | House Clerk XML            | House voting records                                       | None              |
 | Bureau of Labor Statistics | Employment, wages, labor force                             | None              |
-| SEC EDGAR                  | Financial disclosures, stock trades                        | None (User-Agent) |
-| Senate LDA                 | Lobbying disclosure filings                                | None              |
+| SEC EDGAR                  | Company filings                                            | None (User-Agent) |
+| Congress Trading Monitor   | STOCK Act trades, both chambers (open dataset)             | None              |
+| LDA (lda.gov)              | Lobbying disclosure filings                                | None              |
 | FRED                       | Federal Reserve economic indicators                        | API key           |
 | Regulations.gov            | Public comments on proposed rules                          | API key           |
 | Wikidata SPARQL            | State executives, judiciary, biographies                   | None              |
-| FollowTheMoney.org         | State campaign finance                                     | API key           |
-| GDELT v2                   | News aggregation                                           | None              |
 | Census TIGER/Line          | District boundary shapefiles                               | None              |
 
 ### Cross-Domain Join Layer
@@ -134,7 +134,7 @@ Raw Data (Congress.gov, FEC, LDA, SEC)
 ```
 src/
 ├── app/                          # Next.js App Router
-│   ├── api/                      # 181 API endpoints
+│   ├── api/                      # API routes (public contract: /api/v1 + openapi.json)
 │   │   ├── representative/       # Federal member data
 │   │   ├── intelligence/         # Intelligence layer (15 routes)
 │   │   │   ├── representative/[bioguideId]/
@@ -191,8 +191,7 @@ src/
 │
 ├── lib/
 │   ├── intelligence/             # Intelligence engine
-│   │   ├── analyzers/            # 12 statistical analyzers
-│   │   ├── ml/                   # ONNX vote prediction model
+│   │   ├── analyzers/            # Statistical analyzers
 │   │   ├── embeddings/           # HuggingFace text pipelines
 │   │   ├── clusters/             # Precomputed influence clusters
 │   │   ├── entity-resolution/    # Cross-system ID matching
@@ -250,8 +249,8 @@ Representative Profile Request
     → Parallel data fetches:
         → Congress.gov (votes, committees, sponsored bills)
         → FEC (contributions by sector)
-        → Senate LDA (lobbying filings)
-        → SEC EDGAR (stock trades, House only)
+        → LDA (lobbying filings)
+        → Congress Trading Monitor (STOCK Act trades, both chambers)
     → Entity Resolution:
         → Bioguide ID → FEC committee ID
         → Committee codes → agency slugs
@@ -263,7 +262,6 @@ Representative Profile Request
         → Temporal Vote Shifts
         → Lobbying Pipeline
         → Stock-Committee Overlap
-        → Vote Prediction (ONNX model)
     → Peer comparison baselines (Redis mget)
     → AI summary generation (Gemini Flash)
     → Reading level validation (Flesch-Kincaid ≤ 8)
@@ -432,7 +430,6 @@ Validation runs on every push: lint, type-check, test, build. Deployment to Verc
 | Tailwind CSS              | Consistent design system, small CSS bundle, rapid iteration                |
 | Statistics-first analysis | Reproducible, auditable results before any AI summarization                |
 | Small HuggingFace models  | Run server-side without GPU, fast inference, no external API dependency    |
-| ONNX for vote prediction  | Cross-platform inference, trained in Python, served in TypeScript          |
 | Redis + LRU + CDN caching | Three tiers cover serverless, in-process, and edge scenarios               |
 | PMTiles for maps          | No tile server needed, CDN-friendly, HTTP range requests                   |
 | Nostr for publishing      | Decentralized, cryptographically signed, censorship-resistant distribution |

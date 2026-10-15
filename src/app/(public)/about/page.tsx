@@ -7,12 +7,12 @@ import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 export const metadata: Metadata = {
   title: 'About CIV.IQ — Civic Intelligence from Real Government Data',
   description:
-    'CIV.IQ organizes government data about elected officials from 26 official sources — Congress.gov, FEC, Census Bureau, and more — so citizens can understand who represents them. 535 members of Congress, 50 state legislatures (legislators, bills, votes). Local government is not covered. Nonpartisan.',
+    'CIV.IQ organizes government data about elected officials from 29 government sources and 11 open datasets — Congress.gov, FEC, Census Bureau, and more — so citizens can understand who represents them. 535 members of Congress, 50 state legislatures (legislators, bills, committees). Local government is not covered. Nonpartisan.',
   openGraph: {
     images: SITE_OG_IMAGES,
     title: 'About CIV.IQ',
     description:
-      'Nonpartisan civic intelligence platform. 535 members of Congress, 50 state legislatures, 26 government data sources.',
+      'Nonpartisan civic intelligence platform. 535 members of Congress, 50 state legislatures, 29 government data sources and 11 open datasets.',
     type: 'website',
   },
   alternates: {
@@ -42,7 +42,7 @@ export default async function AboutPageRoute({ searchParams }: AboutPageProps) {
       <OrganizationSchema description="CIV.IQ is a civic intelligence platform providing access to federal and state government data. 535 members of Congress, 50 state legislatures (legislators, bills, votes), and machine-learning analysis of federal money-in-politics patterns." />
       <AboutPageSchema
         name="About CIV.IQ"
-        description="CIV.IQ provides nonpartisan access to government data for 535 members of Congress, 50 state legislatures, and 26 official data sources."
+        description="CIV.IQ provides nonpartisan access to government data for 535 members of Congress, 50 state legislatures, 29 government data sources, and 11 open datasets."
         url="https://civdotiq.org/about"
       />
       {useRedesign ? <AboutHybrid /> : <LegacyAboutPage />}

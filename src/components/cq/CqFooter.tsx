@@ -37,7 +37,7 @@ const COLUMNS: ReadonlyArray<FooterColumn> = [
     title: 'For builders',
     lines: [
       'API · 60 req/min · No key',
-      'MCP · 16 tools',
+      'MCP · 46 tools',
       'Bulk download · CSV + JSON',
       'GitHub · civdotiq/civ.iq',
     ],

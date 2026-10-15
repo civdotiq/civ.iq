@@ -163,10 +163,20 @@ describe('agent docs match the MCP surface', () => {
     'public/llms-full.txt',
     'public/openapi.json',
     'src/lib/machine-content/markdown-pages.ts',
+    'README.md',
+    'publiccode.yml',
+    'server.json',
+    'docs/MCP-REGISTRY-SUBMISSIONS.md',
+    'src/app/(public)/developers/page.tsx',
+    'src/app/(public)/mcp/page.tsx',
+    'src/app/(public)/migrate/google-civic/page.tsx',
+    'src/components/cq/CqFooter.tsx',
   ])('every tool count stated in %s matches the registered count', path => {
     const counts = [
-      ...read(path).matchAll(/\b(\d+) (?:read-only )?tools\b|### Tools \((\d+)/g),
-    ].map(m => Number(m[1] ?? m[2]));
+      ...read(path).matchAll(
+        /\b(\d+)[ -](?:read-only )?tools?\b|### Tools \((\d+)|(\d+)<\/div>\s*<div[^>]*>MCP Tools/g
+      ),
+    ].map(m => Number(m[1] ?? m[2] ?? m[3]));
     expect(counts.length).toBeGreaterThan(0);
     for (const count of counts) expect(count).toBe(toolNames.length);
   });
