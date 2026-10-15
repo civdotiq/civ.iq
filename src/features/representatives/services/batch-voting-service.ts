@@ -493,6 +493,11 @@ export function isSenateXmlDisabled(): boolean {
   return Boolean(process.env.VERCEL);
 }
 
+/** Session of the current calendar year: odd year = 1, even year = 2. */
+function currentSessionNumber(): number {
+  return new Date().getFullYear() % 2 === 1 ? 1 : 2;
+}
+
 export class BatchVotingService {
   private static instance: BatchVotingService;
   private cache = new InMemoryCache();
@@ -531,20 +536,35 @@ export class BatchVotingService {
   }
 
   /**
-   * Get House voting history for a member (optimized batch version)
+   * Get House voting history for a member (optimized batch version).
+   *
+   * `session` undefined = the newest `limit` votes of the whole Congress.
+   * A session (1 or 2) keeps only that session's votes; the Congress.gov
+   * list spans both, so without this filter a caller looping over sessions
+   * got the same votes twice.
    */
   async getHouseMemberVotes(
     bioguideId: string,
     congress = getCurrentCongressNumber(),
-    session = new Date().getFullYear() % 2 === 1 ? 1 : 2,
+    session?: number,
     limit = 20,
     bypassCache = false
   ): Promise<MemberVoteRecord[]> {
     const startTime = Date.now();
+    const fallbackSession = session ?? currentSessionNumber();
 
     try {
-      // Step 1: Get vote list (single API call)
-      const voteList = await this.getHouseVoteList(congress, session, limit, bypassCache);
+      // Step 1: Get vote list (single API call, cached for the whole Congress)
+      const fullList = await this.getHouseVoteList(
+        congress,
+        fallbackSession,
+        session === undefined ? limit : Number.MAX_SAFE_INTEGER,
+        bypassCache
+      );
+      const voteList =
+        session === undefined
+          ? fullList
+          : fullList.filter(v => this.sessionForVote(v, session) === session).slice(0, limit);
 
       if (voteList.length === 0) {
         logger.warn('No House votes found', { bioguideId, congress, session });
@@ -557,7 +577,7 @@ export class BatchVotingService {
         bioguideId,
         bypassCache,
         congress,
-        session
+        fallbackSession
       );
 
       logger.info('House member votes retrieved (optimized)', {
@@ -566,7 +586,9 @@ export class BatchVotingService {
         totalProcessed: voteList.length,
         responseTime: Date.now() - startTime,
         cacheHits: voteList.filter(v =>
-          this.cache.has(`house-vote-${congress}-${session}-${v.rollCallNumber}`)
+          this.cache.has(
+            `house-vote-${congress}-${this.sessionForVote(v, fallbackSession)}-${v.rollCallNumber}`
+          )
         ).length,
       });
 
@@ -578,20 +600,26 @@ export class BatchVotingService {
   }
 
   /**
-   * Get Senate voting history for a member (optimized batch version)
+   * Get Senate voting history for a member (optimized batch version).
+   *
+   * `session` undefined = the newest `limit` votes of the whole Congress;
+   * a session (1 or 2) keeps only that session's votes.
    */
   async getSenateMemberVotes(
     bioguideId: string,
     congress = getCurrentCongressNumber(),
-    session = new Date().getFullYear() % 2 === 1 ? 1 : 2,
+    sessionFilter?: number,
     limit = 20
   ): Promise<MemberVoteRecord[]> {
+    // Live XML URLs need a concrete session; the corpus can span both.
+    const session = sessionFilter ?? currentSessionNumber();
+
     // Corpus first (MR10): the mirrored senate.gov corpus in Redis serves
     // every environment, with menu-derived question/result/bill metadata.
     // Live XML remains only as a fallback for cold setups where senate.gov
     // is reachable — it never works on Vercel (Akamai block).
     try {
-      const corpusRolls = await getSenateCorpusRollCalls(congress, limit * 2);
+      const corpusRolls = await getSenateCorpusRollCalls(congress, limit * 2, sessionFilter);
       if (corpusRolls.length > 0) {
         return this.extractMemberVotes(bioguideId, corpusRolls).slice(0, limit);
       }

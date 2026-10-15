@@ -343,7 +343,7 @@ describe('buildSectorLeaderboard', () => {
 
     const calls = mockRedisMget.mock.calls.map(([keys]) => keys as string[]);
     expect(calls.map(keys => keys.length)).toEqual([100, 100, 50]);
-    expect(calls[0][0]).toBe('insight:vote_finance:v4:X000000');
-    expect(calls[2][49]).toBe('insight:vote_finance:v4:X000249');
+    expect(calls[0][0]).toBe('insight:vote_finance:v5:X000000');
+    expect(calls[2][49]).toBe('insight:vote_finance:v5:X000249');
   });
 });

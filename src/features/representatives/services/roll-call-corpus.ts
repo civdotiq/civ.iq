@@ -332,13 +332,15 @@ function senateSourceUrl(congress: number, session: number, rollCallNumber: numb
 /**
  * The most recent `limit` Senate roll calls from the mirrored corpus,
  * enriched with menu metadata (question, result, bill) — full member
- * positions included, newest first, across sessions. Returns [] when the
+ * positions included, newest first, across sessions (or only `session`
+ * when given). Returns [] when the
  * mirror hasn't run for this Congress (callers fall back or render their
  * designed empty states — never fake data).
  */
 export async function getSenateCorpusRollCalls(
   congress: number,
-  limit: number
+  limit: number,
+  session?: number
 ): Promise<StandardizedVote[]> {
   const menu = await getSenateVoteMenu(congress);
   if (!menu) return [];
@@ -347,7 +349,9 @@ export async function getSenateCorpusRollCalls(
   const measureTitles = measureTitlesFromMenu(menu);
 
   // Newest first across sessions: later session wins, then higher number.
+  // A given session keeps only that session's rolls.
   const flat = Object.entries(menu.sessions)
+    .filter(([s]) => session === undefined || Number.parseInt(s, 10) === session)
     .flatMap(([session, entries]) =>
       entries.map(e => ({ session: parseInt(session, 10), entry: e }))
     )
