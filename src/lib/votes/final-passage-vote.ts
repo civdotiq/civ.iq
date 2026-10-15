@@ -27,8 +27,10 @@ export function findFinalPassageVote(votes: BillVote[]): BillVote | null {
       DECISIVE_QUESTION.test(v.question ?? '')
   );
   const pool = decisive.length > 0 ? decisive : votes.filter(v => v.votes);
-  if (pool.length === 0) return null;
-  return pool.reduce((latest, v) =>
-    new Date(v.date).getTime() > new Date(latest.date).getTime() ? v : latest
+  const [first, ...rest] = pool;
+  if (!first) return null;
+  return rest.reduce(
+    (latest, v) => (new Date(v.date).getTime() > new Date(latest.date).getTime() ? v : latest),
+    first
   );
 }
