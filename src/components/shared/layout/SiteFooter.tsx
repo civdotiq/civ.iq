@@ -181,6 +181,11 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
                 </Link>
               </li>
               <li>
+                <Link href="/accessibility" className={linkClass}>
+                  Accessibility
+                </Link>
+              </li>
+              <li>
                 <Link href="/terms" className={linkClass}>
                   Terms of Service
                 </Link>

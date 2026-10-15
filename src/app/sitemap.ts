@@ -355,6 +355,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/spending', priority: 0.6, freq: 'weekly' as const },
     { path: '/about', priority: 0.4, freq: 'monthly' as const },
     { path: '/privacy', priority: 0.2, freq: 'yearly' as const },
+    { path: '/accessibility', priority: 0.2, freq: 'yearly' as const },
     { path: '/terms', priority: 0.2, freq: 'yearly' as const },
     { path: '/disclaimer', priority: 0.2, freq: 'yearly' as const },
     { path: '/docs/api', priority: 0.6, freq: 'monthly' as const },
