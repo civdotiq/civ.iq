@@ -69,7 +69,7 @@ npm run security:emergency
 #### Data Protection
 
 - **No accounts.** CIV.IQ keeps no user profiles or passwords.
-- **Address lookup.** The address you enter is sent to the U.S. Census Geocoder to find your district. CIV.IQ does not write it to a database. The server process caches the result in memory for up to 24 hours, and the address appears in server request logs.
+- **Address lookup.** The address you enter is sent to the U.S. Census Geocoder to find your district. CIV.IQ does not write it to a database. The district result is cached for up to 7 days under a one-way hash of the address, and the address is never logged (see [PRIVACY.md](PRIVACY.md)).
 - **Email subscriptions.** If you subscribe to the digest or to alerts, CIV.IQ stores your email address in Redis, keyed by its SHA-256 hash. That record is used only to send what you signed up for. Subscriptions are double opt-in, unverified sign-ups expire after 48 hours, and every email carries a signed unsubscribe link.
 - **Secrets.** All API keys are environment variables and are never committed.
 - **Untrusted HTML.** HTML from third parties (Wikipedia bios, bill text) is sanitized with isomorphic-dompurify (`src/utils/sanitize.ts`) before it is rendered.
