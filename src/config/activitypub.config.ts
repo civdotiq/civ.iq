@@ -45,7 +45,13 @@ export const activitypubConfig = {
 
   /** TTLs in seconds */
   dedupTTL: 30 * 24 * 60 * 60, // 30 days (for dedup keys only)
-  outboxTTL: 365 * 24 * 60 * 60, // 1 year (outbox is public record, must persist)
+  /**
+   * Outbox is public record, so keep it as long as the cache allows: the
+   * 90-day Redis TTL cap (MAX_TTL_SECONDS in redis-client). Anything longer
+   * is clamped to 90 days anyway and logged as an error on every write —
+   * the old 1-year value emitted two such errors per published event.
+   */
+  outboxTTL: 90 * 24 * 60 * 60,
 
   /** Rate limit for inbox (follows per minute) */
   inboxRateLimit: 30,

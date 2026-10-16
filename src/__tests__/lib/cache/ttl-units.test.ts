@@ -87,6 +87,21 @@ describe('cache TTL units', () => {
       // the longest deliberate TTL in the codebase
     });
 
+    it('keeps the deliberately long-lived TTLs within the cap', async () => {
+      // A configured TTL above the cap is not an error at startup — it is
+      // clamped silently to 90 days and logged as an error on EVERY write.
+      // The ActivityPub outbox shipped at 1 year and emitted two error lines
+      // per published event in the daily nostr-publisher cron.
+      const { MAX_TTL_SECONDS } = await import('@/lib/cache/redis-client');
+      const { activitypubConfig } = await import('@/config/activitypub.config');
+      const { ROLL_TTL_SECONDS } =
+        await import('@/features/representatives/services/roll-call-corpus');
+
+      expect(activitypubConfig.outboxTTL).toBeLessThanOrEqual(MAX_TTL_SECONDS);
+      expect(activitypubConfig.dedupTTL).toBeLessThanOrEqual(MAX_TTL_SECONDS);
+      expect(ROLL_TTL_SECONDS).toBeLessThanOrEqual(MAX_TTL_SECONDS);
+    });
+
     it('falls back to one hour for a nonsensical TTL', async () => {
       const { clampTtl } = await import('@/lib/cache/redis-client');
 
