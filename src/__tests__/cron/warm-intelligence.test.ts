@@ -9,13 +9,14 @@
  * Covers:
  *   - 401 on missing/wrong Authorization header
  *   - Cursor advance + wrap-around across consecutive invocations
- *   - Error isolation (one analyzer throwing does not block the other three)
+ *   - Error isolation (one analyzer throwing does not block the others)
  */
 
 const mockGetAllReps = jest.fn();
 const mockAnalyzeFinanceJurisdiction = jest.fn();
 const mockAnalyzeVoteFinance = jest.fn();
 const mockAnalyzeInfluenceChains = jest.fn();
+const mockAnalyzeTemporalVotes = jest.fn();
 const mockAssembleCivicBrief = jest.fn();
 
 const cursorStore: { value: number | string | null } = { value: null };
@@ -45,6 +46,10 @@ jest.mock('@/lib/intelligence/analyzers/influence-chain-analyzer', () => ({
   analyzeInfluenceChains: (id: string) => mockAnalyzeInfluenceChains(id),
 }));
 
+jest.mock('@/lib/intelligence/analyzers/temporal-vote-analyzer', () => ({
+  analyzeTemporalVotes: (id: string) => mockAnalyzeTemporalVotes(id),
+}));
+
 jest.mock('@/lib/intelligence/analyzers/civic-brief-assembler', () => ({
   assembleCivicBrief: (id: string, opts: unknown) => mockAssembleCivicBrief(id, opts),
 }));
@@ -72,6 +77,7 @@ beforeEach(() => {
   mockAnalyzeFinanceJurisdiction.mockResolvedValue(null);
   mockAnalyzeVoteFinance.mockResolvedValue(null);
   mockAnalyzeInfluenceChains.mockResolvedValue(null);
+  mockAnalyzeTemporalVotes.mockResolvedValue(null);
   mockAssembleCivicBrief.mockResolvedValue(null);
 });
 
@@ -156,7 +162,7 @@ describe('GET /api/cron/warm-intelligence — slicing & cursor', () => {
 });
 
 describe('GET /api/cron/warm-intelligence — error isolation', () => {
-  it('one analyzer throwing does not stop the other two for the same rep', async () => {
+  it('one analyzer throwing does not stop the others for the same rep', async () => {
     mockGetAllReps.mockResolvedValue(fakeReps(1));
     mockAnalyzeVoteFinance.mockRejectedValue(new Error('boom'));
 
@@ -167,17 +173,20 @@ describe('GET /api/cron/warm-intelligence — error isolation', () => {
     expect(mockAnalyzeFinanceJurisdiction).toHaveBeenCalledTimes(1);
     expect(mockAnalyzeVoteFinance).toHaveBeenCalledTimes(1);
     expect(mockAnalyzeInfluenceChains).toHaveBeenCalledTimes(1);
+    expect(mockAnalyzeTemporalVotes).toHaveBeenCalledTimes(1);
 
-    expect(body.ok).toBe(3);
+    // FJ, IC, temporal and the brief ok; vote-finance errored.
+    expect(body.ok).toBe(4);
     expect(body.errors).toBe(1);
     expect(body.perAnalyzer.vote_finance.error).toBe(1);
     expect(body.perAnalyzer.finance_jurisdiction.ok).toBe(1);
     expect(body.perAnalyzer.influence_chain.ok).toBe(1);
+    expect(body.perAnalyzer.temporal.ok).toBe(1);
   });
 });
 
 describe('GET /api/cron/warm-intelligence — civic brief', () => {
-  it('refreshes the brief after the three analyzers finish', async () => {
+  it('refreshes the brief after the analyzers finish', async () => {
     mockGetAllReps.mockResolvedValue(fakeReps(1));
     const order: string[] = [];
     mockAnalyzeFinanceJurisdiction.mockImplementation(async () => {
@@ -186,6 +195,10 @@ describe('GET /api/cron/warm-intelligence — civic brief', () => {
     });
     mockAnalyzeInfluenceChains.mockImplementation(async () => {
       order.push('influence_chain');
+      return null;
+    });
+    mockAnalyzeTemporalVotes.mockImplementation(async () => {
+      order.push('temporal');
       return null;
     });
     mockAssembleCivicBrief.mockImplementation(async () => {
@@ -197,7 +210,8 @@ describe('GET /api/cron/warm-intelligence — civic brief', () => {
     const body = await res.json();
 
     expect(mockAssembleCivicBrief).toHaveBeenCalledWith(expect.any(String), { refresh: true });
-    // The brief reads these two analyzers' caches, so it must run last.
+    // The brief reads these analyzers' caches, so it must run last.
+    expect(order).toContain('temporal');
     expect(order[order.length - 1]).toBe('civic_brief');
     expect(body.perAnalyzer.civic_brief.ok).toBe(1);
   });
