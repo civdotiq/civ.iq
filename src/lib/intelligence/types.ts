@@ -875,6 +875,12 @@ export interface BriefOversight {
   topLobbyingMatches: Array<{ filing: string; bill: string; similarity: number }>;
 }
 
+/** Average of real cached peer values; never a static estimate. */
+export interface BriefPeerBaseline {
+  meanPct: number;
+  peerCount: number;
+}
+
 export interface CivicBriefInsight extends InsightBase {
   bioguideId: string;
   identity: BriefIdentity;
@@ -882,6 +888,16 @@ export interface CivicBriefInsight extends InsightBase {
   voting: BriefVoting;
   oversight: BriefOversight;
   patterns: BriefPattern[];
+  /**
+   * Peer averages behind the party-alignment and in-state comparisons. Null
+   * when fewer than 5 peers are cached. Absent on briefs cached before it existed.
+   */
+  peerBaselines?: {
+    /** Same chamber and party, from temporal alignment scores. */
+    partyAlignment: BriefPeerBaseline | null;
+    /** Same chamber, from in-state donor shares. */
+    inStatePct: BriefPeerBaseline | null;
+  };
   summary: string;
 }
 
