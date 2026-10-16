@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
+import { openStatesUnavailableInit } from '@/lib/openstates-api';
 import { StateBillSummarizer } from '@/features/legislation/services/ai/state-bill-summarizer';
 import { normalizeStateIdentifier } from '@/lib/data/us-states';
 import { decodeBase64Url } from '@/lib/url-encoding';
@@ -78,7 +79,7 @@ export async function GET(
         error: 'Failed to generate bill summary',
         message: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      openStatesUnavailableInit(error) ?? { status: 500 }
     );
   }
 }

@@ -469,23 +469,6 @@ export interface OpenStatesVote {
 }
 
 /**
- * OpenStates v3 Person Vote (vote cast by a specific person)
- */
-export interface OpenStatesPersonVote {
-  vote_id: string;
-  identifier: string;
-  motion_text: string;
-  start_date: string;
-  result: 'pass' | 'fail';
-  option: 'yes' | 'no' | 'abstain' | 'not voting' | 'absent' | 'excused';
-  bill_identifier: string | null;
-  bill_title: string | null;
-  bill_id: string | null;
-  organization_name: string;
-  chamber: 'upper' | 'lower';
-}
-
-/**
  * OpenStates v3 Committee
  */
 export interface OpenStatesCommittee {
@@ -1130,12 +1113,19 @@ class OpenStatesAPI {
   /**
    * Get a single bill by ID
    * @param billId - OpenStates bill ID (e.g., 'ocd-bill/...')
+   * @param budgetMs - Time allowed for the read; throws OpenStatesTimeoutError past it
    */
-  async getBillById(billId: string): Promise<OpenStatesBill | null> {
+  async getBillById(
+    billId: string,
+    budgetMs = OPENSTATES_ROUTE_BUDGET_MS
+  ): Promise<OpenStatesBill | null> {
     try {
-      const response = await this.makeRequest<V3Bill>(`/bills/${billId}`, {
-        include: [...BILL_INCLUDES],
-      });
+      const response = await this.makeRequest<V3Bill>(
+        `/bills/${billId}`,
+        { include: [...BILL_INCLUDES] },
+        undefined,
+        Date.now() + budgetMs
+      );
       return this.transformBill(response);
     } catch (error) {
       if (error instanceof Error && error.message.includes('404')) {
@@ -1194,82 +1184,9 @@ class OpenStatesAPI {
     }
   }
 
-  /**
-   * Get votes cast by a specific person (legislator)
-   * @param personId - OpenStates person ID (format: ocd-person-{uuid})
-   * @param limit - Maximum number of votes to return (default: 50, max: 100)
-   * @param page - Page number for pagination (default: 1)
-   * @returns Array of votes cast by this person
-   */
-  async getVotesByPerson(
-    personId: string,
-    limit: number = 50,
-    page: number = 1
-  ): Promise<OpenStatesPersonVote[]> {
-    try {
-      // OpenStates v3 API endpoint: /people/{id}/votes
-      const params: Record<string, string | number> = {
-        per_page: Math.min(limit, 100), // API max is 100
-        page,
-      };
-
-      interface V3PersonVoteResponse {
-        results: Array<{
-          vote_event_id: string;
-          option: string;
-          vote_event: {
-            id: string;
-            identifier: string;
-            motion_text: string;
-            motion_classification: string[];
-            start_date: string;
-            result: string;
-            organization: {
-              id: string;
-              name: string;
-              classification: string;
-            };
-            bill: {
-              id: string;
-              identifier: string;
-              title: string;
-            } | null;
-          };
-        }>;
-        pagination: {
-          per_page: number;
-          page: number;
-          max_page: number;
-          total_items: number;
-        };
-      }
-
-      const response = await this.makeRequest<V3PersonVoteResponse>(
-        `/people/${personId}/votes`,
-        params
-      );
-
-      // Transform v3 response to our interface
-      return response.results.map(vote => ({
-        vote_id: vote.vote_event.id,
-        identifier: vote.vote_event.identifier,
-        motion_text: vote.vote_event.motion_text,
-        start_date: vote.vote_event.start_date,
-        result: vote.vote_event.result as 'pass' | 'fail',
-        option: vote.option as 'yes' | 'no' | 'abstain' | 'not voting' | 'absent' | 'excused',
-        bill_identifier: vote.vote_event.bill?.identifier || null,
-        bill_title: vote.vote_event.bill?.title || null,
-        bill_id: vote.vote_event.bill?.id || null,
-        organization_name: vote.vote_event.organization.name,
-        chamber: vote.vote_event.organization.classification === 'upper' ? 'upper' : 'lower',
-      }));
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('404')) {
-        return [];
-      }
-      throw error;
-    }
-  }
+  // There is no getVotesByPerson: OpenStates v3 has no per-person votes
+  // endpoint (its OpenAPI spec lists 12 paths, none under /people/{id}). Roll
+  // calls are reachable only inside a bill — see getBillVoteById.
 
   /**
    * Get one roll call, by the id of the bill it belongs to.

@@ -27,6 +27,7 @@
     "seed-data": "tsx scripts/seed-congress-data.ts",
     "sync:bioguide-fec": "tsx scripts/sync-bioguide-fec.ts",
     "sync:openstates-people": "tsx scripts/sync-openstates-people.ts",
+    "sync:openstates-votes": "tsx scripts/sync-openstates-votes.ts",
     "sync:sld-district-keys": "tsx scripts/sync-sld-district-keys.ts",
     "sync:state-governors": "tsx scripts/sync-state-governors.ts",
     "snapshot:adoption": "tsx scripts/snapshot-adoption.ts",

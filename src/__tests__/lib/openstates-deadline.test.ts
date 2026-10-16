@@ -103,6 +103,39 @@ describe('paged OpenStates reads share one route budget', () => {
   });
 });
 
+describe('single bill reads', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.restoreAllMocks();
+  });
+
+  it('times out inside the route budget instead of retrying a stall', async () => {
+    const fetchMock = jest.fn(stalledResponse);
+    global.fetch = fetchMock as unknown as typeof fetch;
+    const api = new OpenStatesAPI({ apiKey: 'test' });
+
+    const result = api.getBillById('ocd-bill/deadline-test');
+    const settled = expect(result).rejects.toBeInstanceOf(OpenStatesTimeoutError);
+    await jest.advanceTimersByTimeAsync(OPENSTATES_ROUTE_BUDGET_MS);
+    await settled;
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('still answers null for a bill OpenStates does not have', async () => {
+    global.fetch = jest.fn(async () => ({
+      ok: false,
+      status: 404,
+      statusText: 'Not Found',
+      text: async () => '{"detail":"Not Found"}',
+    })) as unknown as typeof fetch;
+    const api = new OpenStatesAPI({ apiKey: 'test', retryAttempts: 1 });
+
+    await expect(api.getBillById('ocd-bill/missing')).resolves.toBeNull();
+  });
+});
+
 describe('sponsor bill paging', () => {
   afterEach(() => jest.restoreAllMocks());
 

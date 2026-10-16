@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
+import { openStatesUnavailableInit } from '@/lib/openstates-api';
 import { decodeBase64Url } from '@/lib/url-encoding';
 import logger from '@/lib/logging/simple-logger';
 import { analyzeBillProgress } from '@/lib/bill-progress';
@@ -94,7 +95,7 @@ export async function GET(
           responseTime: Date.now() - startTime,
         },
       } as StateBillApiResponse,
-      { status: 500 }
+      openStatesUnavailableInit(error) ?? { status: 500 }
     );
   }
 }
