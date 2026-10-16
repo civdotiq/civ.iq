@@ -16,6 +16,7 @@
  */
 
 import { notFound } from 'next/navigation';
+import { unstable_cache } from 'next/cache';
 import { Suspense, type ReactNode } from 'react';
 import { getCachedRepresentative } from '@/lib/questions/get-representative';
 import { getCachedCommittee } from '@/lib/questions/get-committee';
@@ -72,6 +73,13 @@ export const maxDuration = 150;
 export async function generateStaticParams(): Promise<Array<{ slug: string; entityId: string }>> {
   return [];
 }
+
+// A render that couldn't reach the FEC must not be served for the full hour.
+// Next keeps the lowest revalidate seen during a render, so calling this
+// unstable_cache entry (revalidate 300) shortens just that render's ISR life.
+const markFecDegradedRender = unstable_cache(async () => true, ['ask-fec-degraded-render'], {
+  revalidate: 300,
+});
 
 interface PageProps {
   params: Promise<{ slug: string; entityId: string }>;
@@ -231,6 +239,12 @@ function computeConfidence(
         return {
           score: 0.91,
           basis: 'FEC cycle totals and industry classification both resolved.',
+        };
+      }
+      if ((finance?.totalRaised || hasIndustries) && data.campaign?.industriesUnavailable) {
+        return {
+          score: 0.74,
+          basis: 'Partial FEC data; the industry breakdown could not be reached for this render.',
         };
       }
       if (finance?.totalRaised || hasIndustries) {
@@ -556,6 +570,9 @@ export default async function QuestionPage({ params }: PageProps) {
   switch (slug) {
     case 'campaign-contributions':
       campaign = await fetchCampaignContributionsData(id, rep.state);
+      if (campaign.financeUnavailable || campaign.industriesUnavailable) {
+        await markFecDegradedRender();
+      }
       break;
     case 'voting-record':
       voting = await fetchVotingRecordData(id, rep.chamber);
@@ -587,6 +604,7 @@ export default async function QuestionPage({ params }: PageProps) {
           finance={campaign.finance}
           financeUnavailable={campaign.financeUnavailable}
           industries={campaign.industries}
+          industriesUnavailable={campaign.industriesUnavailable}
           voteFinanceInsight={campaign.voteFinance}
         />
       )}

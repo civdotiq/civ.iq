@@ -46,6 +46,8 @@ interface CampaignContributionsAnswerProps {
   finance: FinanceData | null;
   financeUnavailable: boolean;
   industries: IndustryData | null;
+  /** The breakdown couldn't be fetched — say so instead of "no employer data". */
+  industriesUnavailable?: boolean;
   voteFinanceInsight: InsightResponse<VoteFinanceInsight> | null;
 }
 
@@ -159,7 +161,24 @@ function FundingSummaryPod({
   );
 }
 
-function TopIndustriesPod({ industries }: { industries: IndustryData | null }) {
+function TopIndustriesPod({
+  industries,
+  unavailable,
+}: {
+  industries: IndustryData | null;
+  unavailable: boolean;
+}) {
+  if (unavailable) {
+    return (
+      <div className="border-2 border-black bg-white p-4 sm:p-6">
+        <h2 className="type-sm font-semibold text-black mb-3">Top industries</h2>
+        <p className="type-sm text-status-warning">
+          The industry breakdown is temporarily unavailable from the FEC. Try again shortly.
+        </p>
+      </div>
+    );
+  }
+
   if (!industries?.topIndustries?.length) {
     return (
       <div className="border-2 border-black bg-white p-4 sm:p-6">
@@ -267,12 +286,13 @@ export function CampaignContributionsAnswer({
   finance,
   financeUnavailable,
   industries,
+  industriesUnavailable = false,
   voteFinanceInsight,
 }: CampaignContributionsAnswerProps) {
   return (
     <>
       <FundingSummaryPod finance={finance} unavailable={financeUnavailable} />
-      <TopIndustriesPod industries={industries} />
+      <TopIndustriesPod industries={industries} unavailable={industriesUnavailable} />
       <VoteFinanceCorrelationPod insight={voteFinanceInsight} />
       <SourcesPod finance={finance} />
     </>
