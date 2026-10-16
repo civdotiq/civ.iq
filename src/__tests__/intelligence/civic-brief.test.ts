@@ -490,4 +490,43 @@ describe('civic-brief-assembler', () => {
     expect(requested).not.toContain('temporal-alignment-party:House:R:R000001');
     expect(requested.some(k => k.includes('S000001'))).toBe(false);
   });
+
+  it('reports no peer baseline when fewer than 5 peers are cached', async () => {
+    const congress = await import('@/features/representatives/services/congress.service');
+    const self = {
+      bioguideId: 'T000001',
+      name: 'Test Rep',
+      party: 'D',
+      state: 'CA',
+      district: '12',
+      chamber: 'House',
+      terms: [{ startYear: '2023' }],
+      committees: [],
+    };
+    const peers = Array.from({ length: 6 }, (_, i) => ({ ...self, bioguideId: `P00000${i}` }));
+    (congress.getEnhancedRepresentative as jest.Mock).mockResolvedValue(self);
+    (congress.getAllEnhancedRepresentatives as jest.Mock).mockResolvedValue([self, ...peers]);
+    // Only 4 party-alignment peers cached; all 6 in-state peers cached.
+    mockRedisMget.mockImplementation((keys: string[]) =>
+      Promise.resolve(
+        keys.map((k, i) => {
+          if (k.startsWith('temporal-alignment-party:')) return i < 4 ? 0.9 : null;
+          if (k.startsWith('brief-instate-pct:')) return 40 + i * 2;
+          return null;
+        })
+      )
+    );
+
+    const { assembleCivicBrief } =
+      await import('@/lib/intelligence/analyzers/civic-brief-assembler');
+    const result = await assembleCivicBrief('T000001', { refresh: true });
+
+    expect(result!.peerBaselines).toEqual({
+      partyAlignment: null,
+      inStatePct: { meanPct: 45, peerCount: 6 },
+    });
+    expect(result!.patterns.some(p => p.type === 'voting-party-divergence')).toBe(false);
+    mockRedisMget.mockReset();
+    mockRedisMget.mockImplementation((keys: string[]) => Promise.resolve(keys.map(() => null)));
+  });
 });

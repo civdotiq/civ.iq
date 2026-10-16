@@ -194,4 +194,37 @@ describe('CivicBriefCard', () => {
     render(<CivicBriefCard insight={makeBrief()} />);
     expect(screen.getByText(/Highlighted industries fall under topics/)).toBeInTheDocument();
   });
+
+  it('shows real peer averages next to the member numbers', () => {
+    const brief = makeBrief();
+    render(
+      <CivicBriefCard
+        insight={makeBrief({
+          // The roster stores full party names.
+          identity: { ...brief.identity, party: 'Democrat' },
+          peerBaselines: {
+            partyAlignment: { meanPct: 95.4, peerCount: 180 },
+            inStatePct: { meanPct: 51.2, peerCount: 400 },
+          },
+        })}
+      />
+    );
+    expect(screen.getByText(/House Democrats average 95%, 180 members/)).toBeInTheDocument();
+    expect(screen.getByText(/House average 51%, 400 members/)).toBeInTheDocument();
+  });
+
+  it('says the peer baseline is unavailable instead of estimating one', () => {
+    render(
+      <CivicBriefCard
+        insight={makeBrief({ peerBaselines: { partyAlignment: null, inStatePct: null } })}
+      />
+    );
+    expect(screen.getAllByText(/peer baseline unavailable/)).toHaveLength(2);
+  });
+
+  it('shows no peer note on briefs cached before peer baselines existed', () => {
+    render(<CivicBriefCard insight={makeBrief()} />);
+    expect(screen.queryByText(/peer baseline unavailable/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/average \d+%, \d+ members/)).not.toBeInTheDocument();
+  });
 });
