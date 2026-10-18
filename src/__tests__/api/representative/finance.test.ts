@@ -181,6 +181,90 @@ describe('/api/representative/[bioguideId]/finance', () => {
       expect(data.metadata.cacheHit).toBe(true);
       expect(mockFecApiService.getFinancialSummary).not.toHaveBeenCalled();
     });
+
+    it('should include the FEC coverage end date', async () => {
+      const request = createMockRequest('http://localhost:3000/api/representative/K000367/finance');
+      const response = await GET(request, { params: Promise.resolve({ bioguideId: 'K000367' }) });
+      const data = await response.json();
+
+      expect(data.coverageEndDate).toBe('2024-06-30');
+    });
+  });
+
+  describe('Cached totals refresh', () => {
+    const DAY_MS = 24 * 60 * 60 * 1000;
+
+    function cachedEntry(builtDaysAgo: number, totalsCheckedDaysAgo?: number) {
+      return {
+        totalRaised: 1000000,
+        totalSpent: 900000,
+        cashOnHand: 100000,
+        industryBreakdown: [{ sector: 'TECH COMPANY', amount: 2800, percentage: 100 }],
+        candidateId: 'S6MN00267',
+        cycle: 2024,
+        lastUpdated: new Date(Date.now() - builtDaysAgo * DAY_MS).toISOString(),
+        ...(totalsCheckedDaysAgo !== undefined && {
+          totalsCheckedAt: new Date(Date.now() - totalsCheckedDaysAgo * DAY_MS).toISOString(),
+        }),
+        metadata: { bioguideId: 'K000367', hasFecMapping: true, cacheHit: false },
+      };
+    }
+
+    async function getFinance() {
+      const request = createMockRequest('http://localhost:3000/api/representative/K000367/finance');
+      const response = await GET(request, { params: Promise.resolve({ bioguideId: 'K000367' }) });
+      return { status: response.status, data: await response.json() };
+    }
+
+    it('re-reads totals older than a day and keeps the cached analysis', async () => {
+      mockGovCache.get.mockResolvedValue(cachedEntry(10));
+
+      const { status, data } = await getFinance();
+
+      expect(status).toBe(200);
+      expect(mockFecApiService.getFinancialSummary).toHaveBeenCalledTimes(1);
+      expect(mockFecApiService.getFinancialSummary).toHaveBeenCalledWith('S6MN00267', 2024);
+      expect(data.totalRaised).toBe(5000000);
+      expect(data.cashOnHand).toBe(500000);
+      expect(data.coverageEndDate).toBe('2024-06-30');
+      expect(data.industryBreakdown).toEqual([
+        { sector: 'TECH COMPANY', amount: 2800, percentage: 100 },
+      ]);
+      expect(mockFecApiService.getAllContributions).not.toHaveBeenCalled();
+    });
+
+    it('writes the refresh back without extending the 30-day expiry', async () => {
+      mockGovCache.get.mockResolvedValue(cachedEntry(10));
+
+      await getFinance();
+
+      expect(mockGovCache.set).toHaveBeenCalledTimes(1);
+      const [, stored, options] = mockGovCache.set.mock.calls[0]!;
+      expect((stored as { totalsCheckedAt?: string }).totalsCheckedAt).toBeDefined();
+      const ttl = (options as { ttl: number }).ttl;
+      expect(ttl).toBeLessThanOrEqual(20 * DAY_MS);
+      expect(ttl).toBeGreaterThan(19 * DAY_MS);
+    });
+
+    it('leaves totals checked within the last day alone', async () => {
+      mockGovCache.get.mockResolvedValue(cachedEntry(10, 0.5));
+
+      const { data } = await getFinance();
+
+      expect(mockFecApiService.getFinancialSummary).not.toHaveBeenCalled();
+      expect(data.totalRaised).toBe(1000000);
+    });
+
+    it('serves the cached totals when the FEC call fails', async () => {
+      mockGovCache.get.mockResolvedValue(cachedEntry(10));
+      mockFecApiService.getFinancialSummary.mockRejectedValue(new Error('FEC API error: 429'));
+
+      const { status, data } = await getFinance();
+
+      expect(status).toBe(200);
+      expect(data.totalRaised).toBe(1000000);
+      expect(mockGovCache.set).not.toHaveBeenCalled();
+    });
   });
 
   describe('No FEC Mapping Cases', () => {
