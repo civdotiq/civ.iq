@@ -98,7 +98,7 @@
     "@upstash/ratelimit": "2.0.7",
     "@upstash/redis": "1.35.8",
     "@vercel/analytics": "2.0.1",
-    "ai": "6.0.214",
+    "ai": "7.0.142",
     "autoprefixer": "^10.4.21",
     "cli-progress": "3.12.0",
     "clsx": "^2.1.1",
