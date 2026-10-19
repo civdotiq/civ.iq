@@ -203,7 +203,8 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
         <p
           className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'} text-center mt-grid-4 pt-grid-3 ${isDark ? 'border-t border-gray-800' : 'border-t border-gray-200'}`}
         >
-          © {new Date().getFullYear()} CIV.IQ. All rights reserved.
+          © {new Date().getFullYear()} CIV.IQ. An independent open-source project, not affiliated
+          with any government.
         </p>
       </div>
     </footer>

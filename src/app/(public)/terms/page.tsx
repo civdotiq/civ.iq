@@ -6,7 +6,7 @@ import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 export const metadata: Metadata = {
   title: 'Terms of service',
   description:
-    'CIV.IQ terms of service: free public access to congressional data from official government sources, with no accounts and no tracking.',
+    'CIV.IQ terms of service: free public access to congressional data from official government sources, with no accounts.',
   alternates: { canonical: 'https://civdotiq.org/terms' },
 };
 
