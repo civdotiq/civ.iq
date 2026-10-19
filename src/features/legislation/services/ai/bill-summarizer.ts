@@ -16,6 +16,7 @@ import { getRedisCache } from '@/lib/cache/redis-client';
 import { generateAIText } from '@/lib/ai/provider';
 import { trackReadingLevel } from '@/lib/analytics/reading-level-tracker';
 import { PLAIN_LANGUAGE_RULES, PLAIN_LANGUAGE_SYSTEM_PROMPT } from '@/lib/ai/plain-language';
+import { simplifyToTargetGrade } from './summary-simplifier';
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
 
@@ -106,36 +107,13 @@ export class BillSummarizer {
       // Generate AI summary
       const summary = await this.generateAISummary(processedText, billMetadata, opts);
 
-      // Validate reading level
-      const readingLevel = await this.calculateReadingLevel(summary.summary);
-
-      // If reading level exceeds target, regenerate with simpler language
-      // Per PlainLanguage.gov: target grade 8 maximum, no tolerance
-      if (readingLevel > opts.targetReadingLevel) {
-        logger.warn('Summary reading level too high, regenerating', {
-          billNumber: billMetadata.number,
-          readingLevel,
-          target: opts.targetReadingLevel,
-        });
-
-        const simplifiedSummary = await this.generateSimplifiedSummary(
-          processedText,
-          billMetadata,
-          opts,
-          readingLevel
-        );
-
-        // If the rewrite failed, keep the original AI summary and its real grade level
-        if (simplifiedSummary) {
-          summary.summary = simplifiedSummary.summary;
-          summary.keyPoints = simplifiedSummary.keyPoints;
-          summary.readingLevel = await this.calculateReadingLevel(summary.summary);
-        } else {
-          summary.readingLevel = readingLevel;
-        }
-      } else {
-        summary.readingLevel = readingLevel;
-      }
+      // Per PlainLanguage.gov: grade 8 maximum. Rewrite the summary itself
+      // (up to two passes) when it reads harder; record the real grade either way.
+      const simplified = await simplifyToTargetGrade(summary.summary, {
+        billNumber: billMetadata.number,
+      });
+      summary.summary = simplified.text;
+      summary.readingLevel = simplified.gradeLevel;
 
       // Track reading level for transparency dashboard (fire-and-forget)
       const metrics = this.calculateReadingMetrics(summary.summary);
@@ -371,54 +349,6 @@ ${PLAIN_LANGUAGE_RULES}`,
   }
 
   /**
-   * Generate simplified summary if reading level is too high.
-   * Returns null when the rewrite fails, so the caller keeps the original.
-   */
-  private static async generateSimplifiedSummary(
-    billText: string,
-    billMetadata: BillMetadata,
-    options: Required<BillSummarizationOptions>,
-    currentReadingLevel: number
-  ): Promise<{ summary: string; keyPoints: string[] } | null> {
-    const simplificationPrompt = `
-The following summary is too complex (reading level ${currentReadingLevel}). 
-Please rewrite it to be at an 8th grade reading level:
-
-ORIGINAL BILL TEXT: ${billText.substring(0, 2000)}
-
-Please provide a much simpler version using:
-- Very short sentences (10-15 words max)
-- Common, everyday words
-- No jargon or technical terms
-- Simple examples people can relate to
-
-Format as JSON:
-{
-  "summary": "Very simple explanation",
-  "keyPoints": ["Simple point 1", "Simple point 2", "Simple point 3"]
-}
-`;
-
-    try {
-      const response = await this.callAIProvider(simplificationPrompt);
-      const parsed = JSON.parse(response.match(/\{[\s\S]*\}/)?.[0] || '{}');
-      if (typeof parsed.summary !== 'string' || parsed.summary.trim() === '') {
-        return null;
-      }
-      return {
-        summary: parsed.summary,
-        keyPoints: parsed.keyPoints || [],
-      };
-    } catch (error) {
-      logger.warn('Summary simplification failed; keeping original', {
-        billNumber: billMetadata.number,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      return null;
-    }
-  }
-
-  /**
    * Calculate both Flesch-Kincaid Grade Level and Flesch Reading Ease
    */
   static calculateReadingMetrics(text: string): {
@@ -450,13 +380,6 @@ Format as JSON:
     );
 
     return { gradeLevel, fleschReadingEase };
-  }
-
-  /**
-   * Calculate reading level using Flesch-Kincaid formula
-   */
-  private static async calculateReadingLevel(text: string): Promise<number> {
-    return this.calculateReadingMetrics(text).gradeLevel;
   }
 
   /**
