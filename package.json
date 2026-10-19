@@ -116,7 +116,7 @@
     "mcp-handler": "1.1.0",
     "next": "16.4.1",
     "nostr-tools": "2.23.1",
-    "pmtiles": "4.3.0",
+    "pmtiles": "4.5.0",
     "qrcode.react": "4.2.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
