@@ -1,16 +1,12 @@
 interface CqSourceTagProps {
   source: string;
   id?: string;
+  /** A real as-of or refresh label. Omitted → no time line (never a guessed default). */
   time?: string;
   compact?: boolean;
 }
 
-export function CqSourceTag({
-  source,
-  id,
-  time = 'Updated weekly',
-  compact = false,
-}: CqSourceTagProps) {
+export function CqSourceTag({ source, id, time, compact = false }: CqSourceTagProps) {
   if (compact) {
     return (
       <span
@@ -68,16 +64,18 @@ export function CqSourceTag({
           {id}
         </span>
       )}
-      <span
-        style={{
-          fontSize: 9,
-          color: 'var(--fg4)',
-          letterSpacing: 'var(--tracking-label)',
-          textTransform: 'uppercase',
-        }}
-      >
-        {time}
-      </span>
+      {time && (
+        <span
+          style={{
+            fontSize: 9,
+            color: 'var(--fg4)',
+            letterSpacing: 'var(--tracking-label)',
+            textTransform: 'uppercase',
+          }}
+        >
+          {time}
+        </span>
+      )}
     </div>
   );
 }
