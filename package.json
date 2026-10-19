@@ -162,7 +162,7 @@
     "jest-environment-jsdom": "^30.0.4",
     "lint-staged": "15.5.2",
     "mapshaper": "0.6.113",
-    "msw": "^2.10.3",
+    "msw": "^3.0.3",
     "npm-audit-resolver": "^3.0.0-RC.0",
     "papaparse": "5.7.0",
     "pbf": "5.1.2",
