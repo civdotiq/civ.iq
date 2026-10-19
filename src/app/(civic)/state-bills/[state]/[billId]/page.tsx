@@ -42,7 +42,7 @@ interface AISummaryResponse {
   whatItDoes?: string;
   currentStatus?: string;
   confidence?: number;
-  source?: 'ai-generated' | 'fallback';
+  source?: 'ai-generated';
   plainLanguage?: { name: string; url: string; description: string };
 }
 
@@ -268,6 +268,12 @@ export default function StateBillDetailPage() {
                     </div>
                   </div>
                 )}
+                {!aiLoading && aiSummary && !aiSummary.success && (
+                  <p className="text-sm text-gray-600 border-l-2 border-gray-300 pl-3">
+                    A plain-language summary is unavailable right now. The bill details below are
+                    from the official record.
+                  </p>
+                )}
                 {aiSummary?.success && aiSummary.summary && (
                   <div className="bg-white border-2 border-black">
                     <div className="p-4 border-b border-gray-100">
@@ -342,7 +348,7 @@ export default function StateBillDetailPage() {
                           <AlertCircle className="h-3 w-3" />
                           <span>AI-generated summary • Verify against official sources</span>
                         </div>
-                        <span>Source: {aiSummary.source}</span>
+                        <span>Written from the bill title, abstract and recent actions</span>
                       </div>
                     </div>
                   </div>

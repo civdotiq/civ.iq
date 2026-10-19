@@ -7,13 +7,18 @@
  * Bill Summary API Endpoint
  *
  * Provides AI-generated summaries of bills at an 8th grade reading level.
- * Includes caching, validation, and error handling.
+ * Includes caching, validation, and error handling. When the AI call fails the
+ * route answers 503 "unavailable" and caches nothing; it never substitutes
+ * template text.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
-import { BillSummarizer } from '@/features/legislation/services/ai/bill-summarizer';
+import {
+  BillSummarizer,
+  BillSummaryUnavailableError,
+} from '@/features/legislation/services/ai/bill-summarizer';
 import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
 import { BillTextProcessor } from '@/features/legislation/services/ai/bill-text-processor';
 import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
@@ -165,20 +170,36 @@ export async function GET(
     const keyContent = BillTextProcessor.extractKeyContent(processedText, 3000);
 
     // Generate AI summary
-    const summary = await BillSummarizer.summarizeBill(
-      keyContent,
-      {
-        number: billText.number,
-        title: billText.title,
-        congress: billText.congress,
-        chamber: billText.chamber,
-      },
-      {
-        targetReadingLevel,
-        maxLength: format === 'brief' ? 150 : format === 'detailed' ? 300 : 500,
-        useCache: !forceRefresh,
-      }
-    );
+    let summary;
+    try {
+      summary = await BillSummarizer.summarizeBill(
+        keyContent,
+        {
+          number: billText.number,
+          title: billText.title,
+          congress: billText.congress,
+          chamber: billText.chamber,
+        },
+        {
+          targetReadingLevel,
+          maxLength: format === 'brief' ? 150 : format === 'detailed' ? 300 : 500,
+          useCache: !forceRefresh,
+        }
+      );
+    } catch (error) {
+      if (!(error instanceof BillSummaryUnavailableError)) throw error;
+      return NextResponse.json(
+        {
+          summary: null,
+          unavailable: true,
+          message:
+            'A plain-language summary is unavailable right now. The official CRS summary and the full text are on the bill page.',
+          billUrl: `/bill/${billId}`,
+        },
+        { status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '300' } }
+      );
+    }
+    summary.basedOn = billText.basedOn;
 
     // Validate reading level
     const readingAnalysis = ReadingLevelValidator.analyzeReadingLevel(summary.summary, {

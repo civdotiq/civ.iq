@@ -135,6 +135,11 @@ export async function GET(
             controller.enqueue(encoder.encode(event));
           }
 
+          // A failed stream can end with no text; never cache or show an empty summary
+          if (fullStreamedText.trim() === '') {
+            throw new Error('AI stream returned no text');
+          }
+
           // Await structured result
           const structuredResponse = await structuredPromise;
           const structured = parseStructuredResponse(structuredResponse);
@@ -159,6 +164,7 @@ export async function GET(
             confidence: structured.confidence,
             lastUpdated: new Date().toISOString(),
             source: 'ai-generated',
+            basedOn: billText.basedOn,
           };
 
           // Cache asynchronously (don't block the response)
