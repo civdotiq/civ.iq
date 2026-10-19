@@ -335,7 +335,7 @@ export default function GoogleCivicMigrationPage() {
                 <tr className="border-b border-gray-200">
                   <td className="py-2 pr-4">Federal legislators</td>
                   <td className="py-2 pr-4 line-through text-gray-400">Shut down</td>
-                  <td className="py-2">535 members, updated hourly</td>
+                  <td className="py-2">535 members, refreshed every 1–2 days</td>
                 </tr>
                 <tr className="border-b border-gray-200">
                   <td className="py-2 pr-4">State legislators</td>
