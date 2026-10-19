@@ -183,7 +183,6 @@ export async function GET(
         {
           targetReadingLevel,
           maxLength: format === 'brief' ? 150 : format === 'detailed' ? 300 : 500,
-          useCache: !forceRefresh,
         }
       );
     } catch (error) {

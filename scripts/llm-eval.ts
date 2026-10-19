@@ -124,7 +124,7 @@ async function main(): Promise<void> {
     process.stdout.write(`\n${meta.number} — ${meta.title}\n`);
     let checks: Check[];
     try {
-      const summary = await BillSummarizer.summarizeBill(text, meta, { useCache: false });
+      const summary = await BillSummarizer.summarizeBill(text, meta);
       checks = evaluateSummary(summary);
       process.stdout.write(`  summary: "${summary.summary}"\n`);
     } catch (err) {

@@ -12,7 +12,6 @@
  */
 
 import logger from '@/lib/logging/simple-logger';
-import { getRedisCache } from '@/lib/cache/redis-client';
 import { generateAIText } from '@/lib/ai/provider';
 import { trackReadingLevel } from '@/lib/analytics/reading-level-tracker';
 import { PLAIN_LANGUAGE_RULES, PLAIN_LANGUAGE_SYSTEM_PROMPT } from '@/lib/ai/plain-language';
@@ -62,7 +61,6 @@ export interface BillSummarizationOptions {
   maxLength?: number;
   includeKeyPoints?: boolean;
   targetReadingLevel?: number;
-  useCache?: boolean;
 }
 
 export class BillSummarizer {
@@ -70,7 +68,6 @@ export class BillSummarizer {
     maxLength: 300,
     includeKeyPoints: true,
     targetReadingLevel: 8,
-    useCache: true,
   };
 
   private static readonly READING_LEVEL_PROMPTS: Record<number, string> = {
@@ -78,7 +75,9 @@ export class BillSummarizer {
   };
 
   /**
-   * Summarize a bill with AI-generated content at 8th grade reading level
+   * Summarize a bill with AI-generated content at 8th grade reading level.
+   * Does not cache: callers cache under the canonical bill id (BillSummaryCache),
+   * since BillMetadata.number alone ("1") can't tell H.R. 1 from S. 1.
    */
   static async summarizeBill(
     billText: string,
@@ -86,21 +85,8 @@ export class BillSummarizer {
     options: BillSummarizationOptions = {}
   ): Promise<BillSummary> {
     const opts = { ...this.DEFAULT_OPTIONS, ...options };
-    const cacheKey = `bill-summary:${billMetadata.number}:${billMetadata.congress}`;
 
     try {
-      // Check cache first
-      if (opts.useCache) {
-        const cached = await getRedisCache().get<BillSummary>(cacheKey);
-        if (cached) {
-          logger.info('Bill summary cache hit', {
-            billNumber: billMetadata.number,
-            operation: 'bill_summarization',
-          });
-          return cached;
-        }
-      }
-
       // Process bill text into manageable chunks
       const processedText = this.preprocessBillText(billText);
 
@@ -122,11 +108,6 @@ export class BillSummarizer {
         `${billMetadata.congress}-${billMetadata.number}`,
         metrics.fleschReadingEase
       );
-
-      // Cache the result
-      if (opts.useCache) {
-        await getRedisCache().set(cacheKey, summary, 24 * 60 * 60); // Cache for 24 hours
-      }
 
       logger.info('Bill summary generated successfully', {
         billNumber: billMetadata.number,
