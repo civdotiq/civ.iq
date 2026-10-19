@@ -7,7 +7,8 @@
  * AI-Powered Bill Summarization Service
  *
  * Provides automatic summarization of complex legislation at an 8th grade reading level.
- * Uses multiple AI providers with fallback mechanisms for reliability.
+ * When the AI call fails, throws BillSummaryUnavailableError. There is no template
+ * fallback: callers show the CRS summary or the full-text link instead.
  */
 
 import logger from '@/lib/logging/simple-logger';
@@ -15,7 +16,6 @@ import { getRedisCache } from '@/lib/cache/redis-client';
 import { generateAIText } from '@/lib/ai/provider';
 import { trackReadingLevel } from '@/lib/analytics/reading-level-tracker';
 import { PLAIN_LANGUAGE_RULES, PLAIN_LANGUAGE_SYSTEM_PROMPT } from '@/lib/ai/plain-language';
-import { BillSummaryFallbacks } from './bill-summary-fallbacks';
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
 
@@ -32,6 +32,21 @@ export interface BillSummary {
   confidence: number;
   lastUpdated: string;
   source: 'ai-generated' | 'congressional-summary' | 'manual';
+  /** What the AI read. Absent on summaries cached before this field existed. */
+  basedOn?: 'bill-text' | 'crs-summary';
+}
+
+/**
+ * Thrown when no AI summary could be produced. Never cached; routes answer
+ * "unavailable" rather than substituting template text.
+ */
+export class BillSummaryUnavailableError extends Error {
+  constructor(billNumber: string, cause: unknown) {
+    super(
+      `AI summary unavailable for ${billNumber}: ${cause instanceof Error ? cause.message : String(cause)}`
+    );
+    this.name = 'BillSummaryUnavailableError';
+  }
 }
 
 export interface BillMetadata {
@@ -110,9 +125,14 @@ export class BillSummarizer {
           readingLevel
         );
 
-        summary.summary = simplifiedSummary.summary;
-        summary.keyPoints = simplifiedSummary.keyPoints;
-        summary.readingLevel = await this.calculateReadingLevel(summary.summary);
+        // If the rewrite failed, keep the original AI summary and its real grade level
+        if (simplifiedSummary) {
+          summary.summary = simplifiedSummary.summary;
+          summary.keyPoints = simplifiedSummary.keyPoints;
+          summary.readingLevel = await this.calculateReadingLevel(summary.summary);
+        } else {
+          summary.readingLevel = readingLevel;
+        }
       } else {
         summary.readingLevel = readingLevel;
       }
@@ -139,33 +159,12 @@ export class BillSummarizer {
 
       return summary;
     } catch (error) {
-      logger.error('Bill summarization failed, attempting fallbacks', error as Error, {
+      logger.error('Bill summarization failed; summary unavailable', error as Error, {
         billNumber: billMetadata.number,
         operation: 'bill_summarization',
       });
 
-      // Execute comprehensive fallback chain
-      const fallbackResult = await BillSummaryFallbacks.executeFallbackChain(
-        billText,
-        billMetadata,
-        error instanceof Error ? error : new Error('Unknown error'),
-        {
-          useCongressionalSummary: true,
-          useKeywordExtraction: true,
-          useSimpleExtraction: true,
-        }
-      );
-
-      // Log fallback result
-      logger.info('Fallback summary generated', {
-        billNumber: billMetadata.number,
-        fallbackMethod: fallbackResult.fallbackMethod,
-        success: fallbackResult.success,
-        confidence: fallbackResult.summary.confidence,
-        operation: 'bill_summarization',
-      });
-
-      return fallbackResult.summary;
+      throw new BillSummaryUnavailableError(billMetadata.number, error);
     }
   }
 
@@ -199,7 +198,7 @@ export class BillSummarizer {
   }
 
   /**
-   * Generate AI summary using OpenAI or fallback providers
+   * Generate AI summary. Throws if the AI call fails or returns no summary.
    */
   private static async generateAISummary(
     billText: string,
@@ -207,19 +206,8 @@ export class BillSummarizer {
     options: Required<BillSummarizationOptions>
   ): Promise<BillSummary> {
     const prompt = this.buildSummarizationPrompt(billText, billMetadata, options);
-
-    try {
-      const response = await this.callAIProvider(prompt);
-      return this.parseSummaryResponse(response, billMetadata);
-    } catch (error) {
-      logger.warn('AI summarization failed, trying fallback', {
-        billNumber: billMetadata.number,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-
-      // Fallback to simpler rule-based summarization
-      return this.generateRuleBasedSummary(billText, billMetadata, options);
-    }
+    const response = await this.callAIProvider(prompt);
+    return this.parseSummaryResponse(response, billMetadata);
   }
 
   /**
@@ -332,11 +320,14 @@ ${PLAIN_LANGUAGE_RULES}`,
       }
 
       const parsed = JSON.parse(jsonMatch[0]);
+      if (typeof parsed.summary !== 'string' || parsed.summary.trim() === '') {
+        throw new Error('AI response has no summary text');
+      }
 
       return {
         billId: `${billMetadata.number}-${billMetadata.congress}`,
         title: billMetadata.title,
-        summary: parsed.summary || '',
+        summary: parsed.summary,
         keyPoints: parsed.keyPoints || [],
         whoItAffects: parsed.whoItAffects || [],
         whatItDoes: parsed.whatItDoes || '',
@@ -380,14 +371,15 @@ ${PLAIN_LANGUAGE_RULES}`,
   }
 
   /**
-   * Generate simplified summary if reading level is too high
+   * Generate simplified summary if reading level is too high.
+   * Returns null when the rewrite fails, so the caller keeps the original.
    */
   private static async generateSimplifiedSummary(
     billText: string,
     billMetadata: BillMetadata,
     options: Required<BillSummarizationOptions>,
     currentReadingLevel: number
-  ): Promise<{ summary: string; keyPoints: string[] }> {
+  ): Promise<{ summary: string; keyPoints: string[] } | null> {
     const simplificationPrompt = `
 The following summary is too complex (reading level ${currentReadingLevel}). 
 Please rewrite it to be at an 8th grade reading level:
@@ -410,20 +402,19 @@ Format as JSON:
     try {
       const response = await this.callAIProvider(simplificationPrompt);
       const parsed = JSON.parse(response.match(/\{[\s\S]*\}/)?.[0] || '{}');
+      if (typeof parsed.summary !== 'string' || parsed.summary.trim() === '') {
+        return null;
+      }
       return {
-        summary: parsed.summary || '',
+        summary: parsed.summary,
         keyPoints: parsed.keyPoints || [],
       };
-    } catch {
-      // Ultimate fallback - super simple rule-based summary
-      return {
-        summary: `This bill, ${billMetadata.title}, makes changes to current laws. It affects how things work in our government or society.`,
-        keyPoints: [
-          'This is a new law being considered',
-          'It would change how things currently work',
-          'Congress is voting on whether to pass it',
-        ],
-      };
+    } catch (error) {
+      logger.warn('Summary simplification failed; keeping original', {
+        billNumber: billMetadata.number,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return null;
     }
   }
 
@@ -494,95 +485,6 @@ Format as JSON:
     }
 
     return totalSyllables;
-  }
-
-  /**
-   * Generate rule-based summary as fallback
-   */
-  private static async generateRuleBasedSummary(
-    billText: string,
-    billMetadata: BillMetadata,
-    _options: Required<BillSummarizationOptions>
-  ): Promise<BillSummary> {
-    // Extract key phrases and create simple summary
-    const keyPhrases = this.extractKeyPhrases(billText);
-    const summaryText = `This bill, called ${billMetadata.title}, makes changes to current laws. ${keyPhrases.slice(0, 2).join(' ')}`;
-    const readingLevel = await this.calculateReadingLevel(summaryText);
-
-    return {
-      billId: `${billMetadata.number}-${billMetadata.congress}`,
-      title: billMetadata.title,
-      summary: summaryText,
-      keyPoints: [
-        'This is new legislation being considered by Congress',
-        'It would change current laws or create new ones',
-        'The full text contains detailed legal language',
-      ],
-      whoItAffects: ['American citizens', 'Government agencies'],
-      whatItDoes: 'Changes or creates laws',
-      whyItMatters: 'Laws affect how our government and society work',
-      affectedIndustries: billMetadata.policyArea
-        ? getIndustrySectorsForPolicyArea(billMetadata.policyArea)
-        : [],
-      readingLevel,
-      confidence: 0.6,
-      lastUpdated: new Date().toISOString(),
-      source: 'ai-generated',
-    };
-  }
-
-  /**
-   * Extract key phrases from bill text
-   */
-  private static extractKeyPhrases(text: string): string[] {
-    const phrases: string[] = [];
-
-    // Look for common bill patterns
-    const patterns = [
-      /to amend .{1,100}/gi,
-      /to establish .{1,100}/gi,
-      /to require .{1,100}/gi,
-      /to provide .{1,100}/gi,
-      /shall .{1,50}/gi,
-    ];
-
-    for (const pattern of patterns) {
-      const matches = text.match(pattern);
-      if (matches) {
-        phrases.push(...matches.slice(0, 2));
-      }
-    }
-
-    return phrases.map(phrase => phrase.trim().replace(/\s+/g, ' ')).slice(0, 5);
-  }
-
-  /**
-   * Generate fallback summary when all else fails
-   */
-  private static async generateFallbackSummary(billMetadata: BillMetadata): Promise<BillSummary> {
-    const summaryText = `This is ${billMetadata.number}, titled "${billMetadata.title}". This bill is being considered by Congress. You can read the full text to learn more about what it does.`;
-    const readingLevel = await this.calculateReadingLevel(summaryText);
-
-    return {
-      billId: `${billMetadata.number}-${billMetadata.congress}`,
-      title: billMetadata.title,
-      summary: summaryText,
-      keyPoints: [
-        'This bill is being considered by Congress',
-        'The title gives you an idea of what it covers',
-        'Read the full text for complete details',
-      ],
-      whoItAffects: ['To be determined'],
-      whatItDoes: 'Changes or creates laws',
-      whyItMatters: 'All laws can affect citizens',
-      affectedIndustries: billMetadata.policyArea
-        ? getIndustrySectorsForPolicyArea(billMetadata.policyArea)
-        : [],
-      readingLevel,
-      confidence: 0.3,
-      lastUpdated: new Date().toISOString(),
-      source: 'ai-generated',
-    };
   }
 
   /**

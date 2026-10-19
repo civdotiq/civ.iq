@@ -211,9 +211,15 @@ export function BillSummary({
             <AlertCircle className="h-3 w-3" />
             <span>AI-generated summary • Simplified to {summary.readingLevel}th grade level</span>
           </div>
-          <div className="flex items-center gap-1">
-            <span>Source: {summary.source}</span>
-          </div>
+          {summary.basedOn && (
+            <div className="flex items-center gap-1">
+              <span>
+                {summary.basedOn === 'crs-summary'
+                  ? 'Written from the CRS summary'
+                  : 'Written from the full bill text'}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>

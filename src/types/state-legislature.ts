@@ -1239,7 +1239,7 @@ export interface StateBillAISummary {
   currentStatus: string;
   confidence: number;
   lastUpdated: string;
-  source: 'ai-generated' | 'fallback';
+  source: 'ai-generated';
   plainLanguage: {
     name: string;
     url: string;
