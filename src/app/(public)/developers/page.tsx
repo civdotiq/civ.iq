@@ -196,9 +196,9 @@ export default function DevelopersPage() {
           Free civic data for developers, journalists, researchers, and AI agents.
         </p>
         <p className="text-sm text-gray-600 max-w-3xl mb-grid-6">
-          No API key. No account. No tracking. Every endpoint, dataset, and protocol on this page is
-          free to use. The government data is in the public domain; the code is open source under
-          the Apache-2.0 license.
+          No API key. No account. Every endpoint, dataset, and protocol on this page is free to use.
+          The government data is in the public domain; the code is open source under the Apache-2.0
+          license.
         </p>
 
         {/* Stat cards */}

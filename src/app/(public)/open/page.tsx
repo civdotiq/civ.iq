@@ -358,8 +358,8 @@ export default function OpenDataPage() {
         </p>
         <p className="text-sm text-gray-600 max-w-3xl mb-grid-6">
           Every piece of data on CIV.IQ is available through open protocols. No account. No API key.
-          No tracking. We pull from official government sources and publish to decentralized
-          networks so these records exist independently of this website.
+          We pull from official government sources and publish to decentralized networks so these
+          records exist independently of this website.
         </p>
 
         {/* Stat cards */}
