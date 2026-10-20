@@ -225,6 +225,11 @@ export function ProfileRedesign({ representative }: ProfileRedesignProps) {
                   error={Boolean(summaryError)}
                   committeeCount={fullCommitteeCount}
                   subcommitteeCount={(representative.committees?.length ?? 0) - fullCommitteeCount}
+                  recordCardHref={
+                    representative.isHistorical
+                      ? undefined
+                      : `/representative/${representative.bioguideId}/record`
+                  }
                 />
               </div>
 
