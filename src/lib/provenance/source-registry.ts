@@ -25,84 +25,98 @@ const CC0 = {
   licenseHref: 'https://creativecommons.org/publicdomain/zero/1.0/',
 };
 
-const METHOD_SOURCES = '/methodology#data-sources';
-const METHOD_FINANCE = '/methodology#campaign-finance';
+const METHOD_SOURCES = { methodHref: '/methodology#data-sources', methodLabel: 'Data sources' };
+const METHOD_FINANCE = {
+  methodHref: '/methodology#campaign-finance',
+  methodLabel: 'Campaign finance',
+};
 
 /** Methodology anchor for AI-written text. */
 export const METHOD_AI = '/methodology#how-we-analyze';
 
 interface RegistryEntry {
   name: string;
+  shortName: string;
   publisher: string;
   href: string;
   license: string;
   licenseHref: string;
   methodHref: string;
+  methodLabel: string;
 }
 
 export const SOURCE_REGISTRY = {
   congressGov: {
     name: 'Congress.gov',
+    shortName: 'Congress.gov',
     publisher: 'Library of Congress',
     href: 'https://www.congress.gov',
     ...PUBLIC_DOMAIN,
-    methodHref: METHOD_SOURCES,
+    ...METHOD_SOURCES,
   },
   crs: {
     name: 'CRS bill summary',
+    shortName: 'CRS',
     publisher: 'Congressional Research Service, via Congress.gov',
     href: 'https://www.congress.gov',
     ...PUBLIC_DOMAIN,
-    methodHref: METHOD_SOURCES,
+    ...METHOD_SOURCES,
   },
   houseClerk: {
     name: 'House roll-call votes',
+    shortName: 'House Clerk',
     publisher: 'Office of the Clerk, U.S. House of Representatives',
     href: 'https://clerk.house.gov/Votes',
     ...PUBLIC_DOMAIN,
-    methodHref: METHOD_SOURCES,
+    ...METHOD_SOURCES,
   },
   senate: {
     name: 'Senate roll-call votes',
+    shortName: 'Senate',
     publisher: 'U.S. Senate',
     href: 'https://www.senate.gov/legislative/votes_new.htm',
     ...PUBLIC_DOMAIN,
-    methodHref: METHOD_SOURCES,
+    ...METHOD_SOURCES,
   },
   cbo: {
     name: 'CBO cost estimates',
+    shortName: 'CBO',
     publisher: 'Congressional Budget Office',
     href: 'https://www.cbo.gov',
     ...PUBLIC_DOMAIN,
-    methodHref: METHOD_SOURCES,
+    ...METHOD_SOURCES,
   },
   usaspending: {
     name: 'USAspending.gov',
+    shortName: 'USAspending',
     publisher: 'U.S. Department of the Treasury',
     href: 'https://www.usaspending.gov',
     ...PUBLIC_DOMAIN,
-    methodHref: METHOD_SOURCES,
+    ...METHOD_SOURCES,
   },
   fec: {
     name: 'FEC filings',
+    shortName: 'FEC',
     publisher: 'Federal Election Commission',
     href: 'https://www.fec.gov/data/',
     ...PUBLIC_DOMAIN,
-    methodHref: METHOD_FINANCE,
+    ...METHOD_FINANCE,
   },
   lda: {
     name: 'Lobbying disclosures (LDA)',
+    shortName: 'LDA',
     publisher: 'Secretary of the Senate and Clerk of the House',
     href: 'https://lda.gov',
     ...PUBLIC_DOMAIN,
-    methodHref: METHOD_FINANCE,
+    ...METHOD_FINANCE,
   },
   congressLegislators: {
     name: 'congress-legislators',
+    shortName: 'congress-legislators',
     publisher: '@unitedstates project',
     href: 'https://github.com/unitedstates/congress-legislators',
     ...CC0,
-    methodHref: METHOD_SOURCES,
+    ...METHOD_SOURCES,
   },
 } satisfies Record<string, RegistryEntry>;
 
