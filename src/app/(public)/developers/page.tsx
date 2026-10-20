@@ -574,8 +574,8 @@ npx @civiq/sdk --help`}
         <section id="bulk-data" className="mb-grid-8">
           <h2 className="text-2xl font-bold mb-grid-2">Bulk Data Downloads</h2>
           <p className="text-gray-600 mb-grid-3">
-            Download complete datasets as CSV or JSON. Updated hourly from official government
-            sources. No account required.
+            Download complete datasets as CSV or JSON, built from official government sources. Each
+            one lists how often it refreshes. No account required.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-grid-3 mb-grid-3">
