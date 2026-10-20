@@ -126,6 +126,9 @@ export interface Bill {
   introducedDate: string;
   url?: string;
   textUrl?: string;
+  /** Congress.gov's own record update time (updateDateIncludingText). */
+  sourceUpdatedAt?: string;
+  /** When CIV.IQ fetched the record (set inside the cached fetch). */
   lastUpdated: string;
 }
 

@@ -63,6 +63,8 @@ export interface UnifiedVoteDetail {
     processingDate: string;
     xmlUrl?: string;
     apiUrl?: string;
+    /** Senate corpus path: when the senate.gov vote mirror last synced. */
+    mirrorSyncedAt?: string;
   };
 }
 
@@ -487,6 +489,7 @@ async function senateVoteFromCorpus(
         confidence: 'high',
         processingDate: new Date().toISOString(),
         xmlUrl,
+        mirrorSyncedAt: menu?.updatedAt,
       },
     };
   } catch (error) {

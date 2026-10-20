@@ -51,6 +51,9 @@ import { useSearchParams } from 'next/navigation';
 import { BillSpendingSection } from '@/features/legislation/components/BillSpendingSection';
 import { BillIntelligenceSection } from '@/components/intelligence/BillIntelligenceSection';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
+import { DataProvenance } from '@/shared/components/ui/DataProvenance';
+import { billPageSources } from '@/lib/provenance/page-sources';
+import { METHOD_AI } from '@/lib/provenance/source-registry';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { SkeletonLoader } from '@/shared/components/ui/SkeletonLoader';
 
@@ -997,6 +1000,21 @@ export function ClientBillContent({ billId, initialBill }: ClientBillContentProp
           </div>
         </div>
       </div>
+
+      <DataProvenance
+        variant="block"
+        className="mt-8"
+        sources={billPageSources(bill)}
+        note={
+          <>
+            AI-written text on this page is labeled where it appears. It is written from the sources
+            above and is not a source itself.{' '}
+            <Link href={METHOD_AI} className="text-civiq-blue hover:underline">
+              How we analyze data →
+            </Link>
+          </>
+        }
+      />
 
       {/* Open Data Strip */}
       <OpenDataStrip
