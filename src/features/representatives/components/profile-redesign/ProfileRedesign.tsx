@@ -7,6 +7,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 import useSWR from 'swr';
+import { DataProvenance } from '@/shared/components/ui/DataProvenance';
+import { profilePageSources } from '@/lib/provenance/page-sources';
 import { EnhancedRepresentative } from '@/types/representative';
 import type { DataQuality } from '@/types/backbone-response';
 import { useSectionNavigation } from '@/shared/components/dashboard';
@@ -270,6 +272,20 @@ export function ProfileRedesign({ representative }: ProfileRedesignProps) {
                     bioguideId={representative.bioguideId}
                     memberName={representative.name}
                     onExplore={() => openSection('news')}
+                  />
+
+                  <DataProvenance
+                    variant="block"
+                    className="mt-8"
+                    sources={profilePageSources({
+                      chamber: representative.chamber,
+                      voteDates: votesResponse?.votes?.map(v => v.date),
+                      billIntroducedDates: [
+                        ...(bills?.sponsored?.bills ?? []),
+                        ...(bills?.cosponsored?.bills ?? []),
+                      ].map(b => b.introducedDate),
+                      finance: finance?.metadata,
+                    })}
                   />
                 </main>
 

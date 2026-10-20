@@ -165,3 +165,59 @@ export function votePageSources(vote: UnifiedVoteDetail): DataSource[] {
 
   return sources;
 }
+
+/** What the profile's own data responses carry; mapped by ProfileRedesign. */
+export interface ProfileSourceInput {
+  chamber: string;
+  /** Dates of the roll calls the Recent votes section shows. */
+  voteDates?: string[];
+  /** Introduced dates of the bills the Bills section shows. */
+  billIntroducedDates?: string[];
+  finance?: { lastUpdated?: string; coverageEndDate?: string } | null;
+}
+
+/**
+ * The profile loads its sections in the browser from cached endpoints, so
+ * there is no single fetch time for bills or votes. Their rows carry only
+ * the newest date in what the page shows; FEC totals carry their own fetch
+ * time and report period.
+ */
+export function profilePageSources(input: ProfileSourceInput): DataSource[] {
+  const newestVote = latest(input.voteDates ?? []);
+  const newestBill = latest(input.billIntroducedDates ?? []);
+  const voteAsOf = newestVote ? `Latest roll call ${fmt(newestVote)}` : undefined;
+  const billAsOf = newestBill ? `Newest bill introduced ${fmt(newestBill)}` : undefined;
+  const sources: DataSource[] = [
+    registrySource('congressLegislators', {
+      covers: 'Name, party, terms, committees and contact details',
+    }),
+  ];
+
+  if (input.chamber === 'Senate') {
+    sources.push(registrySource('senate', { covers: 'Recent roll-call votes', asOf: voteAsOf }));
+    sources.push(
+      registrySource('congressGov', { covers: 'Sponsored and cosponsored bills', asOf: billAsOf })
+    );
+  } else {
+    // House roll calls and bills both come from Congress.gov: one row.
+    sources.push(
+      registrySource('congressGov', {
+        covers: 'Recent roll-call votes, sponsored and cosponsored bills',
+        asOf: [voteAsOf, billAsOf].filter(Boolean).join(' · ') || undefined,
+      })
+    );
+  }
+
+  const coverageEnd = input.finance?.coverageEndDate;
+  sources.push(
+    registrySource('fec', {
+      covers: 'Money raised and spent, and candidate filings',
+      asOf: coverageEnd ? `Filings through ${fmt(coverageEnd)}` : undefined,
+      fetchedAt: input.finance?.lastUpdated,
+    })
+  );
+  sources.push(registrySource('lda', { covers: 'Influence section' }));
+  sources.push(registrySource('news', { covers: 'News section' }));
+
+  return sources;
+}

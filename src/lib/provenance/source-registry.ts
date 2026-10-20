@@ -40,7 +40,7 @@ interface RegistryEntry {
   publisher: string;
   href: string;
   license: string;
-  licenseHref: string;
+  licenseHref?: string;
   methodHref: string;
   methodLabel: string;
 }
@@ -109,6 +109,14 @@ export const SOURCE_REGISTRY = {
     href: 'https://lda.gov',
     ...PUBLIC_DOMAIN,
     ...METHOD_FINANCE,
+  },
+  news: {
+    name: 'News headlines',
+    shortName: 'News',
+    publisher: 'NewsAPI.org and Google News',
+    href: 'https://newsapi.org',
+    license: 'Headlines and links only; articles belong to their publishers',
+    ...METHOD_SOURCES,
   },
   congressLegislators: {
     name: 'congress-legislators',
