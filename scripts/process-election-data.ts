@@ -451,7 +451,7 @@ import type { ElectionMetadata } from '@/types/elections';
 export const ELECTION_2024_METADATA: ElectionMetadata = {
   year: 2024,
   source: 'MIT Election Data and Science Lab (MEDSL)',
-  doi: '10.7910/DVN/2024',
+  doi: '10.7910/DVN/NYTPDU',
   generatedAt: '${new Date().toISOString()}',
   coveredStates: ${JSON.stringify(coveredStates.sort())},
   missingStates: ${JSON.stringify(missingStates.sort())},
