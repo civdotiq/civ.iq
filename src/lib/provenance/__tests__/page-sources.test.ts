@@ -3,7 +3,7 @@
  * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
-import { billPageSources, votePageSources } from '../page-sources';
+import { billPageSources, profilePageSources, votePageSources } from '../page-sources';
 import type { Bill } from '@/types/bill';
 import type { UnifiedVoteDetail } from '@/lib/services/vote.service';
 
@@ -193,5 +193,44 @@ describe('votePageSources', () => {
     expect(congress?.covers).toBe('Bill summary');
     // An API URL is not a page for readers; fall back to the site.
     expect(congress?.href).toBe('https://www.congress.gov');
+  });
+});
+
+describe('profilePageSources', () => {
+  it('gives a House member one Congress.gov row with the newest vote and bill dates', () => {
+    const sources = profilePageSources({
+      chamber: 'House',
+      voteDates: ['2026-09-16T19:05:00-04:00', '2026-09-10T12:00:00-04:00'],
+      billIntroducedDates: ['2026-03-02', '2026-09-16'],
+      finance: { lastUpdated: LOADED, coverageEndDate: '2026-09-30' },
+    });
+    expect(sources.map(s => s.name)).toEqual([
+      'congress-legislators',
+      'Congress.gov',
+      'FEC filings',
+      'Lobbying disclosures (LDA)',
+      'News headlines',
+    ]);
+    const congress = sources[1];
+    expect(congress?.asOf).toBe(
+      'Latest roll call Sep 16, 2026 · Newest bill introduced Sep 16, 2026'
+    );
+    // Bills and votes come from separate caches: no single load time to claim.
+    expect(congress?.fetchedAt).toBeUndefined();
+    expect(sources[2]?.asOf).toBe('Filings through Sep 30, 2026');
+    expect(sources[2]?.fetchedAt).toBe(LOADED);
+  });
+
+  it('credits the Senate for a senator’s votes', () => {
+    const names = profilePageSources({ chamber: 'Senate' }).map(s => s.name);
+    expect(names).toContain('Senate roll-call votes');
+    expect(names).toContain('Congress.gov');
+  });
+
+  it('shows no dates while the sections are still loading', () => {
+    for (const source of profilePageSources({ chamber: 'House', finance: null })) {
+      expect(source.asOf).toBeUndefined();
+      expect(source.fetchedAt).toBeUndefined();
+    }
   });
 });

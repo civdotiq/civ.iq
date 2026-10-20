@@ -26,7 +26,14 @@ export type ProfileFinance = {
   pacContributions?: number;
   partyContributions?: number;
   candidateContributions?: number;
-  metadata?: { matchedCycle?: number; note?: string };
+  metadata?: {
+    matchedCycle?: number;
+    note?: string;
+    /** When the batch service fetched these totals from the FEC. */
+    lastUpdated?: string;
+    /** End of the latest FEC report period (YYYY-MM-DD). */
+    coverageEndDate?: string;
+  };
 };
 
 export interface ProfileBatchResponse {

@@ -424,6 +424,8 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
               candidateId,
               matchedCycle,
               lastUpdated: new Date().toISOString(),
+              // End of the latest FEC report period in these totals.
+              coverageEndDate: summaryData.coverage_end_date || undefined,
               bioguideId,
             },
           };
