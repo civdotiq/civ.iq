@@ -147,8 +147,17 @@ export default function ElectionsPage() {
             DATA SOURCE
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            MIT Election Data and Science Lab (MEDSL). &ldquo;2024 General Election Results.&rdquo;
-            Harvard Dataverse, 2024. DOI: 10.7910/DVN/2024.
+            MIT Election Data and Science Lab (MEDSL). &ldquo;Precinct-Level Returns 2024 by
+            Individual State.&rdquo; Harvard Dataverse, 2024. DOI:{' '}
+            <a
+              href="https://doi.org/10.7910/DVN/NYTPDU"
+              className="underline hover:no-underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              10.7910/DVN/NYTPDU
+            </a>
+            .
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             2025 governor results (NJ, VA): Ballotpedia, citing official state certified results.

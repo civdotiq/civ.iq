@@ -1,8 +1,8 @@
 {
   "source": "MIT Election Data and Science Lab (MEDSL)",
   "repository": "https://github.com/MEDSL/2024-elections-official",
-  "doi": "10.7910/DVN/2024",
-  "license": "CC BY 4.0",
+  "doi": "10.7910/DVN/NYTPDU",
+  "license": "CC0 1.0",
   "baseUrl": "https://github.com/MEDSL/2024-elections-official/raw/main/individual_states",
   "states": {
     "AL": { "file": "al24.zip", "format": "zip" },
