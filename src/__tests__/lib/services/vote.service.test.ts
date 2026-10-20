@@ -206,6 +206,46 @@ describe('lookupVote', () => {
     expect(await lookupVote('house-119-99999')).toEqual({ status: 'unavailable' });
   });
 
+  it('reads member positions from indented Clerk XML', async () => {
+    // Clerk EVS XML puts each tag on its own indented line.
+    const clerkXml = `<?xml version="1.0" encoding="utf-8"?>
+<rollcall-vote>
+  <vote-data>
+    <recorded-vote>
+      <legislator name-id="A000370" sort-field="Adams" unaccented-name="Adams" party="D" state="NC" role="legislator">Adams</legislator>
+      <vote>Nay</vote>
+    </recorded-vote>
+    <recorded-vote>
+      <legislator name-id="A000055" sort-field="Aderholt" unaccented-name="Aderholt" party="R" state="AL" role="legislator">Aderholt</legislator>
+      <vote>Yea</vote>
+    </recorded-vote>
+  </vote-data>
+</rollcall-vote>`;
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          houseRollCallVote: {
+            startDate: '2025-05-22T06:00:00-04:00',
+            result: 'Passed',
+            voteQuestion: 'On Passage',
+            sourceDataURL: 'https://clerk.house.gov/evs/2025/roll145.xml',
+            votePartyTotal: [],
+          },
+        }),
+      })
+      .mockResolvedValueOnce({ ok: true, status: 200, text: async () => clerkXml });
+
+    const lookup = await lookupVote('house-119-1-145');
+    expect(lookup.status).toBe('found');
+    const members = lookup.status === 'found' ? lookup.vote.members : [];
+    expect(members.map(m => [m.bioguideId, m.position])).toEqual([
+      ['A000370', 'Nay'],
+      ['A000055', 'Yea'],
+    ]);
+  });
+
   it('is unavailable when the House request times out', async () => {
     fetchMock.mockRejectedValue(new DOMException('timed out', 'TimeoutError'));
     expect(await lookupVote('house-119-1-100')).toEqual({ status: 'unavailable' });
