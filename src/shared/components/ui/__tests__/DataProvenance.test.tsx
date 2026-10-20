@@ -34,13 +34,36 @@ describe('DataProvenance block variant', () => {
     expect(
       screen.getByText('Record updated Sep 19, 2026 · Loaded Oct 20, 2026, 9:12 AM ET')
     ).toBeInTheDocument();
+    // One license line and one method link for the whole list, not per row.
     expect(screen.getAllByRole('link', { name: 'Public domain (17 U.S.C. § 105)' })).toHaveLength(
-      2
+      1
     );
-    expect(screen.getAllByRole('link', { name: 'Method →' })[0]).toHaveAttribute(
+    expect(screen.getByText(/All sources:/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Data sources →' })).toHaveAttribute(
       'href',
       '/methodology#data-sources'
     );
+  });
+
+  it('starts collapsed, with names and the headline date in the summary', () => {
+    const { container } = render(
+      <DataProvenance
+        variant="block"
+        sources={[
+          registrySource('congressGov', { covers: 'Status', asOf: 'Record updated Sep 19, 2026' }),
+          registrySource('crs', { covers: 'Official summary' }),
+          registrySource('congressLegislators', { covers: 'Member names' }),
+        ]}
+      />
+    );
+    const details = container.querySelector('details');
+    expect(details).not.toHaveAttribute('open');
+    expect(container.querySelector('summary')).toHaveTextContent(
+      /^▸Sources and method · Congress\.gov, CRS, congress-legislators · Record updated Sep 19, 2026$/
+    );
+    // Mixed licenses are grouped by source.
+    expect(screen.getByText(/Congress\.gov, CRS:/)).toBeInTheDocument();
+    expect(screen.getByText(/congress-legislators:/)).toBeInTheDocument();
   });
 
   it('prints no date line for a source without dates', () => {

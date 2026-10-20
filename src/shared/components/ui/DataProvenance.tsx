@@ -14,6 +14,8 @@ export interface DataSource {
   fetchedAt?: string;
   status: 'available' | 'unavailable' | 'stale';
   // The fields below are read by the block variant only.
+  /** Short label for the collapsed summary, e.g. "CRS". */
+  shortName?: string;
   publisher?: string;
   href?: string;
   /** What this source supplies on the page. */
@@ -23,6 +25,8 @@ export interface DataSource {
   license?: string;
   licenseHref?: string;
   methodHref?: string;
+  /** Name of the methodology section `methodHref` points to. */
+  methodLabel?: string;
 }
 
 interface DataProvenanceProps {
@@ -118,8 +122,11 @@ function formatProvenanceDate(isoDate: string): string {
 }
 
 /**
- * Page-level source list: publisher, as-of date, load time, license and a
- * method link per source. A date shows only where the record carries one.
+ * Page-level source list, collapsed to one line by default. Opened, it shows
+ * one row per source (name, publisher, what it covers, dates), then the
+ * licenses and method links once. A date shows only where the record carries
+ * one. Native <details> keeps every row in the HTML for crawlers and screen
+ * readers, with no client JS.
  */
 function SourcesAndMethod({
   sources,
@@ -130,71 +137,115 @@ function SourcesAndMethod({
   note?: ReactNode;
   className: string;
 }) {
+  const names = [...new Set(sources.map(s => s.shortName ?? s.name))];
+  const headline = sources.find(s => s.asOf)?.asOf;
+
+  const licenses = new Map<string, { href?: string; names: string[] }>();
+  for (const source of sources) {
+    if (!source.license) continue;
+    const group = licenses.get(source.license) ?? { href: source.licenseHref, names: [] };
+    group.names.push(source.shortName ?? source.name);
+    licenses.set(source.license, group);
+  }
+  const methods = new Map<string, string>();
+  for (const source of sources) {
+    if (source.methodHref && !methods.has(source.methodHref)) {
+      methods.set(source.methodHref, source.methodLabel ?? 'Method');
+    }
+  }
+
   return (
-    <section
-      aria-labelledby="sources-and-method"
-      className={`bg-white border-2 border-black p-6 ${className}`}
-    >
-      <h2 id="sources-and-method" className="text-lg font-semibold text-gray-900">
-        Sources and method
-      </h2>
-      <ul className="mt-grid-2 divide-y divide-gray-200 border-t border-gray-200">
-        {sources.map(source => {
-          const loaded = source.fetchedAt ? formatLoadedAt(source.fetchedAt) : '';
-          const dates = [source.asOf, loaded && `Loaded ${loaded}`].filter(Boolean);
-          return (
-            <li key={`${source.name}-${source.covers ?? ''}`} className="py-grid-2">
-              <p className="text-sm text-gray-900">
-                {source.href ? (
+    <details className={`group bg-white border-2 border-black ${className}`}>
+      <summary className="flex cursor-pointer list-none flex-wrap items-baseline gap-x-grid-1 px-grid-3 py-grid-2 text-sm text-gray-600 [&::-webkit-details-marker]:hidden">
+        <span
+          aria-hidden="true"
+          className="inline-block text-gray-500 transition-transform group-open:rotate-90"
+        >
+          ▸
+        </span>
+        <h2 id="sources-and-method" className="font-semibold text-gray-900">
+          Sources and method
+        </h2>
+        <span className="min-w-0">
+          {/* Names repeat inside; on a phone the summary keeps just the date. */}
+          <span className="hidden sm:inline"> · {names.join(', ')}</span>
+          {headline && <span> · {headline}</span>}
+        </span>
+      </summary>
+
+      <div className="border-t border-gray-200 px-grid-3 pb-grid-2">
+        <ul className="divide-y divide-gray-200">
+          {sources.map(source => {
+            const loaded = source.fetchedAt ? formatLoadedAt(source.fetchedAt) : '';
+            const dates = [source.asOf, loaded && `Loaded ${loaded}`].filter(Boolean);
+            return (
+              <li
+                key={`${source.name}-${source.covers ?? ''}`}
+                className="grid gap-x-grid-3 gap-y-1 py-grid-1 text-sm sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_minmax(0,16rem)]"
+              >
+                <div>
+                  {source.href ? (
+                    <a
+                      href={source.href}
+                      className="font-semibold text-civiq-blue hover:underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {source.name}
+                    </a>
+                  ) : (
+                    <span className="font-semibold text-gray-900">{source.name}</span>
+                  )}
+                  {source.publisher && (
+                    <span className="block text-xs text-gray-500">{source.publisher}</span>
+                  )}
+                </div>
+                <div className="text-gray-700">{source.covers}</div>
+                <div className="text-xs text-gray-600">{dates.join(' · ')}</div>
+              </li>
+            );
+          })}
+        </ul>
+
+        <div className="space-y-1 border-t border-gray-200 pt-grid-1 text-xs text-gray-600">
+          <p>
+            {[...licenses].map(([license, group], i) => (
+              <span key={license}>
+                {i > 0 && ' · '}
+                {licenses.size > 1 && `${group.names.join(', ')}: `}
+                {licenses.size === 1 && 'All sources: '}
+                {group.href ? (
                   <a
-                    href={source.href}
-                    className="font-semibold text-civiq-blue hover:underline"
+                    href={group.href}
+                    className="hover:underline"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    {source.name}
+                    {license}
                   </a>
                 ) : (
-                  <span className="font-semibold">{source.name}</span>
+                  license
                 )}
-                {source.publisher && <span className="text-gray-600"> · {source.publisher}</span>}
-              </p>
-              {source.covers && <p className="mt-1 text-sm text-gray-700">{source.covers}</p>}
-              {dates.length > 0 && (
-                <p className="mt-1 text-xs text-gray-600">{dates.join(' · ')}</p>
-              )}
-              {(source.license || source.methodHref) && (
-                <p className="mt-1 text-xs text-gray-600">
-                  {source.license &&
-                    (source.licenseHref ? (
-                      <a
-                        href={source.licenseHref}
-                        className="hover:underline"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {source.license}
-                      </a>
-                    ) : (
-                      source.license
-                    ))}
-                  {source.license && source.methodHref && ' · '}
-                  {source.methodHref && (
-                    <a href={source.methodHref} className="text-civiq-blue hover:underline">
-                      Method →
-                    </a>
-                  )}
-                </p>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-      {note && <p className="mt-grid-2 text-sm text-gray-700">{note}</p>}
-      <p className="mt-grid-2 text-xs text-gray-500">
-        Dates shown where the source reports one. “Loaded” is when CIV.IQ last fetched the record.
-      </p>
-    </section>
+              </span>
+            ))}
+            {methods.size > 0 && ' · Method: '}
+            {[...methods].map(([href, label], i) => (
+              <span key={href}>
+                {i > 0 && ' · '}
+                <a href={href} className="text-civiq-blue hover:underline">
+                  {label} →
+                </a>
+              </span>
+            ))}
+          </p>
+          {note && <p className="text-gray-700">{note}</p>}
+          <p className="text-gray-500">
+            Dates shown where the source reports one. “Loaded” is when CIV.IQ last fetched the
+            record.
+          </p>
+        </div>
+      </div>
+    </details>
   );
 }
 
