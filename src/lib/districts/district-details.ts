@@ -9,6 +9,7 @@
  * server-rendered /districts/[districtId] page so both read one cache entry.
  */
 
+import { ACS_5YR_VINTAGE } from '@/lib/census-vintage';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
 import { cachedFetch } from '@/lib/cache';
@@ -92,6 +93,8 @@ export interface DistrictDetails {
     motto?: string;
     nickname?: string;
   } | null;
+  /** When CIV.IQ assembled this record (set inside the 7-day cached fetch). */
+  fetchedAt?: string;
 }
 
 /**
@@ -253,7 +256,7 @@ async function fetchAgeDistribution(
     const variables = [...maleVars, ...femaleVars].join(',');
 
     const geoParams = buildCensusGeoParams(state, district, apiKey, isStatewideQuery);
-    const url = `https://api.census.gov/data/2022/acs/acs5?get=${variables}&${geoParams}`;
+    const url = `https://api.census.gov/data/${ACS_5YR_VINTAGE}/acs/acs5?get=${variables}&${geoParams}`;
 
     const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
     if (!response.ok) return [];
@@ -359,7 +362,7 @@ async function fetchIncomeAndEmployment(
     const variables = [...incomeVars, ...maleOccVars, ...femaleOccVars].join(',');
 
     const geoParams = buildCensusGeoParams(state, district, apiKey, isStatewideQuery);
-    const url = `https://api.census.gov/data/2022/acs/acs5?get=${variables}&${geoParams}`;
+    const url = `https://api.census.gov/data/${ACS_5YR_VINTAGE}/acs/acs5?get=${variables}&${geoParams}`;
 
     const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
     if (!response.ok) return { income: [], employment: [] };
@@ -426,7 +429,7 @@ async function getDistrictDemographics(
     const apiKey = process.env.CENSUS_API_KEY || '';
 
     // Get comprehensive data from Census American Community Survey 5-Year estimates
-    const acsUrl = 'https://api.census.gov/data/2022/acs/acs5';
+    const acsUrl = `https://api.census.gov/data/${ACS_5YR_VINTAGE}/acs/acs5`;
     const variables = [
       // Demographics
       'B01003_001E', // Total population
@@ -1979,6 +1982,7 @@ export async function getDistrictDetails(districtId: string): Promise<DistrictDe
       },
       geography,
       wikidata,
+      fetchedAt: new Date().toISOString(),
     };
 
     return districtDetails;

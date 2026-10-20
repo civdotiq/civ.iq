@@ -128,6 +128,9 @@ function formatProvenanceDate(isoDate: string): string {
  * one. Native <details> keeps every row in the HTML for crawlers and screen
  * readers, with no client JS.
  */
+/** Beyond this, the collapsed summary names the first few and counts the rest. */
+const MAX_SUMMARY_NAMES = 8;
+
 function SourcesAndMethod({
   sources,
   note,
@@ -137,7 +140,14 @@ function SourcesAndMethod({
   note?: ReactNode;
   className: string;
 }) {
-  const names = [...new Set(sources.map(s => s.shortName ?? s.name))];
+  const allNames = [...new Set(sources.map(s => s.shortName ?? s.name))];
+  const names =
+    allNames.length > MAX_SUMMARY_NAMES
+      ? [
+          ...allNames.slice(0, MAX_SUMMARY_NAMES - 2),
+          `and ${allNames.length - MAX_SUMMARY_NAMES + 2} more`,
+        ]
+      : allNames;
   const headline = sources.find(s => s.asOf)?.asOf;
 
   const licenses = new Map<string, { href?: string; names: string[] }>();
@@ -147,6 +157,9 @@ function SourcesAndMethod({
     group.names.push(source.shortName ?? source.name);
     licenses.set(source.license, group);
   }
+  // Largest license group last, as "all other sources", so a page with one
+  // CC0 source among a dozen federal ones doesn't list every federal name.
+  const licenseGroups = [...licenses].sort((a, b) => a[1].names.length - b[1].names.length);
   const methods = new Map<string, string>();
   for (const source of sources) {
     if (source.methodHref && !methods.has(source.methodHref)) {
@@ -209,11 +222,14 @@ function SourcesAndMethod({
 
         <div className="space-y-1 border-t border-gray-200 pt-grid-1 text-xs text-gray-600">
           <p>
-            {[...licenses].map(([license, group], i) => (
+            {licenseGroups.map(([license, group], i) => (
               <span key={license}>
                 {i > 0 && ' · '}
-                {licenses.size > 1 && `${group.names.join(', ')}: `}
-                {licenses.size === 1 && 'All sources: '}
+                {licenseGroups.length === 1
+                  ? 'All sources: '
+                  : i === licenseGroups.length - 1
+                    ? 'All other sources: '
+                    : `${group.names.join(', ')}: `}
                 {group.href ? (
                   <a
                     href={group.href}

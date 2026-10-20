@@ -31,3 +31,6 @@ export const LATEST_VINTAGE = 'Current_Current';
 export function currentOfficeholderVintage(now: Date = new Date()): string {
   return now.getTime() < CONGRESS_120_CONVENES_MS ? SITTING_119TH_VINTAGE : LATEST_VINTAGE;
 }
+
+/** ACS 5-year release behind district demographics (2022 = 2018–2022 estimates). */
+export const ACS_5YR_VINTAGE = 2022;

@@ -14,6 +14,8 @@
 import type { DataSource } from '@/shared/components/ui/DataProvenance';
 import type { Bill } from '@/types/bill';
 import type { UnifiedVoteDetail } from '@/lib/services/vote.service';
+import type { DistrictDetails } from '@/lib/districts/district-details';
+import { ACS_5YR_VINTAGE } from '@/lib/census-vintage';
 import { formatDateOnly } from '@/lib/utils/date-only';
 import { officialVoteRecordUrl } from '@/lib/votes/vote-links';
 import { registrySource } from './source-registry';
@@ -218,6 +220,58 @@ export function profilePageSources(input: ProfileSourceInput): DataSource[] {
   );
   sources.push(registrySource('lda', { covers: 'Influence section' }));
   sources.push(registrySource('news', { covers: 'News section' }));
+
+  return sources;
+}
+
+export function districtPageSources(district: DistrictDetails): DataSource[] {
+  // fetchedAt is set inside the district record's cached fetch: it dates
+  // the live Census and Wikidata calls. The 2024 results and the Gazetteer
+  // ship with the site, so no load time applies to them.
+  const fetchedAt = district.fetchedAt;
+  const hasElection = district.political.lastElection.winner !== 'Data unavailable';
+  const sources: DataSource[] = [
+    registrySource('congressLegislators', { covers: 'Current representative' }),
+  ];
+
+  if (district.demographics) {
+    sources.push(
+      registrySource('acs', {
+        covers: 'Population, income, age and other demographics',
+        asOf: `ACS ${ACS_5YR_VINTAGE - 4}–${ACS_5YR_VINTAGE} 5-year estimates`,
+        fetchedAt,
+      })
+    );
+  }
+  if (hasElection) {
+    sources.push(
+      registrySource('medsl', {
+        covers: 'Last House election result',
+        asOf: '2024 general election',
+      })
+    );
+  }
+  sources.push(
+    registrySource('tigerweb', { covers: 'District map', asOf: '119th Congress boundaries' }),
+    registrySource('gazetteer', {
+      covers: 'Land area and neighboring districts',
+      asOf: '2024 Gazetteer, 119th Congress districts',
+    })
+  );
+  if (district.wikidata) {
+    sources.push(registrySource('wikidata', { covers: 'Historical facts', fetchedAt }));
+  }
+
+  // Loaded in the browser by their own sections; no date reaches this block.
+  sources.push(
+    registrySource('fec', { covers: '2026 candidates and campaign finance' }),
+    registrySource('fred', { covers: 'Statewide economic indicators' }),
+    registrySource('communityAgencies', { covers: 'Community profile section' }),
+    registrySource('hud', { covers: 'Housing affordability section' }),
+    registrySource('servicesHealth', { covers: 'Services and health section' }),
+    registrySource('usaspending', { covers: 'Federal spending and relevant bills' }),
+    registrySource('congressGov', { covers: 'Bills relevant to this district' })
+  );
 
   return sources;
 }
