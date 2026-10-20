@@ -6,6 +6,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { formatMoney, type ProfileSummary } from './types';
 
 interface GlanceBandProps {
@@ -15,6 +16,8 @@ interface GlanceBandProps {
   error?: boolean;
   committeeCount: number;
   subcommitteeCount?: number;
+  /** The member's Record Card. Omitted for former members, whose record isn't current. */
+  recordCardHref?: string;
 }
 
 interface GlanceCellProps {
@@ -56,6 +59,7 @@ export function GlanceBand({
   error,
   committeeCount,
   subcommitteeCount = 0,
+  recordCardHref,
 }: GlanceBandProps) {
   // A failed request is not evidence of absence: never tell the citizen
   // "No FEC filings found" because our own endpoint timed out.
@@ -70,49 +74,60 @@ export function GlanceBand({
   const cycle = summary?.financeCycle;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-2 border-black border-t-4 border-t-civiq-blue bg-white mb-10">
-      <GlanceCell
-        label="Roll-call votes"
-        value={votes && votes > 0 ? String(votes) : '—'}
-        caption={votes && votes > 0 ? 'Most recent floor votes' : unavailable}
-        loading={loading}
-      />
-      <GlanceCell
-        label="Bills sponsored"
-        value={typeof sponsored === 'number' ? String(sponsored) : '—'}
-        caption={
-          typeof sponsored === 'number'
-            ? `${cosponsored && cosponsored > 0 ? `${cosponsored}${cosponsoredPlus} cosponsored · ` : ''}119th Congress`
-            : summary?.legislationUnavailable
-              ? 'Could not load — retry shortly'
-              : unavailable
-        }
-        loading={loading}
-      />
-      <GlanceCell
-        label="Raised"
-        value={raised ?? '—'}
-        caption={
-          raised
-            ? `${cycle ? `${cycle} cycle` : 'Latest cycle'}${spent ? ` · ${spent} spent` : ''}`
-            : failed || summary?.financeUnavailable
-              ? 'Could not load — retry shortly'
-              : 'No FEC filings found'
-        }
-        loading={loading}
-      />
-      <GlanceCell
-        label="Committees"
-        value={committeeCount > 0 ? String(committeeCount) : '—'}
-        caption={
-          committeeCount > 0
-            ? subcommitteeCount > 0
-              ? `Plus ${subcommitteeCount} subcommittee${subcommitteeCount === 1 ? '' : 's'}`
-              : 'Current assignments'
-            : 'Data unavailable'
-        }
-        loading={false}
-      />
+    <div className="mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-2 border-black border-t-4 border-t-civiq-blue bg-white">
+        <GlanceCell
+          label="Roll-call votes"
+          value={votes && votes > 0 ? String(votes) : '—'}
+          caption={votes && votes > 0 ? 'Most recent floor votes' : unavailable}
+          loading={loading}
+        />
+        <GlanceCell
+          label="Bills sponsored"
+          value={typeof sponsored === 'number' ? String(sponsored) : '—'}
+          caption={
+            typeof sponsored === 'number'
+              ? `${cosponsored && cosponsored > 0 ? `${cosponsored}${cosponsoredPlus} cosponsored · ` : ''}119th Congress`
+              : summary?.legislationUnavailable
+                ? 'Could not load — retry shortly'
+                : unavailable
+          }
+          loading={loading}
+        />
+        <GlanceCell
+          label="Raised"
+          value={raised ?? '—'}
+          caption={
+            raised
+              ? `${cycle ? `${cycle} cycle` : 'Latest cycle'}${spent ? ` · ${spent} spent` : ''}`
+              : failed || summary?.financeUnavailable
+                ? 'Could not load — retry shortly'
+                : 'No FEC filings found'
+          }
+          loading={loading}
+        />
+        <GlanceCell
+          label="Committees"
+          value={committeeCount > 0 ? String(committeeCount) : '—'}
+          caption={
+            committeeCount > 0
+              ? subcommitteeCount > 0
+                ? `Plus ${subcommitteeCount} subcommittee${subcommitteeCount === 1 ? '' : 's'}`
+                : 'Current assignments'
+              : 'Data unavailable'
+          }
+          loading={false}
+        />
+      </div>
+      {/* The Record Card is built from the same source as these numbers, with
+        each one cited and a printable version. */}
+      {recordCardHref && (
+        <div className="mt-2 text-right text-sm">
+          <Link href={recordCardHref} className="font-medium text-civiq-blue-dark hover:underline">
+            Full record card, with sources →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
