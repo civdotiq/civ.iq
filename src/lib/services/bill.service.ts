@@ -151,6 +151,8 @@ interface CongressBillData {
   shortTitle?: string;
   originChamber: string;
   introducedDate: string;
+  updateDate?: string;
+  updateDateIncludingText?: string;
   latestAction?: {
     actionDate: string;
     text: string;
@@ -1130,6 +1132,7 @@ export async function lookupBill(billId: string): Promise<BillLookup> {
           textUrl: bill.textVersions?.[0]?.formats?.find(
             (f: CongressTextFormat) => f.type === 'Formatted HTML'
           )?.url,
+          sourceUpdatedAt: bill.updateDateIncludingText ?? bill.updateDate,
           lastUpdated: new Date().toISOString(),
         };
 

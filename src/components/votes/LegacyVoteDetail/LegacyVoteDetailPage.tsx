@@ -24,6 +24,8 @@ import { findBioguideId } from '@/lib/data/senate-member-mappings';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { LegislativeEventSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { VoteFooter } from '@/components/seo/VoteFooter';
+import { DataProvenance } from '@/shared/components/ui/DataProvenance';
+import { votePageSources } from '@/lib/provenance/page-sources';
 import { ShareButton } from '@/components/shared/social/ShareButton';
 import type { UnifiedVoteDetail } from '@/lib/services/vote.service';
 import {
@@ -646,17 +648,7 @@ export function LegacyVoteDetailPage({
           })}
         </div>
 
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p className="flex flex-col sm:flex-row sm:justify-center sm:gap-1">
-            <span>Data source: {voteDetail.metadata.source}</span>
-            <span className="hidden sm:inline">•</span>
-            <span>
-              Processed: {new Date(voteDetail.metadata.processingDate).toLocaleDateString()}
-            </span>
-            <span className="hidden sm:inline">•</span>
-            <span>Confidence: {voteDetail.metadata.confidence}</span>
-          </p>
-        </div>
+        <DataProvenance variant="block" className="mt-8" sources={votePageSources(voteDetail)} />
 
         <VoteFooter
           chamber={voteDetail.chamber}
