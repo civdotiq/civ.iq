@@ -244,6 +244,32 @@ describe('/api/spending/district/[districtId]', () => {
       expect(data.summary).toHaveProperty('grantSpending');
     });
 
+    it('labels the federal fiscal year it queried, not the calendar year', async () => {
+      // Oct 20, 2026 is in FY2027 (Oct 1, 2026 – Sep 30, 2027). Fake only Date.
+      jest.useFakeTimers({
+        now: new Date('2026-10-20T12:00:00Z'),
+        doNotFake: [
+          'setTimeout',
+          'clearTimeout',
+          'setInterval',
+          'clearInterval',
+          'setImmediate',
+          'clearImmediate',
+          'nextTick',
+          'queueMicrotask',
+        ],
+      });
+      try {
+        const request = createMockRequest('http://localhost:3000/api/spending/district/MI-05');
+        const response = await GET(request, { params: Promise.resolve({ districtId: 'MI-05' }) });
+        const data = await response.json();
+        expect(data.summary?.fiscalYear).toBe(2027);
+        expect(data.metadata?.fiscalYear).toBe(2027);
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
     it('should include metadata with data source', async () => {
       const request = createMockRequest('http://localhost:3000/api/spending/district/MI-05');
       const response = await GET(request, { params: Promise.resolve({ districtId: 'MI-05' }) });
