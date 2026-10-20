@@ -87,13 +87,23 @@ export class FileCache {
     }
   }
 
-  async set<T>(key: string, data: T, ttlSeconds: number = 86400): Promise<boolean> {
+  /**
+   * `ageSeconds` is how old `data` already is. Pass it when copying a value
+   * from another cache tier so the entry expires with the data, rather than
+   * getting a fresh TTL from the moment of the copy.
+   */
+  async set<T>(
+    key: string,
+    data: T,
+    ttlSeconds: number = 86400,
+    ageSeconds: number = 0
+  ): Promise<boolean> {
     try {
       await this.ensureCacheDir();
 
       const entry: FileCacheEntry<T> = {
         data,
-        timestamp: Date.now(),
+        timestamp: Date.now() - Math.max(0, ageSeconds) * 1000,
         ttl: ttlSeconds,
         hash: this.generateHash(data),
       };

@@ -122,5 +122,15 @@ export const cache = {
     }
   },
 
+  /** Seconds until `key` expires, or null when that can't be known. */
+  ttl: async (key: string): Promise<number | null> => {
+    try {
+      return await getCache().ttl(key);
+    } catch (error) {
+      logger.error('Cache ttl failed', error as Error, { key });
+      return null;
+    }
+  },
+
   getStatus: () => getCache().getStatus(),
 };

@@ -852,6 +852,64 @@ export class RedisCache {
   }
 
   /**
+   * Seconds until `key` expires, or null when that can't be known: the key is
+   * missing, has no expiry, or the store couldn't be asked.
+   */
+  async ttl(key: string): Promise<number | null> {
+    const remainingOf = (seconds: number): number | null => (seconds > 0 ? seconds : null);
+    const fallbackRemaining = (): number | null => {
+      const entry = this.fallbackCache.get(this.getFallbackKey(key));
+      if (!entry) return null;
+      return remainingOf(Math.floor((entry.timestamp + entry.ttl - Date.now()) / 1000));
+    };
+
+    try {
+      if (
+        this.isConnected &&
+        !this.client &&
+        process.env.UPSTASH_REDIS_REST_URL &&
+        process.env.UPSTASH_REDIS_REST_TOKEN
+      ) {
+        try {
+          const response = await fetch(
+            `${process.env.UPSTASH_REDIS_REST_URL}/ttl/${encodeURIComponent(this.keyPrefix + key)}`,
+            {
+              headers: {
+                Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            return typeof data.result === 'number' ? remainingOf(data.result) : null;
+          }
+
+          throw new Error(`REST API failed: ${response.status}`);
+        } catch (restError) {
+          this.recordRestFailure('ttl', restError);
+          logger.warn('[Cache] REST API error on ttl, falling back to memory', {
+            key,
+            error: (restError as Error).message,
+          });
+          // Fall through to memory cache
+        }
+      }
+
+      if (this.isConnected && this.client) {
+        return remainingOf(await this.client.ttl(key));
+      }
+      return fallbackRemaining();
+    } catch (error) {
+      logger.error('[Cache] error', key, {
+        operation: 'ttl',
+        error: (error as Error).message,
+      });
+      return fallbackRemaining();
+    }
+  }
+
+  /**
    * Batch get multiple keys at once. Returns results in the same order as keys.
    * Null for keys that don't exist or on error.
    */
