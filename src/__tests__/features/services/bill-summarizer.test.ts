@@ -162,27 +162,25 @@ describe('summarizeBill', () => {
     );
   });
 
-  it('regenerates with the simplification prompt when the summary exceeds grade 8', async () => {
+  it('rewrites the summary itself when it reads above grade 8', async () => {
     const simplified = 'This bill helps kids. It gives schools money.';
     mockGenerateAIText
       .mockResolvedValueOnce(makeAIResponse({ summary: COMPLEX_SUMMARY }))
-      .mockResolvedValueOnce(
-        JSON.stringify({ summary: simplified, keyPoints: ['Simple point one', 'Simple point two'] })
-      );
+      .mockResolvedValueOnce(simplified);
 
     const result = await BillSummarizer.summarizeBill(BILL_TEXT, BILL_METADATA);
 
     expect(mockGenerateAIText).toHaveBeenCalledTimes(2);
 
-    // The second call is the simplification prompt. Quirk: it embeds the
-    // preprocessed BILL TEXT, not the failed summary.
+    // The rewrite prompt carries the summary to simplify, not the bill text.
     const secondUserPrompt = mockGenerateAIText.mock.calls[1]?.[1] as string;
-    expect(secondUserPrompt).toContain('too complex');
-    expect(secondUserPrompt).toContain('A bill to provide funds');
+    expect(secondUserPrompt).toContain('Rewrite it so it reads at grade 8 or below');
+    expect(secondUserPrompt).toContain(COMPLEX_SUMMARY);
+    expect(secondUserPrompt).not.toContain('A bill to provide funds');
 
-    // Simplified text replaces summary and keyPoints; other fields survive.
+    // Only the summary text is rewritten; the other fields survive.
     expect(result.summary).toBe(simplified);
-    expect(result.keyPoints).toEqual(['Simple point one', 'Simple point two']);
+    expect(result.keyPoints).toEqual(['Schools get repair money', 'Old buildings get fixed']);
     expect(result.whoItAffects).toEqual(['Students', 'Teachers']);
     expect(result.readingLevel).toBeLessThanOrEqual(8);
   });

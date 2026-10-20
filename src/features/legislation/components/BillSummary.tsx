@@ -209,7 +209,10 @@ export function BillSummary({
         <div className="flex items-center justify-between text-xs text-gray-500">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-3 w-3" />
-            <span>AI-generated summary • Simplified to {summary.readingLevel}th grade level</span>
+            <span>
+              AI-generated summary • Reading level: grade {summary.readingLevel}
+              {summary.readingLevel > 8 && ' (above our grade-8 target)'}
+            </span>
           </div>
           {summary.basedOn && (
             <div className="flex items-center gap-1">
