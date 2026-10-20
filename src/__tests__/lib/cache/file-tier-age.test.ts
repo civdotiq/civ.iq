@@ -11,61 +11,73 @@ import os from 'os';
 import path from 'path';
 import { FileCache } from '@/lib/cache/file-cache';
 
-const REST_URL = 'https://fake-db.upstash.io';
-const REST_TOKEN = 'test-token';
-
 type RedisCacheCtor = typeof import('@/lib/cache/redis-client').RedisCache;
 
-const okJson = (body: unknown): Response =>
-  ({ ok: true, status: 200, json: async () => body }) as unknown as Response;
+const UPSTASH = 'https://fake-db.upstash.io';
 
 describe('RedisCache.ttl over Upstash REST', () => {
   let RedisCache: RedisCacheCtor;
-  const originalFetch = global.fetch;
+  const realFetch = global.fetch;
+  let requested: string[] = [];
+
+  // Answer every Upstash call with `reply`, or fail it when reply is an Error.
+  const upstashReplies = (reply: number | Error): void => {
+    requested = [];
+    global.fetch = jest.fn(async (url: unknown) => {
+      requested.push(String(url));
+      if (reply instanceof Error) throw reply;
+      return { ok: true, status: 200, json: async () => ({ result: reply }) } as Response;
+    }) as unknown as typeof fetch;
+  };
 
   beforeAll(async () => {
-    // The constructor schedules a cleanup interval that is never unref'd.
-    jest.useFakeTimers();
-    process.env.UPSTASH_REDIS_REST_URL = REST_URL;
-    process.env.UPSTASH_REDIS_REST_TOKEN = REST_TOKEN;
-    ({ RedisCache } = await import('@/lib/cache/redis-client'));
+    process.env.UPSTASH_REDIS_REST_URL = UPSTASH;
+    process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
+    jest.useFakeTimers(); // RedisCache's cleanup interval is never unref'd
+    RedisCache = (await import('@/lib/cache/redis-client')).RedisCache;
   });
 
   afterAll(() => {
+    global.fetch = realFetch;
     jest.useRealTimers();
-    global.fetch = originalFetch;
   });
 
   it('returns the seconds left on the prefixed key', async () => {
-    const urls: string[] = [];
-    global.fetch = jest.fn(async (url: unknown) => {
-      urls.push(String(url));
-      return okJson({ result: 3600 });
-    }) as unknown as typeof fetch;
+    upstashReplies(3600);
 
     expect(await new RedisCache().ttl('congress-legislators-current')).toBe(3600);
-    expect(urls).toEqual([`${REST_URL}/ttl/civiq%3Acongress-legislators-current`]);
+    expect(requested).toEqual([`${UPSTASH}/ttl/civiq%3Acongress-legislators-current`]);
   });
 
   it('returns null for a missing key (-2) or one with no expiry (-1)', async () => {
-    global.fetch = jest.fn(async () => okJson({ result: -2 })) as unknown as typeof fetch;
+    upstashReplies(-2);
     expect(await new RedisCache().ttl('gone')).toBeNull();
 
-    global.fetch = jest.fn(async () => okJson({ result: -1 })) as unknown as typeof fetch;
+    upstashReplies(-1);
     expect(await new RedisCache().ttl('forever')).toBeNull();
   });
 
   it('returns null when Upstash cannot be reached', async () => {
-    global.fetch = jest.fn(async () => {
-      throw new Error('network down');
-    }) as unknown as typeof fetch;
+    upstashReplies(new Error('network down'));
 
     expect(await new RedisCache().ttl('congress-legislators-current')).toBeNull();
   });
 });
 
 describe('FileCache.set with an age', () => {
+  const SIX_HOURS = 6 * 60 * 60;
   let dir: string;
+
+  // Read `key` as if `msLater` milliseconds had passed.
+  async function readLater(cache: FileCache, key: string, msLater: number): Promise<unknown> {
+    const realNow = Date.now;
+    Date.now = () => realNow() + msLater;
+    try {
+      return await cache.get(key);
+    } finally {
+      Date.now = realNow;
+    }
+  }
 
   beforeEach(async () => {
     dir = await fs.mkdtemp(path.join(os.tmpdir(), 'file-tier-age-'));
@@ -78,30 +90,18 @@ describe('FileCache.set with an age', () => {
   it('expires when the source entry would, not a full TTL after the copy', async () => {
     const cache = new FileCache(dir);
 
-    // 6h TTL, already 5h59m59s old: one second left.
-    await cache.set('roster', ['A000001'], 6 * 60 * 60, 6 * 60 * 60 - 1);
-    await expect(cache.get('roster')).resolves.toEqual(['A000001']);
+    // Already 5h59m59s into a 6h TTL: one second left.
+    await cache.set('roster', ['A000001'], SIX_HOURS, SIX_HOURS - 1);
 
-    const realNow = Date.now;
-    Date.now = () => realNow() + 2000;
-    try {
-      await expect(cache.get('roster')).resolves.toBeNull();
-    } finally {
-      Date.now = realNow;
-    }
+    await expect(cache.get('roster')).resolves.toEqual(['A000001']);
+    await expect(readLater(cache, 'roster', 2000)).resolves.toBeNull();
   });
 
   it('keeps a full TTL for data written fresh', async () => {
     const cache = new FileCache(dir);
 
-    await cache.set('roster', ['A000001'], 6 * 60 * 60);
+    await cache.set('roster', ['A000001'], SIX_HOURS);
 
-    const realNow = Date.now;
-    Date.now = () => realNow() + 5 * 60 * 60 * 1000;
-    try {
-      await expect(cache.get('roster')).resolves.toEqual(['A000001']);
-    } finally {
-      Date.now = realNow;
-    }
+    await expect(readLater(cache, 'roster', 5 * 60 * 60 * 1000)).resolves.toEqual(['A000001']);
   });
 });

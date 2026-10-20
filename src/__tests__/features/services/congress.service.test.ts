@@ -496,20 +496,29 @@ describe('blob memo (shared by both representative paths)', () => {
     expect(rosterFetchCount()).toBe(1);
   });
 
-  it('writes the file tier even when the value came from the cache below', async () => {
-    // The file-cache write used to live inside the fetchFn handed to
-    // cachedFetch, which only runs it on a MISS. With a warm cache below — the
-    // normal case in production — the file tier was never written and so could
-    // never be hit, no matter where its directory pointed.
+  // Serve the congress blobs as if Redis already held them (cachedFetch never
+  // calls its fetchFn), with `redisTtl` seconds left on each entry.
+  async function withWarmRedis(redisTtl: number | null, run: () => Promise<void>): Promise<void> {
     const passThrough = mockCachedFetch.getMockImplementation()!;
     mockCachedFetch.mockImplementation(async (key: string) => {
       if (key === 'congress-legislators-current') return CURRENT_LEGISLATORS;
       if (key === 'congress-legislators-social-media') return SOCIAL_MEDIA;
       return [];
     });
-
+    mockRedisTtl.mockResolvedValue(redisTtl);
     try {
-      mockRedisTtl.mockResolvedValue(6 * 60 * 60);
+      await run();
+    } finally {
+      mockCachedFetch.mockImplementation(passThrough);
+    }
+  }
+
+  it('writes the file tier even when the value came from the cache below', async () => {
+    // The file-cache write used to live inside the fetchFn handed to
+    // cachedFetch, which only runs it on a MISS. With a warm cache below — the
+    // normal case in production — the file tier was never written and so could
+    // never be hit, no matter where its directory pointed.
+    await withWarmRedis(6 * 60 * 60, async () => {
       await getAllEnhancedRepresentatives();
 
       expect(global.fetch).not.toHaveBeenCalled();
@@ -519,24 +528,14 @@ describe('blob memo (shared by both representative paths)', () => {
         expect.any(Number),
         expect.any(Number)
       );
-    } finally {
-      mockCachedFetch.mockImplementation(passThrough);
-    }
+    });
   });
 
   it('carries the age of a Redis value into the file tier', async () => {
     // A fresh timestamp on a copy from Redis let the file tier serve data up
     // to two full TTLs old. The copy must expire when the Redis entry does.
-    const passThrough = mockCachedFetch.getMockImplementation()!;
-    mockCachedFetch.mockImplementation(async (key: string) => {
-      if (key === 'congress-legislators-current') return CURRENT_LEGISLATORS;
-      if (key === 'congress-legislators-social-media') return SOCIAL_MEDIA;
-      return [];
-    });
     // 6h TTL with 1h left: the data is already 5h old.
-    mockRedisTtl.mockResolvedValue(60 * 60);
-
-    try {
+    await withWarmRedis(60 * 60, async () => {
       await getAllEnhancedRepresentatives();
 
       expect(mockRedisTtl).toHaveBeenCalledWith('congress-legislators-current');
@@ -546,21 +545,11 @@ describe('blob memo (shared by both representative paths)', () => {
         6 * 60 * 60,
         5 * 60 * 60
       );
-    } finally {
-      mockCachedFetch.mockImplementation(passThrough);
-    }
+    });
   });
 
   it('skips the file tier write when the Redis value has no readable TTL', async () => {
-    const passThrough = mockCachedFetch.getMockImplementation()!;
-    mockCachedFetch.mockImplementation(async (key: string) => {
-      if (key === 'congress-legislators-current') return CURRENT_LEGISLATORS;
-      if (key === 'congress-legislators-social-media') return SOCIAL_MEDIA;
-      return [];
-    });
-    mockRedisTtl.mockResolvedValue(null);
-
-    try {
+    await withWarmRedis(null, async () => {
       const reps = await getAllEnhancedRepresentatives();
 
       expect(reps.length).toBeGreaterThan(0);
@@ -570,9 +559,7 @@ describe('blob memo (shared by both representative paths)', () => {
         expect.anything(),
         expect.anything()
       );
-    } finally {
-      mockCachedFetch.mockImplementation(passThrough);
-    }
+    });
   });
 
   it('writes a fresh file tier entry for data fetched from upstream', async () => {
