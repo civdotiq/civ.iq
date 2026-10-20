@@ -3,7 +3,13 @@
  * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
-import { billPageSources, profilePageSources, votePageSources } from '../page-sources';
+import {
+  billPageSources,
+  districtPageSources,
+  profilePageSources,
+  votePageSources,
+} from '../page-sources';
+import type { DistrictDetails } from '@/lib/districts/district-details';
 import type { Bill } from '@/types/bill';
 import type { UnifiedVoteDetail } from '@/lib/services/vote.service';
 
@@ -230,6 +236,77 @@ describe('profilePageSources', () => {
   it('shows no dates while the sections are still loading', () => {
     for (const source of profilePageSources({ chamber: 'House', finance: null })) {
       expect(source.asOf).toBeUndefined();
+      expect(source.fetchedAt).toBeUndefined();
+    }
+  });
+});
+
+describe('districtPageSources', () => {
+  function makeDistrict(overrides: Partial<DistrictDetails> = {}): DistrictDetails {
+    return {
+      id: 'mi-12',
+      state: 'MI',
+      number: '12',
+      name: 'MI District 12',
+      representative: { name: 'Rashida Tlaib', party: 'Democrat', bioguideId: 'T000481' },
+      demographics: {
+        population: 770000,
+        medianIncome: 50000,
+        medianAge: 37,
+        diversityIndex: 0,
+        urbanPercentage: 0,
+        white_percent: 40,
+        black_percent: 45,
+        hispanic_percent: 7,
+        asian_percent: 3,
+        poverty_rate: 25,
+        bachelor_degree_percent: 25,
+      },
+      political: {
+        cookPVI: 'Data unavailable',
+        lastElection: { winner: 'Democrat', margin: 40, turnout: 300000 },
+        registeredVoters: 0,
+      },
+      geography: { area: 200, counties: ['Wayne'], majorCities: ['Detroit'] },
+      wikidata: { established: '1913' },
+      fetchedAt: LOADED,
+      ...overrides,
+    };
+  }
+
+  it('dates the Census ACS vintage and the live-fetched record', () => {
+    const sources = districtPageSources(makeDistrict());
+    const acs = sources.find(s => s.name === 'American Community Survey');
+    expect(acs?.asOf).toBe('ACS 2018–2022 5-year estimates');
+    expect(acs?.fetchedAt).toBe(LOADED);
+    expect(sources.find(s => s.name === 'Wikidata')?.fetchedAt).toBe(LOADED);
+    // Shipped with the site: a vintage, no load time.
+    const medsl = sources.find(s => s.name === 'MEDSL 2024 House returns');
+    expect(medsl?.asOf).toBe('2024 general election');
+    expect(medsl?.fetchedAt).toBeUndefined();
+    expect(medsl?.license).toMatch(/CC0/);
+  });
+
+  it('omits sources the page does not show', () => {
+    const names = districtPageSources(
+      makeDistrict({
+        demographics: undefined,
+        wikidata: null,
+        political: {
+          cookPVI: 'Data unavailable',
+          lastElection: { winner: 'Data unavailable', margin: 0, turnout: 0 },
+          registeredVoters: 0,
+        },
+      })
+    ).map(s => s.name);
+    expect(names).not.toContain('American Community Survey');
+    expect(names).not.toContain('Wikidata');
+    expect(names).not.toContain('MEDSL 2024 House returns');
+    expect(names).toContain('USAspending.gov');
+  });
+
+  it('claims no load time for a record cached before fetchedAt existed', () => {
+    for (const source of districtPageSources(makeDistrict({ fetchedAt: undefined }))) {
       expect(source.fetchedAt).toBeUndefined();
     }
   });

@@ -61,9 +61,30 @@ describe('DataProvenance block variant', () => {
     expect(container.querySelector('summary')).toHaveTextContent(
       /^▸Sources and method · Congress\.gov, CRS, congress-legislators · Record updated Sep 19, 2026$/
     );
-    // Mixed licenses are grouped by source.
-    expect(screen.getByText(/Congress\.gov, CRS:/)).toBeInTheDocument();
+    // Mixed licenses: the smaller group is named, the larger is "all other".
     expect(screen.getByText(/congress-legislators:/)).toBeInTheDocument();
+    expect(screen.getByText(/All other sources:/)).toBeInTheDocument();
+  });
+
+  it('caps the summary list on pages with many sources', () => {
+    const keys = [
+      'congressGov',
+      'crs',
+      'houseClerk',
+      'senate',
+      'cbo',
+      'usaspending',
+      'fec',
+      'lda',
+      'news',
+      'acs',
+    ] as const;
+    const { container } = render(
+      <DataProvenance variant="block" sources={keys.map(k => registrySource(k, { covers: k }))} />
+    );
+    expect(container.querySelector('summary')).toHaveTextContent(
+      'Congress.gov, CRS, House Clerk, Senate, CBO, USAspending, and 4 more'
+    );
   });
 
   it('prints no date line for a source without dates', () => {
