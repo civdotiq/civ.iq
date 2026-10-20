@@ -889,47 +889,17 @@ npx @civiq/sdk --help`}
         {/* Data Freshness */}
         <section id="freshness" className="mb-grid-8">
           <h2 className="text-2xl font-bold mb-grid-2">Data Freshness</h2>
-          <p className="text-gray-600 mb-grid-3">
-            API responses are cached using Incremental Static Regeneration (ISR). The cache
-            automatically refreshes at these intervals from the upstream government sources:
+          <p className="text-gray-600">
+            Each endpoint caches its upstream data for its own window, so a response can be older
+            than the government source. Most windows run from 5 minutes (search, news) to 24 hours
+            (bills, representatives, committees). Slow-changing data is kept longer: address lookups
+            for 7 days, campaign-finance totals for 30 days, and state legislators&apos; vote
+            records for 6 months. Each bulk dataset lists its own refresh schedule under{' '}
+            <Link href="#bulk-data" className="text-[#3ea2d4] underline hover:no-underline">
+              Bulk data
+            </Link>
+            .
           </p>
-
-          <div className="border-2 border-gray-200 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b-2 border-gray-200">
-                <tr>
-                  <th className="text-left p-grid-2 font-semibold">Update Frequency</th>
-                  <th className="text-left p-grid-2 font-semibold">Data Types</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-gray-100">
-                  <td className="p-grid-2 font-medium">5 minutes</td>
-                  <td className="p-grid-2 text-gray-600">News, trending bills, search results</td>
-                </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="p-grid-2 font-medium">1 hour</td>
-                  <td className="p-grid-2 text-gray-600">
-                    Votes, bills, campaign finance, lobbying
-                  </td>
-                </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="p-grid-2 font-medium">24 hours</td>
-                  <td className="p-grid-2 text-gray-600">
-                    Representatives, committees, districts, demographics
-                  </td>
-                </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="p-grid-2 font-medium">30 days</td>
-                  <td className="p-grid-2 text-gray-600">Geocoding results, address lookups</td>
-                </tr>
-                <tr>
-                  <td className="p-grid-2 font-medium">6 months</td>
-                  <td className="p-grid-2 text-gray-600">Historical voting records</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
         </section>
 
         {/* Coverage & Limitations */}
@@ -944,8 +914,8 @@ npx @civiq/sdk --help`}
               <h3 className="font-bold mb-grid-2">What&apos;s covered</h3>
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>
-                  <span className="font-medium">Congress:</span> 119th (current), plus historical
-                  116th–118th sessions
+                  <span className="font-medium">Congress:</span> 119th (current) only. Bills and
+                  votes from earlier Congresses are not served
                 </li>
                 <li>
                   <span className="font-medium">State legislatures:</span> All 50 states via
