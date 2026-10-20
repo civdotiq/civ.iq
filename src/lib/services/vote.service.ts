@@ -219,7 +219,7 @@ async function parseHouseVoteXML(sourceDataURL: string): Promise<MemberVote[]> {
     if (!xmlText.includes('<legislator') || !xmlText.includes('<vote>')) return [];
 
     const memberPattern =
-      /<recorded-vote><legislator name-id="([^"]+)"([^>]*)>([^<]*)<\/legislator><vote>([^<]+)<\/vote><\/recorded-vote>/gi;
+      /<recorded-vote>\s*<legislator name-id="([^"]+)"([^>]*)>([^<]*)<\/legislator>\s*<vote>([^<]+)<\/vote>\s*<\/recorded-vote>/gi;
     const members: MemberVote[] = [];
     let match;
 
