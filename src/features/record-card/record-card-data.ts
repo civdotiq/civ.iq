@@ -16,6 +16,7 @@
  * (see chamber-baselines.ts). No AI text on this card.
  */
 
+import { currentFederalFiscalYear } from '@/lib/helpers/federal-fiscal-year';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import type { EnhancedRepresentative } from '@/types/representative';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
@@ -405,7 +406,8 @@ async function fetchDistrictMoneySection(
   district: string | undefined,
   chamber: 'House' | 'Senate'
 ): Promise<DistrictMoneySection | null> {
-  const fiscalYear = new Date().getFullYear();
+  // Both spending queries use the federal fiscal-year window (Oct–Sep).
+  const fiscalYear = currentFederalFiscalYear();
 
   // Senators: statewide place-of-performance total (all award types).
   if (chamber === 'Senate') {

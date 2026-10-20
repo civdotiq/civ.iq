@@ -3,6 +3,7 @@
  * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
+import { currentFederalFiscalYear } from '@/lib/helpers/federal-fiscal-year';
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { isDelegateJurisdiction } from '@/lib/data/us-states';
@@ -23,7 +24,8 @@ export async function GET(
   const { districtId } = await params;
   const parsed = parseDistrictId(districtId);
   const now = new Date().toISOString();
-  const fiscalYear = new Date().getFullYear();
+  // The federal fiscal year getDistrictSpending queries (Oct–Sep), not the calendar year.
+  const fiscalYear = currentFederalFiscalYear();
 
   if (!parsed) {
     const sourceStatus: SourceStatus = {
