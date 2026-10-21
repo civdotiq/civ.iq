@@ -7,6 +7,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { fmtInt, fmtPct } from '@/features/record-card/format';
 import { formatMoney, type ProfileSummary } from './types';
 
 interface GlanceBandProps {
@@ -50,6 +51,26 @@ function GlanceCell({ label, value, caption, loading }: GlanceCellProps) {
 }
 
 /**
+ * "Missed 61 of 676 (9%) · chamber median 2.1%" — the member's denominator
+ * and the chamber baseline from the same sweep, so the count never stands
+ * alone. Null when the summary predates these fields.
+ */
+export function votesCaption(summary: ProfileSummary | null): string | null {
+  const appearances = summary?.votesAppearances;
+  const missed = summary?.votesMissed;
+  if (!appearances || appearances <= 0 || typeof missed !== 'number') return null;
+  const of =
+    summary?.votesFullCoverage === false
+      ? `of the ${fmtInt(appearances)} most recent`
+      : `of ${fmtInt(appearances)}`;
+  const median =
+    typeof summary?.votesMedianMissedPct === 'number'
+      ? ` · chamber median ${fmtPct(summary.votesMedianMissedPct)}`
+      : '';
+  return `Missed ${fmtInt(missed)} ${of} (${fmtPct((missed / appearances) * 100)})${median}`;
+}
+
+/**
  * At-a-glance stat band. Numbers come from real Congress.gov / FEC data;
  * cells show "Data unavailable" rather than ever inventing a figure.
  */
@@ -72,14 +93,19 @@ export function GlanceBand({
   const raised = formatMoney(summary?.totalRaised);
   const spent = formatMoney(summary?.totalSpent);
   const cycle = summary?.financeCycle;
+  const hasMedian = typeof summary?.votesMedianMissedPct === 'number';
 
   return (
     <div className="mb-10">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-2 border-black border-t-4 border-t-civiq-blue bg-white">
         <GlanceCell
           label="Roll-call votes"
-          value={votes && votes > 0 ? String(votes) : '—'}
-          caption={votes && votes > 0 ? 'Most recent floor votes' : unavailable}
+          value={votes && votes > 0 ? fmtInt(votes) : '—'}
+          caption={
+            votes && votes > 0
+              ? (votesCaption(summary) ?? 'Votes cast, 119th Congress')
+              : unavailable
+          }
           loading={loading}
         />
         <GlanceCell
@@ -119,13 +145,22 @@ export function GlanceBand({
           loading={false}
         />
       </div>
-      {/* The Record Card is built from the same source as these numbers, with
-        each one cited and a printable version. */}
-      {recordCardHref && (
-        <div className="mt-2 text-right text-sm">
-          <Link href={recordCardHref} className="font-medium text-civiq-blue-dark hover:underline">
-            Full record card, with sources →
-          </Link>
+      {(hasMedian || recordCardHref) && (
+        <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
+          {/* Standing note: the median is context for the number, not a score. */}
+          <span className="text-xs text-gray-500">
+            {hasMedian ? 'Chamber medians are a description, not a grade.' : ''}
+          </span>
+          {/* The Record Card is built from the same source as these numbers,
+            with each one cited and a printable version. */}
+          {recordCardHref && (
+            <Link
+              href={recordCardHref}
+              className="font-medium text-civiq-blue-dark hover:underline"
+            >
+              Full record card, with sources →
+            </Link>
+          )}
         </div>
       )}
     </div>
