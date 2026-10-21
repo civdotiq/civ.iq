@@ -242,7 +242,7 @@ export default function FederalElectionsPage() {
                 >
                   10.7910/DVN/IG0UN2
                 </a>
-                . Coverage: all 435 districts and DC.
+                {'. Coverage: all 435 districts and DC.'}
               </p>
             </>
           ) : (

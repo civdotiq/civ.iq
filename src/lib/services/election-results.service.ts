@@ -10,7 +10,7 @@
  * All data is imported at module scope — no async, no network calls.
  */
 
-import { HOUSE_RESULTS_2024, HOUSE_2024_METADATA } from '@/data/election-results-house';
+import { HOUSE_RESULTS_2024 } from '@/data/election-results-house';
 import { STATEWIDE_RESULTS_2024 } from '@/data/election-results-statewide';
 import { STATE_LEG_RESULTS_2024 } from '@/data/election-results-state-leg';
 import { ELECTION_2024_METADATA } from '@/data/election-results-metadata';
@@ -198,4 +198,5 @@ export function electionPartyLabel(party: ElectionParty): string {
   return 'Other';
 }
 
-export { ELECTION_2024_METADATA, HOUSE_2024_METADATA };
+export { ELECTION_2024_METADATA };
+export { HOUSE_2024_METADATA } from '@/data/election-results-house';

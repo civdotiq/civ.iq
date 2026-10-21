@@ -22,8 +22,8 @@
  * https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/IG0UN2
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { parse } from 'csv-parse';
 
 const INPUT_PATH = path.join(
@@ -76,9 +76,9 @@ function partyCode(party: string): PartyCode {
 
 /** A fusion candidate counts toward the first major party on any of their lines. */
 function candidatePartyCode(parties: string[]): PartyCode {
-  const codes = parties.map(partyCode);
+  const codes = new Set(parties.map(partyCode));
   for (const code of ['D', 'R', 'L'] as const) {
-    if (codes.includes(code)) return code;
+    if (codes.has(code)) return code;
   }
   return 'OTHER';
 }
@@ -88,7 +88,36 @@ function pct(part: number, whole: number): number {
 }
 
 function seatKey(state: string, district: string): string {
-  return `${state}-${String(parseInt(district, 10) || 0).padStart(2, '0')}`;
+  return `${state}-${String(Number.parseInt(district, 10) || 0).padStart(2, '0')}`;
+}
+
+/** Adds one MEDSL row's votes to its race. */
+function addRow(race: Race, key: string, row: MedslHouseRow): void {
+  const votes = Number.parseInt(row.candidatevotes, 10);
+  if (Number.isNaN(votes) || votes < 0) {
+    throw new Error(`Bad vote count in ${key}: ${row.candidatevotes}`);
+  }
+
+  const name = row.candidate.replace(/\\"/g, '"').trim();
+  if (NON_VOTES.has(name)) return;
+
+  const hasParty = row.party !== 'NA' && row.party !== '';
+  const namedWriteIn = row.writein === 'TRUE' && name !== 'WRITEIN';
+  if (!hasParty && !namedWriteIn) {
+    // SCATTERING, ALL OTHERS, write-in totals, and CT fusion lines MEDSL
+    // left without a candidate. Real votes, but not anyone's we can name.
+    race.unattributed += votes;
+    return;
+  }
+
+  const party = hasParty ? row.party : 'WRITE-IN';
+  const existing = race.candidates.get(name);
+  if (existing) {
+    existing.votes += votes; // NY fusion: one row per ballot line
+    if (!existing.parties.includes(party)) existing.parties.push(party);
+  } else {
+    race.candidates.set(name, { name, parties: [party], votes });
+  }
 }
 
 async function readRaces(): Promise<{ races: Map<string, Race>; version: string }> {
@@ -115,31 +144,7 @@ async function readRaces(): Promise<{ races: Map<string, Race>; version: string 
       race = { candidates: new Map(), unattributed: 0 };
       races.set(key, race);
     }
-
-    const votes = parseInt(row.candidatevotes, 10);
-    if (isNaN(votes) || votes < 0)
-      throw new Error(`Bad vote count in ${key}: ${row.candidatevotes}`);
-
-    const name = row.candidate.replace(/\\"/g, '"').trim();
-    if (NON_VOTES.has(name)) continue;
-
-    const hasParty = row.party !== 'NA' && row.party !== '';
-    const namedWriteIn = row.writein === 'TRUE' && name !== 'WRITEIN';
-    if (!hasParty && !namedWriteIn) {
-      // SCATTERING, ALL OTHERS, write-in totals, and CT fusion lines MEDSL
-      // left without a candidate. Real votes, but not anyone's we can name.
-      race.unattributed += votes;
-      continue;
-    }
-
-    const party = hasParty ? row.party : 'WRITE-IN';
-    const existing = race.candidates.get(name);
-    if (existing) {
-      existing.votes += votes; // NY fusion: one row per ballot line
-      if (!existing.parties.includes(party)) existing.parties.push(party);
-    } else {
-      race.candidates.set(name, { name, parties: [party], votes });
-    }
+    addRow(race, key, row);
   }
 
   if (versions.size !== 1) throw new Error(`Expected one MEDSL version, got ${[...versions]}`);
@@ -201,7 +206,7 @@ async function main(): Promise<void> {
   }
 
   const { races, version } = await readRaces();
-  const keys = [...races.keys()].sort();
+  const keys = [...races.keys()].sort((a, b) => a.localeCompare(b));
   const entries = keys.map(key => raceLiteral(key, races.get(key)!)).join('\n');
   const generatedAt = new Date().toISOString();
 
