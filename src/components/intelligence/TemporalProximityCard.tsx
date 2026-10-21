@@ -97,6 +97,7 @@ export function TemporalProximityCard({ insight, className = '' }: TemporalProxi
       </div>
 
       <InsightDisclaimer
+        pattern
         disclaimer={insight.disclaimer}
         methodology={insight.methodology}
         source={insight.source}

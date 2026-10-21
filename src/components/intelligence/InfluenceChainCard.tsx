@@ -191,6 +191,7 @@ export function InfluenceChainCard({ insight, className = '' }: InfluenceChainCa
       <SourceCitation sources={insight.sources ?? []} dataAsOf={insight.dataAsOf} />
 
       <InsightDisclaimer
+        pattern
         disclaimer={insight.disclaimer}
         methodology={insight.methodology}
         source={insight.source}

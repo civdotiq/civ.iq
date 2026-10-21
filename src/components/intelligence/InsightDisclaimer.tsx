@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { PATTERN_CAVEAT } from '@/lib/constants/standing-caveats';
 
 /**
  * InsightDisclaimer — collapsible disclaimer + methodology section.
@@ -19,6 +20,9 @@ interface InsightDisclaimerProps {
   disclaimer: string;
   methodology: string;
   source: 'ai-generated' | 'statistical-fallback';
+  /** Add the standing pattern caveat (cards that surface money, influence
+   *  or trade-timing patterns about a person). */
+  pattern?: boolean;
   className?: string;
 }
 
@@ -26,6 +30,7 @@ export function InsightDisclaimer({
   disclaimer,
   methodology,
   source,
+  pattern = false,
   className = '',
 }: InsightDisclaimerProps) {
   const [expanded, setExpanded] = useState(false);
@@ -33,6 +38,7 @@ export function InsightDisclaimer({
   return (
     <div className={`border-t-2 border-gray-200 pt-3 mt-4 ${className}`}>
       <p className="type-xs text-gray-500">{disclaimer}</p>
+      {pattern && <p className="type-xs text-gray-500 mt-1">{PATTERN_CAVEAT}</p>}
 
       <button
         onClick={() => setExpanded(prev => !prev)}

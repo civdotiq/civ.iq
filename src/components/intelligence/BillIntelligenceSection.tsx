@@ -306,6 +306,7 @@ export function BillIntelligenceSection({ billId }: BillIntelligenceSectionProps
 
       {/* Disclaimer + methodology */}
       <InsightDisclaimer
+        pattern
         disclaimer={data.disclaimer}
         methodology={data.methodology}
         source={data.source}
