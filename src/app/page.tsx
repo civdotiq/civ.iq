@@ -13,6 +13,26 @@ export const metadata: Metadata = {
 // Live counts refresh once a day; the hero must never block on Congress.gov.
 export const revalidate = 86400;
 
+// A senator whose term runs to 2031, so the sample stays current for years.
+const DEV_EXAMPLE_REQUEST = 'curl https://civdotiq.org/api/v1/representatives/S001208';
+
+const DEV_EXAMPLE_RESPONSE = `{
+  "data": {
+    "bioguideId": "S001208",
+    "name": "Elissa Slotkin",
+    "party": "Democrat",
+    "state": "MI",
+    "chamber": "Senate",
+    "currentTerm": { "start": "2025-01-03", "end": "2031-01-03" },
+    …
+  },
+  "meta": {
+    "source": "congress-legislators",
+    "license": "Public Domain",
+    …
+  }
+}`;
+
 const civiqMark = (
   <svg
     viewBox="0 0 120 188"
@@ -371,6 +391,22 @@ export default async function HomePage() {
             the <code>@civiq/sdk</code> TypeScript client and CLI on npm. Start at the{' '}
             <Link href="/developers">developer portal</Link>.
           </p>
+          {/* A real request and a trimmed copy of its real response (fields
+            that don't change within a term), so the claim above is checkable
+            in one paste. */}
+          <div className={styles.devBlock} aria-label="Example API request">
+            <span className={styles.devLabel}>Try it</span>
+            <pre className={`${styles.devCode} ${styles.devRequest}`}>
+              <code>{DEV_EXAMPLE_REQUEST}</code>
+            </pre>
+            <pre className={styles.devCode}>
+              <code>{DEV_EXAMPLE_RESPONSE}</code>
+            </pre>
+            <p className={styles.devNote}>
+              Response trimmed to a few fields. No key, no sign-up. Every field is in the{' '}
+              <Link href="/docs/api">API documentation</Link>.
+            </p>
+          </div>
         </div>
       </section>
     </div>
