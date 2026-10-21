@@ -54,6 +54,14 @@ export interface ProfileSummary {
   totalSpent?: number;
   cashOnHand?: number;
   votesParticipated?: number;
+  /** Roll calls the member could have voted on (the denominator). */
+  votesAppearances?: number;
+  /** 'Not Voting' appearances. */
+  votesMissed?: number;
+  /** Chamber median missed-vote %, 0–100; null when not computed. */
+  votesMedianMissedPct?: number | null;
+  /** False when the sweep covered only the most recent roll calls. */
+  votesFullCoverage?: boolean;
   financeCycle?: number;
   /** The FEC could not be reached; money fields are absent, not zero. */
   financeUnavailable?: boolean;
