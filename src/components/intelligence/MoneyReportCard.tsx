@@ -238,6 +238,7 @@ export function MoneyReportCard({ insight, className = '' }: MoneyReportCardProp
       {/* Footer */}
       <div className="mt-4">
         <InsightDisclaimer
+          pattern
           disclaimer={insight.disclaimer}
           methodology={insight.methodology}
           source={insight.source}

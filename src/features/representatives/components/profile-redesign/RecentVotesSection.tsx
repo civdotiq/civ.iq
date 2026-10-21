@@ -11,6 +11,7 @@ import { VoteLink } from '@/components/shared/links/EntityLinks';
 import { amendmentSponsorName, stripMeasureTags } from '@/lib/senate-vote-fields';
 import { partyAlignment } from '@/lib/vote-tally';
 import type { Vote } from '../VoteRow';
+import { ROLL_CALL_CAVEAT } from '@/lib/constants/standing-caveats';
 import { SectionBlock, SectionEmptyState, SectionSkeleton } from './SectionBlock';
 import { groupVotesByMeasure, voteKind, type VoteGroup } from './vote-groups';
 import { PartyBreakdown, TallyBar, useVoteTally } from './VoteTally';
@@ -213,7 +214,7 @@ export function RecentVotesSection({
         <>
           <p className="mb-2 text-[13px] text-gray-600">
             Grouped by measure. The position shown is on the passage or confirmation vote, or the
-            latest vote when there was none. Open a row for every roll call.
+            latest vote when there was none. Open a row for every roll call. {ROLL_CALL_CAVEAT}
           </p>
           <ul>
             {groups.map(group => (

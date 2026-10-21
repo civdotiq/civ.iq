@@ -148,6 +148,7 @@ export function InsightCard({
 
       {/* Disclaimer + methodology */}
       <InsightDisclaimer
+        pattern
         disclaimer={insight.disclaimer}
         methodology={insight.methodology}
         source={insight.source}

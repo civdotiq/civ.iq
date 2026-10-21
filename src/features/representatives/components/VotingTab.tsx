@@ -23,6 +23,7 @@ import { ExportButton } from '@/shared/components/ui/ExportButton';
 import { ExportColumn } from '@/lib/utils/data-export';
 import { VoteRow, extractVoteId, type Vote } from './VoteRow';
 import { VotePatternSection } from './VotePatternSection';
+import { ROLL_CALL_CAVEAT } from '@/lib/constants/standing-caveats';
 
 /**
  * Bridge for ExportButton which requires Record<string, unknown>.
@@ -372,8 +373,8 @@ const VotingTabComponent = React.memo(
         </div>
 
         <p className="text-sm text-gray-500 mb-grid-3 border-l-2 border-gray-200 pl-grid-2">
-          Roll call votes only. Voice votes and committee votes are not shown here. This also skips
-          the talks that shape what reaches the floor.
+          {ROLL_CALL_CAVEAT} Committee votes are not shown here, nor the talks that shape what
+          reaches the floor.
         </p>
 
         {/* AI Vote Pattern Analysis */}

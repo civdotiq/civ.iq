@@ -8,6 +8,7 @@
 import { useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { CqDisclaimer, CqLabel, CqPlainReading, CqSourceTag } from '@/components/cq';
+import { ROLL_CALL_CAVEAT } from '@/lib/constants/standing-caveats';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { CompactHero } from './CompactHero';
 import { FilterRail } from './FilterRail';
@@ -151,6 +152,9 @@ export function VotingRecordPage({ representative: r }: VotingRecordPageProps) {
                 }}
               >
                 Floor votes by roll call
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--fg2)', marginTop: 4 }}>
+                {ROLL_CALL_CAVEAT}
               </div>
             </div>
             <a

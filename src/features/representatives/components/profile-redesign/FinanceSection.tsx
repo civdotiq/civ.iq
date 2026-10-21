@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { SectionBlock, SectionEmptyState, SectionSkeleton } from './SectionBlock';
+import { MONEY_AND_VOTES_CAVEAT } from '@/lib/constants/standing-caveats';
 import { formatMoney, type ProfileFinance } from './types';
 
 interface FinanceSectionProps {
@@ -112,6 +113,7 @@ export function FinanceSection({ finance, loading, onExplore }: FinanceSectionPr
               )}
             </div>
           )}
+          <p className="text-xs text-gray-500 pt-4">{MONEY_AND_VOTES_CAVEAT}</p>
         </>
       )}
     </SectionBlock>
