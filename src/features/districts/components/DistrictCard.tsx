@@ -145,7 +145,9 @@ export function DistrictCard({ district }: { district: District }) {
           <div className="col-span-2">
             <p className="text-xs sm:text-sm text-gray-600">Last Election</p>
             <p className="font-semibold text-sm sm:text-base">
-              {marginWinner} won by {margin.toFixed(1)}%
+              {marginWinner === 'Data unavailable'
+                ? 'Data unavailable'
+                : `${marginWinner} won by ${margin.toFixed(1)}%`}
             </p>
           </div>
         </div>
