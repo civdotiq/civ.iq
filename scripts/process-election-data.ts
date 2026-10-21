@@ -542,16 +542,9 @@ async function main(): Promise<void> {
   console.log('--- Phase 3: Write Output Files ---');
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
-  // House results
-  const houseContent = generateDataFile(
-    '2024 House Election Results',
-    'HOUSE_RESULTS_2024',
-    "US House race results keyed by 'STATE-DD' (e.g., 'PA-07').",
-    buckets.house
-  );
-  const housePath = path.join(OUTPUT_DIR, 'election-results-house.ts');
-  fs.writeFileSync(housePath, houseContent);
-  console.log(`  ${housePath} — ${buckets.house.size} races`);
+  // House results are NOT written from precinct data: several state files lack
+  // district codes or mix vote modes, which merged districts and flipped winners.
+  // election-results-house.ts comes from scripts/process-house-results-2024.ts.
 
   // Statewide results (president + senate + governor merged)
   const statewideMap = new Map<string, VoteTotals>();

@@ -33,6 +33,7 @@ interface District {
       winner: string;
       margin: number;
       turnout: number | null;
+      unopposed?: boolean;
     };
     votingAgePopulation?: number;
     registeredVoters?: number;
@@ -83,6 +84,10 @@ export function DistrictCard({ district }: { district: District }) {
   const partyColor = district.representative.party === 'D' ? 'text-party-dem' : 'text-civiq-red';
   const marginWinner = district.political.lastElection.winner;
   const margin = district.political.lastElection.margin;
+  const unopposed = district.political.lastElection.unopposed === true;
+  let lastElectionText = `${marginWinner} won by ${margin.toFixed(1)}%`;
+  if (marginWinner === 'Data unavailable') lastElectionText = 'Data unavailable';
+  else if (unopposed) lastElectionText = `${marginWinner} ran unopposed`;
 
   return (
     <div className="bg-white border-2 border-black hover:border-civiq-blue transition-colors p-4 sm:p-6">
@@ -144,11 +149,7 @@ export function DistrictCard({ district }: { district: District }) {
           </div>
           <div className="col-span-2">
             <p className="text-xs sm:text-sm text-gray-600">Last Election</p>
-            <p className="font-semibold text-sm sm:text-base">
-              {marginWinner === 'Data unavailable'
-                ? 'Data unavailable'
-                : `${marginWinner} won by ${margin.toFixed(1)}%`}
-            </p>
+            <p className="font-semibold text-sm sm:text-base">{lastElectionText}</p>
           </div>
         </div>
       </Link>

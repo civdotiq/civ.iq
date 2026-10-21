@@ -13,12 +13,17 @@
 export type ElectionParty = 'D' | 'R' | 'L' | 'OTHER';
 
 export type ElectionOffice =
-  | 'US_PRESIDENT'
-  | 'US_SENATE'
-  | 'US_HOUSE'
-  | 'GOVERNOR'
-  | 'STATE_SENATE'
-  | 'STATE_HOUSE';
+  'US_PRESIDENT' | 'US_SENATE' | 'US_HOUSE' | 'GOVERNOR' | 'STATE_SENATE' | 'STATE_HOUSE';
+
+export interface RaceCandidateResult {
+  /** As MEDSL lists it (uppercase), e.g. 'LATEEFAH SIMON'. */
+  name: string;
+  /** Every ballot line the candidate ran on, e.g. 'REPUBLICAN, LIBERTARIAN'. */
+  party: string;
+  partyCode: ElectionParty;
+  votes: number;
+  pct: number;
+}
 
 export interface RaceResult {
   dem: number;
@@ -29,6 +34,13 @@ export interface RaceResult {
   margin: number; // percentage points (positive = winner's margin)
   demPct: number;
   repPct: number;
+  /**
+   * House only: every named candidate, most votes first. With candidates,
+   * `margin` is first place minus second place, so a two-Democrat race reads
+   * correctly. A single candidate ran unopposed; total 0 means no votes were
+   * tallied (the race was not on the ballot).
+   */
+  candidates?: RaceCandidateResult[];
 }
 
 export interface RaceResultFull extends RaceResult {
