@@ -246,11 +246,12 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
   const result2024 = (() => {
     if (parsed.year !== 2024) return null;
-    if (!ELECTION_2024_METADATA.coveredStates.includes(parsed.state)) return null;
+    // House results cover every state; the coverage list below is precinct data.
     if (parsed.office === 'US_HOUSE' && parsed.district) {
       const r = getHouseResult2024(parsed.state, parsed.district);
       return r.dataAvailable ? r : null;
     }
+    if (!ELECTION_2024_METADATA.coveredStates.includes(parsed.state)) return null;
     if (
       parsed.office === 'US_PRESIDENT' ||
       parsed.office === 'US_SENATE' ||

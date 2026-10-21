@@ -18,7 +18,8 @@ import { getStateFromWikidata, getDistrictFromWikidata } from '@/lib/api/wikidat
 import districtGeography from '@/data/district-geography.json';
 import gazetteerData from '@/data/district-gazetteer.json';
 import { US_STATES, censusCongressionalDistrictCode } from '@/lib/data/us-states';
-import { getHouseResult2024 } from '@/lib/services/election-results.service';
+import { electionPartyLabel, getHouseResult2024 } from '@/lib/services/election-results.service';
+import type { RaceCandidateResult } from '@/types/elections';
 import { canonicalizeDistrictId } from '@/lib/helpers/url-builders';
 import { checkDistrictId } from '@/lib/districts/known-districts';
 
@@ -75,6 +76,8 @@ export interface DistrictDetails {
       winner: string;
       margin: number;
       turnout: number;
+      /** 2024 candidates, most votes first; absent when no result is available. */
+      candidates?: RaceCandidateResult[];
     };
     registeredVoters: number;
   };
@@ -1971,9 +1974,10 @@ export async function getDistrictDetails(districtId: string): Promise<DistrictDe
           );
           if (houseResult.dataAvailable) {
             return {
-              winner: houseResult.winner === 'D' ? 'Democrat' : 'Republican',
+              winner: electionPartyLabel(houseResult.winner),
               margin: houseResult.margin,
               turnout: houseResult.total,
+              candidates: houseResult.candidates,
             };
           }
           return { winner: 'Data unavailable', margin: 0, turnout: 0 };
@@ -2031,7 +2035,7 @@ export function districtDetailsResponse(district: DistrictDetails) {
  */
 export function getCachedDistrictDetails(districtId: string): Promise<DistrictDetails | null> {
   return cachedFetch(
-    `district-details-v2-${districtId}`,
+    `district-details-v3-${districtId}`,
     () => getDistrictDetails(districtId),
     // Seconds. Was 15552000000 (a ms value) → clamped to 90 days; the payload
     // also carries the representative, so keep it to a week.

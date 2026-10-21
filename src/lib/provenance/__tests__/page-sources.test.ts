@@ -281,7 +281,7 @@ describe('districtPageSources', () => {
     expect(acs?.fetchedAt).toBe(LOADED);
     expect(sources.find(s => s.name === 'Wikidata')?.fetchedAt).toBe(LOADED);
     // Shipped with the site: a vintage, no load time.
-    const medsl = sources.find(s => s.name === 'MEDSL 2024 precinct returns');
+    const medsl = sources.find(s => s.name === 'MEDSL U.S. House 1976–2024');
     expect(medsl?.asOf).toBe('2024 general election');
     expect(medsl?.fetchedAt).toBeUndefined();
     expect(medsl?.license).toMatch(/CC0/);
@@ -301,7 +301,7 @@ describe('districtPageSources', () => {
     ).map(s => s.name);
     expect(names).not.toContain('American Community Survey');
     expect(names).not.toContain('Wikidata');
-    expect(names).not.toContain('MEDSL 2024 precinct returns');
+    expect(names).not.toContain('MEDSL U.S. House 1976–2024');
     expect(names).toContain('USAspending.gov');
   });
 

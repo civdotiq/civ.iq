@@ -143,10 +143,10 @@ export const SOURCE_REGISTRY = {
     ...METHOD_SOURCES,
   },
   medsl: {
-    name: 'MEDSL 2024 precinct returns',
+    name: 'MEDSL U.S. House 1976–2024',
     shortName: 'MEDSL',
     publisher: 'MIT Election Data and Science Lab',
-    href: 'https://doi.org/10.7910/DVN/NYTPDU',
+    href: 'https://doi.org/10.7910/DVN/IG0UN2',
     ...CC0,
     ...METHOD_SOURCES,
   },

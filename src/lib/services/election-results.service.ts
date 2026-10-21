@@ -10,17 +10,20 @@
  * All data is imported at module scope — no async, no network calls.
  */
 
-import { HOUSE_RESULTS_2024 } from '@/data/election-results-house';
+import { HOUSE_RESULTS_2024, HOUSE_2024_METADATA } from '@/data/election-results-house';
 import { STATEWIDE_RESULTS_2024 } from '@/data/election-results-statewide';
 import { STATE_LEG_RESULTS_2024 } from '@/data/election-results-state-leg';
 import { ELECTION_2024_METADATA } from '@/data/election-results-metadata';
 import type {
+  ElectionParty,
+  RaceCandidateResult,
   RaceResultFull,
   RaceResultUnavailable,
   RaceResultOrUnavailable,
   ElectionOffice,
 } from '@/types/elections';
 
+/** Precinct-data coverage. House results come from a separate, complete source. */
 function stateInDataset(state: string): boolean {
   return !ELECTION_2024_METADATA.missingStates.includes(state.toUpperCase());
 }
@@ -35,6 +38,7 @@ function toFull(
     margin: number;
     demPct: number;
     repPct: number;
+    candidates?: RaceCandidateResult[];
   },
   office: ElectionOffice,
   districtId: string
@@ -66,10 +70,6 @@ export function getHouseResult2024(state: string, district: string): RaceResultO
   const stateUpper = state.toUpperCase();
   const distNorm = String(parseInt(district, 10) || 0).padStart(2, '0');
   const key = `${stateUpper}-${distNorm}`;
-
-  if (!stateInDataset(stateUpper)) {
-    return unavailable('US_HOUSE', key, 'state_not_in_dataset');
-  }
 
   const result = HOUSE_RESULTS_2024[key];
   if (!result) {
@@ -190,4 +190,12 @@ export function getAllStateLegResults2024(
   });
 }
 
-export { ELECTION_2024_METADATA };
+/** 'Democrat' | 'Republican' | 'Libertarian' | 'Other' — never defaults a non-D winner to Republican. */
+export function electionPartyLabel(party: ElectionParty): string {
+  if (party === 'D') return 'Democrat';
+  if (party === 'R') return 'Republican';
+  if (party === 'L') return 'Libertarian';
+  return 'Other';
+}
+
+export { ELECTION_2024_METADATA, HOUSE_2024_METADATA };
