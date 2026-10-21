@@ -225,34 +225,18 @@ export function RacialCompositionChart({ demographics }: { demographics: Demogra
 }
 
 export function ElectionHistoryChart({
-  currentPVI,
   currentMargin,
   winner,
   turnout,
 }: {
-  currentPVI: string;
   currentMargin: number;
   winner?: string;
   turnout?: number;
 }) {
   const hasRealData = winner && winner !== 'Data unavailable';
-  const pviMatch = currentPVI?.match(/^([DR])\+/);
 
-  // Determine display values
-  const winnerLabel = hasRealData
-    ? winner
-    : pviMatch?.[1] === 'D'
-      ? 'Democratic'
-      : pviMatch?.[1] === 'R'
-        ? 'Republican'
-        : null;
-
-  const winnerColor =
-    winnerLabel === 'Democrat' || winnerLabel === 'Democratic'
-      ? SEMANTIC_COLORS.democrat
-      : '#e11d07';
-
-  const isDemWinner = winnerLabel === 'Democrat' || winnerLabel === 'Democratic';
+  const isDemWinner = winner === 'Democrat' || winner === 'Democratic';
+  const winnerColor = isDemWinner ? SEMANTIC_COLORS.democrat : '#e11d07';
   const demBar = hasRealData ? (isDemWinner ? 50 + currentMargin / 2 : 50 - currentMargin / 2) : 0;
   const repBar = hasRealData ? (isDemWinner ? 50 - currentMargin / 2 : 50 + currentMargin / 2) : 0;
 
@@ -311,26 +295,15 @@ export function ElectionHistoryChart({
           </p>
         </>
       ) : (
-        <>
-          <div className="flex items-center justify-center h-48 text-center">
-            <div>
-              <p className="text-gray-600">Data unavailable</p>
-              <p className="text-sm text-gray-500 mt-1">
-                Election results not yet published for this state
-              </p>
-            </div>
+        <div className="flex items-center justify-center h-48 text-center">
+          <div>
+            <p className="text-gray-600">Data unavailable</p>
+            <p className="text-sm text-gray-500 mt-1">
+              2024 House results for this state are not yet in the MIT Election Data + Science Lab
+              (MEDSL) dataset
+            </p>
           </div>
-          <p className="text-sm text-gray-600 mt-2">
-            Estimated from Cook PVI:{' '}
-            {winnerLabel ? (
-              <strong>
-                {winnerLabel} +{Math.abs(currentMargin).toFixed(1)}%
-              </strong>
-            ) : (
-              <strong>{Math.abs(currentMargin).toFixed(1)}% margin</strong>
-            )}
-          </p>
-        </>
+        </div>
       )}
     </div>
   );
@@ -415,7 +388,6 @@ export function DistrictCharts({ districtData }: DistrictChartsProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RacialCompositionChart demographics={districtData.demographics} />
         <ElectionHistoryChart
-          currentPVI={districtData.political.cookPVI}
           currentMargin={districtData.political.lastElection.margin}
           winner={districtData.political.lastElection.winner}
           turnout={districtData.political.lastElection.turnout}
