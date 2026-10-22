@@ -67,6 +67,7 @@
     "generate-district-neighbors": "tsx scripts/generate-district-neighbors.ts",
     "process-election-data": "tsx scripts/process-election-data.ts",
     "process-house-results": "tsx scripts/process-house-results-2024.ts",
+    "process-statewide-results": "tsx scripts/process-statewide-results-2024.ts",
     "diagnose:apis": "tsx scripts/diagnose-apis.ts",
     "diagnose:fec": "node scripts/diagnose-fec.js",
     "generate:embeddings": "tsx scripts/generate-sector-embeddings.ts",

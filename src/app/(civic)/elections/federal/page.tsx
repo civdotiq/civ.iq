@@ -18,6 +18,24 @@ import type { RaceResultFull } from '@/types/elections';
 
 type FederalTab = 'president' | 'senate' | 'house';
 
+const SOURCES: Record<FederalTab, { title: string; doi: string; coverage: string }> = {
+  president: {
+    title: 'U.S. President 1976–2024',
+    doi: '10.7910/DVN/42MVDX',
+    coverage: 'all 50 states and DC',
+  },
+  senate: {
+    title: 'U.S. Senate statewide 1976–2024',
+    doi: '10.7910/DVN/PEJ5QU',
+    coverage: 'all 35 races, including the California and Nebraska special elections',
+  },
+  house: {
+    title: 'U.S. House 1976–2024',
+    doi: '10.7910/DVN/IG0UN2',
+    coverage: 'all 435 districts and DC',
+  },
+};
+
 const TABS: { id: FederalTab; label: string }[] = [
   { id: 'president', label: 'President' },
   { id: 'senate', label: 'US Senate' },
@@ -226,45 +244,22 @@ export default function FederalElectionsPage() {
           <p className="text-xs aicher-heading-wide text-gray-500 dark:text-gray-400 tracking-wider mb-2">
             DATA SOURCE
           </p>
-          {activeTab === 'house' ? (
-            <>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                MIT Election Data and Science Lab (MEDSL). &ldquo;U.S. House 1976&ndash;2024.&rdquo;
-                Harvard Dataverse.
-              </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                DOI:{' '}
-                <a
-                  href="https://doi.org/10.7910/DVN/IG0UN2"
-                  className="underline hover:no-underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  10.7910/DVN/IG0UN2
-                </a>
-                {'. Coverage: all 435 districts and DC.'}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                MIT Election Data and Science Lab (MEDSL). &ldquo;Precinct-Level Returns 2024 by
-                Individual State.&rdquo; Harvard Dataverse, 2024.
-              </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                DOI:{' '}
-                <a
-                  href="https://doi.org/10.7910/DVN/NYTPDU"
-                  className="underline hover:no-underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  10.7910/DVN/NYTPDU
-                </a>
-                . Coverage: 46 of 51 jurisdictions. Missing: AZ, CA, MS, NY, OR.
-              </p>
-            </>
-          )}
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            MIT Election Data and Science Lab (MEDSL). &ldquo;{SOURCES[activeTab].title}.&rdquo;
+            Harvard Dataverse.
+          </p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            DOI:{' '}
+            <a
+              href={`https://doi.org/${SOURCES[activeTab].doi}`}
+              className="underline hover:no-underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {SOURCES[activeTab].doi}
+            </a>
+            {`. Coverage: ${SOURCES[activeTab].coverage}.`}
+          </p>
         </div>
       </div>
     </>

@@ -13,7 +13,7 @@
  */
 
 import { HOUSE_RESULTS_2024, HOUSE_2024_METADATA } from '@/data/election-results-house';
-import { STATEWIDE_RESULTS_2024 } from '@/data/election-results-statewide';
+import { STATEWIDE_RESULTS_2024, STATEWIDE_2024_SOURCES } from '@/data/election-results-statewide';
 import { STATE_LEG_RESULTS_2024 } from '@/data/election-results-state-leg';
 import { ELECTION_2024_METADATA } from '@/data/election-results-metadata';
 import type { DatasetResult, DatasetColumn } from '@/types/dataset';
@@ -124,7 +124,7 @@ export async function generateElectionResults2024(): Promise<DatasetResult | nul
     metadata: {
       name: '2024 Election Results',
       slug: 'election-results-2024',
-      description: `2024 election results. US House: all 435 districts and DC from MEDSL's district-level U.S. House 1976–2024 release (DOI ${HOUSE_2024_METADATA.doi}). President, Senate, Governor, and state legislature: precinct-aggregated for ${ELECTION_2024_METADATA.coveredStates.length} states.`,
+      description: `2024 election results from MEDSL. US House: all 435 districts and DC (DOI ${HOUSE_2024_METADATA.doi}). President: all states and DC (DOI ${STATEWIDE_2024_SOURCES.president.doi}). Senate: all 35 races (DOI ${STATEWIDE_2024_SOURCES.senate.doi}). Governor: precinct returns checked against state certified totals (${STATEWIDE_2024_SOURCES.governor.states.length} states). State legislature: precinct-aggregated for ${ELECTION_2024_METADATA.coveredStates.length} states.`,
       source: ELECTION_2024_METADATA.source,
       sourceUrl: 'https://github.com/MEDSL/2024-elections-official',
       generated: new Date().toISOString(),

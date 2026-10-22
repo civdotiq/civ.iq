@@ -11,7 +11,7 @@
  */
 
 import { HOUSE_RESULTS_2024 } from '@/data/election-results-house';
-import { STATEWIDE_RESULTS_2024 } from '@/data/election-results-statewide';
+import { STATEWIDE_RESULTS_2024, STATEWIDE_2024_SOURCES } from '@/data/election-results-statewide';
 import { STATE_LEG_RESULTS_2024 } from '@/data/election-results-state-leg';
 import { ELECTION_2024_METADATA } from '@/data/election-results-metadata';
 import type {
@@ -23,7 +23,7 @@ import type {
   ElectionOffice,
 } from '@/types/elections';
 
-/** Precinct-data coverage. House results come from a separate, complete source. */
+/** Precinct-data coverage (state legislature). House and statewide results come from complete sources. */
 function stateInDataset(state: string): boolean {
   return !ELECTION_2024_METADATA.missingStates.includes(state.toUpperCase());
 }
@@ -80,7 +80,9 @@ export function getHouseResult2024(state: string, district: string): RaceResultO
 }
 
 /**
- * Look up 2024 statewide race results (President, Senate, Governor).
+ * Look up 2024 statewide race results (President, Senate, Governor). For the
+ * Senate this is the regular election; CA and NE also held special elections,
+ * listed by getAllStatewideResults2024.
  * @param state Two-letter state code (e.g., 'GA')
  * @param office One of 'US_PRESIDENT', 'US_SENATE', 'GOVERNOR'
  */
@@ -93,10 +95,12 @@ export function getStatewideResult2024(
     office === 'US_PRESIDENT' ? 'PRESIDENT' : office === 'US_SENATE' ? 'SENATE' : 'GOVERNOR';
   const key = `${stateUpper}-${officeLabel}`;
 
-  if (!stateInDataset(stateUpper)) {
+  const unverified: readonly string[] = STATEWIDE_2024_SOURCES.governor.unavailable;
+  if (office === 'GOVERNOR' && unverified.includes(stateUpper)) {
     return unavailable(office, key, 'state_not_in_dataset');
   }
 
+  // Otherwise statewide results cover every state; a missing key means no 2024 race.
   const result = STATEWIDE_RESULTS_2024[key];
   if (!result) {
     return unavailable(office, key, 'district_not_found');
@@ -141,7 +145,7 @@ export function getAllStatewideResults2024(
 
   const results: RaceResultFull[] = [];
   for (const [key, raw] of Object.entries(STATEWIDE_RESULTS_2024)) {
-    if (!key.endsWith(suffix)) continue;
+    if (!key.endsWith(suffix) && !key.endsWith(`${suffix}-SPECIAL`)) continue;
     const st = key.slice(0, key.indexOf('-'));
     if (stateFilter && st !== stateFilter.toUpperCase()) continue;
     results.push(toFull(raw, office, key));
@@ -200,3 +204,4 @@ export function electionPartyLabel(party: ElectionParty): string {
 
 export { ELECTION_2024_METADATA };
 export { HOUSE_2024_METADATA } from '@/data/election-results-house';
+export { STATEWIDE_2024_SOURCES };

@@ -12,15 +12,13 @@
  * filing is NOT ballot access — copy downstream must say "filed",
  * never "on the ballot".
  *
- * Falls through MEDSL 2024 results when the year is 2024 and the
- * state is in coveredStates.
+ * Falls through MEDSL 2024 results when the year is 2024.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { reserveFecCall } from '@/lib/fec/fec-rate-limiter';
 import logger from '@/lib/logging/simple-logger';
 import {
-  ELECTION_2024_METADATA,
   getHouseResult2024,
   getStatewideResult2024,
 } from '@/lib/services/election-results.service';
@@ -246,12 +244,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
   const result2024 = (() => {
     if (parsed.year !== 2024) return null;
-    // House results cover every state; the coverage list below is precinct data.
     if (parsed.office === 'US_HOUSE' && parsed.district) {
       const r = getHouseResult2024(parsed.state, parsed.district);
       return r.dataAvailable ? r : null;
     }
-    if (!ELECTION_2024_METADATA.coveredStates.includes(parsed.state)) return null;
     if (
       parsed.office === 'US_PRESIDENT' ||
       parsed.office === 'US_SENATE' ||
