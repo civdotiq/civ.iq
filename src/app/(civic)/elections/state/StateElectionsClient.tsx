@@ -81,9 +81,14 @@ const US_STATES: { code: string; name: string }[] = [
 interface StateElectionsClientProps {
   /** 2024 governor results rendered on the server for the default view. */
   initialResults: RaceResultFull[];
+  /** States that held a 2024 governor race whose results could not be verified. */
+  unavailableGovernorStates: readonly string[];
 }
 
-export default function StateElectionsClient({ initialResults }: StateElectionsClientProps) {
+export default function StateElectionsClient({
+  initialResults,
+  unavailableGovernorStates,
+}: StateElectionsClientProps) {
   const [activeTab, setActiveTab] = useState<StateTab>('governor');
   const [stateFilter, setStateFilter] = useState('');
   const [chamber, setChamber] = useState<Chamber>('');
@@ -307,7 +312,7 @@ export default function StateElectionsClient({ initialResults }: StateElectionsC
         {/* Missing state notice */}
         {stateFilter &&
           ELECTION_2024_METADATA.missingStates.includes(stateFilter) &&
-          (activeTab !== 'governor' || year === '2024') &&
+          activeTab === 'state-leg' &&
           !loading && (
             <div className="border-2 border-gray-300 dark:border-gray-600 p-8 text-center mb-6">
               <p className="text-gray-600 dark:text-gray-300 font-medium mb-2">
@@ -340,7 +345,7 @@ export default function StateElectionsClient({ initialResults }: StateElectionsC
           !(
             stateFilter &&
             ELECTION_2024_METADATA.missingStates.includes(stateFilter) &&
-            (activeTab !== 'governor' || year === '2024')
+            activeTab === 'state-leg'
           ) && (
             <>
               <ElectionSummary results={results} raceLabel={raceLabels[activeTab]} />
@@ -349,6 +354,20 @@ export default function StateElectionsClient({ initialResults }: StateElectionsC
                 {stateFilter &&
                   ` in ${US_STATES.find(s => s.code === stateFilter)?.name || stateFilter}`}
               </p>
+              {activeTab === 'governor' &&
+                year === '2024' &&
+                (stateFilter
+                  ? unavailableGovernorStates.includes(stateFilter)
+                  : unavailableGovernorStates.length > 0) && (
+                  <p className="border-l-4 border-amber-600 pl-3 py-1 mb-3 text-sm text-gray-600 dark:text-gray-300">
+                    Data unavailable for{' '}
+                    {(stateFilter ? [stateFilter] : unavailableGovernorStates)
+                      .map(code => US_STATES.find(s => s.code === code)?.name || code)
+                      .join(', ')}
+                    : these states held a 2024 governor race, but MEDSL&apos;s precinct returns do
+                    not match the certified totals.
+                  </p>
+                )}
               <ElectionResultsTable results={results} labelFn={formatDistrictLabel} />
             </>
           )
@@ -364,6 +383,10 @@ export default function StateElectionsClient({ initialResults }: StateElectionsC
             Individual State.&rdquo; Harvard Dataverse, 2024.
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            2024 governor results are summed from these precinct returns and checked against each
+            state&apos;s certified totals.
+          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             2025 governor results (NJ, VA): Ballotpedia, citing official state certified results.
           </p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
@@ -376,7 +399,7 @@ export default function StateElectionsClient({ initialResults }: StateElectionsC
             >
               10.7910/DVN/NYTPDU
             </a>
-            . Coverage: 46 of 51 jurisdictions. Missing: AZ, CA, MS, NY, OR.
+            . State legislature coverage: 46 of 51 jurisdictions. Missing: AZ, CA, MS, NY, OR.
           </p>
         </div>
       </div>

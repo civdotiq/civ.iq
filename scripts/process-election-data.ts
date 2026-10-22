@@ -546,21 +546,9 @@ async function main(): Promise<void> {
   // district codes or mix vote modes, which merged districts and flipped winners.
   // election-results-house.ts comes from scripts/process-house-results-2024.ts.
 
-  // Statewide results (president + senate + governor merged)
-  const statewideMap = new Map<string, VoteTotals>();
-  for (const [k, v] of buckets.president) statewideMap.set(k, v);
-  for (const [k, v] of buckets.senate) statewideMap.set(k, v);
-  for (const [k, v] of buckets.governor) statewideMap.set(k, v);
-
-  const statewideContent = generateDataFile(
-    '2024 Statewide Election Results',
-    'STATEWIDE_RESULTS_2024',
-    "President, Senate, and Governor results keyed by 'STATE-OFFICE' (e.g., 'GA-SENATE').",
-    statewideMap
-  );
-  const statewidePath = path.join(OUTPUT_DIR, 'election-results-statewide.ts');
-  fs.writeFileSync(statewidePath, statewideContent);
-  console.log(`  ${statewidePath} — ${statewideMap.size} races`);
+  // Statewide results are NOT written from precinct data either: summary rows
+  // were counted as candidates and offices were matched too loosely.
+  // election-results-statewide.ts comes from scripts/process-statewide-results-2024.ts.
 
   // State legislature results
   const stateLegMap = new Map<string, VoteTotals>();

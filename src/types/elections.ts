@@ -6,8 +6,8 @@
 /**
  * Election Results Types
  *
- * Types for 2024 election results aggregated from MEDSL precinct-level data.
- * Source: MIT Election Data and Science Lab via Harvard Dataverse.
+ * Types for 2024 election results from MIT Election Data and Science Lab
+ * (MEDSL) releases on Harvard Dataverse.
  */
 
 export type ElectionParty = 'D' | 'R' | 'L' | 'OTHER';
@@ -35,7 +35,7 @@ export interface RaceResult {
   demPct: number;
   repPct: number;
   /**
-   * House only: every named candidate, most votes first. With candidates,
+   * House and statewide races: every named candidate, most votes first. With candidates,
    * `margin` is first place minus second place, so a two-Democrat race reads
    * correctly. A single candidate ran unopposed; total 0 means no votes were
    * tallied (the race was not on the ballot).
