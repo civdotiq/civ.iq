@@ -9,7 +9,7 @@
  * Server component. CqAskInput is the only piece that needs 'use client'.
  *
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import Link from 'next/link';
@@ -167,7 +167,7 @@ export function AskEntryPage({ initialQuery = '', asof }: AskEntryPageProps) {
       crumbs={['Ask', 'Reference Q&A']}
       crumbRight={
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg3)' }}>
-          Indexed {today} · 26 sources
+          Indexed {today} · 40 sources
         </span>
       }
     >

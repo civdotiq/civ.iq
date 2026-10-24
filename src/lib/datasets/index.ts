@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -30,7 +30,8 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
     source: 'congress-legislators',
     sourceUrl: 'https://github.com/unitedstates/congress-legislators',
     approximateRows: '~535',
-    freshness: 'Updated hourly',
+    // Stacked caches: 24h govCache over 6h Redis/file tiers over congress-legislators.
+    freshness: 'Refreshed every 1–2 days',
     columnLabels: [
       'Bioguide ID',
       'Full Name',
@@ -58,7 +59,8 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
     source: 'congress-legislators',
     sourceUrl: 'https://github.com/unitedstates/congress-legislators',
     approximateRows: '~3,000',
-    freshness: 'Updated hourly',
+    // Rosters cache 6h; member names come through the congress-members chain.
+    freshness: 'Refreshed every 1–2 days',
     columnLabels: [
       'Committee ID',
       'Committee Name',
@@ -102,7 +104,8 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
     source: 'Congress.gov + Senate.gov',
     sourceUrl: 'https://api.congress.gov',
     approximateRows: '~20',
-    freshness: 'Updated hourly',
+    // Senate rolls come from the corpus synced daily by sync-senate-votes.yml.
+    freshness: 'House hourly; Senate daily',
     columnLabels: [
       'Vote ID',
       'Chamber',
@@ -127,7 +130,8 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
     source: 'Congress.gov + Senate.gov + House Clerk',
     sourceUrl: 'https://api.congress.gov',
     approximateRows: '~10,000',
-    freshness: 'Updated hourly',
+    // Same vote path as recent-votes.
+    freshness: 'House hourly; Senate daily',
     columnLabels: [
       'Vote ID',
       'Vote Date',
@@ -176,7 +180,8 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
     source: 'MIT Election Data and Science Lab',
     sourceUrl: 'https://github.com/MEDSL/2024-elections-official',
     approximateRows: '~7,300',
-    freshness: 'Static (regenerated when MEDSL adds states)',
+    // Built by hand with scripts/process-election-data.ts; nothing regenerates it.
+    freshness: 'Static snapshot from March 2026',
     columnLabels: [
       'District ID',
       'Office',
@@ -200,7 +205,8 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
     source: 'Congress Trading Monitor / Senate eFD',
     sourceUrl: 'https://efdsearch.senate.gov',
     approximateRows: '~3,000',
-    freshness: 'Updated daily',
+    // Upstream monitor refreshes daily, then a 24h Redis cache on top.
+    freshness: 'Refreshed every 1–2 days',
     columnLabels: [
       'Bioguide ID',
       'Senator Name',

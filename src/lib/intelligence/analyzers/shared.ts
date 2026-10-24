@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -58,7 +58,7 @@ export const ANALYZER_TIMEOUT_MS = 55_000;
  * endpoint can surface timings without requiring Vercel log access.
  *
  * Introduced for MR7 (`PROMPT-MR7-analyzer-timeout-rootcause.md`) to root-cause
- * uniform 55000ms timeouts on vote-finance + vote-prediction. Remove when the
+ * uniform 55000ms timeouts on vote-finance. Remove when the
  * root cause is fixed and steady-state production timings are known.
  */
 export interface PhaseEvent {
@@ -131,6 +131,32 @@ export async function withTimeout<T>(
     }, timeoutMs);
   });
   return Promise.race([promise, timeout]);
+}
+
+// ── Peer Score Reads ────────────────────────────────────────────────
+
+/** Upstash MGET batch size for peer reads. */
+const PEER_MGET_CHUNK_SIZE = 100;
+
+/**
+ * Read cached peer scores by exact key. Returns only keys that hold a number,
+ * in input order. Callers build the keys from a known list (the roster, the
+ * sector enum, the state list): a KEYS pattern match is disabled in prod and
+ * silently returns [], which left every peer comparison empty.
+ */
+export async function readPeerScores(
+  keys: string[]
+): Promise<Array<{ key: string; value: number }>> {
+  const found: Array<{ key: string; value: number }> = [];
+  for (let i = 0; i < keys.length; i += PEER_MGET_CHUNK_SIZE) {
+    const chunkKeys = keys.slice(i, i + PEER_MGET_CHUNK_SIZE);
+    const values = await getRedisCache().mget<number>(chunkKeys);
+    chunkKeys.forEach((key, j) => {
+      const value = values[j];
+      if (typeof value === 'number') found.push({ key, value });
+    });
+  }
+  return found;
 }
 
 // ── Bounded Concurrency ─────────────────────────────────────────────
@@ -304,7 +330,7 @@ export function findCommitteeMapping(committeeName: string): CommitteeMapping | 
  * Classification runs embeddings + zero-shot NLI — hundreds of ms per call
  * on a cold path. Reps overlap heavily on which bills they vote on, so
  * keying by billId alone makes the cache shared across every analyzer
- * (vote-finance, vote-prediction, influence-chain, influence-graph). Bills
+ * (vote-finance, influence-chain, influence-graph). Bills
  * are immutable once introduced, so a 30-day TTL is safe; bump the key
  * version if the classifier itself changes in a breaking way.
  */

@@ -1,12 +1,14 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 'use client';
 
 import React, { useCallback, useMemo } from 'react';
 import useSWR from 'swr';
+import { DataProvenance } from '@/shared/components/ui/DataProvenance';
+import { profilePageSources } from '@/lib/provenance/page-sources';
 import { EnhancedRepresentative } from '@/types/representative';
 import type { DataQuality } from '@/types/backbone-response';
 import { useSectionNavigation } from '@/shared/components/dashboard';
@@ -225,6 +227,11 @@ export function ProfileRedesign({ representative }: ProfileRedesignProps) {
                   error={Boolean(summaryError)}
                   committeeCount={fullCommitteeCount}
                   subcommitteeCount={(representative.committees?.length ?? 0) - fullCommitteeCount}
+                  recordCardHref={
+                    representative.isHistorical
+                      ? undefined
+                      : `/representative/${representative.bioguideId}/record`
+                  }
                 />
               </div>
 
@@ -265,6 +272,20 @@ export function ProfileRedesign({ representative }: ProfileRedesignProps) {
                     bioguideId={representative.bioguideId}
                     memberName={representative.name}
                     onExplore={() => openSection('news')}
+                  />
+
+                  <DataProvenance
+                    variant="block"
+                    className="mt-8"
+                    sources={profilePageSources({
+                      chamber: representative.chamber,
+                      voteDates: votesResponse?.votes?.map(v => v.date),
+                      billIntroducedDates: [
+                        ...(bills?.sponsored?.bills ?? []),
+                        ...(bills?.cosponsored?.bills ?? []),
+                      ].map(b => b.introducedDate),
+                      finance: finance?.metadata,
+                    })}
                   />
                 </main>
 

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import { CqChip } from '@/components/cq';
@@ -48,8 +48,8 @@ export function TopicHero({ displayName, industrySectorLabel, policyArea }: Topi
           maxWidth: 640,
         }}
       >
-        Federal legislation, regulations, oversight committees, and industry contributions filed
-        under the Congress.gov policy area <strong>{policyArea}</strong>.
+        Federal legislation, regulations, and oversight committees filed under the Congress.gov
+        policy area <strong>{policyArea}</strong>.
       </p>
     </div>
   );

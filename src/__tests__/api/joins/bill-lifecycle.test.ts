@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import { GET } from '@/app/api/bills/lifecycle/route';
@@ -22,6 +22,7 @@ jest.mock('@/lib/logging/simple-logger', () => ({
 }));
 
 jest.mock('@/lib/services/bill.service', () => ({
+  billTypeChamber: jest.fn(),
   mapCongressStatus: jest.fn().mockImplementation((text?: string) => {
     if (!text) return null;
     if (text.toLowerCase().includes('enacted')) return 'enacted';

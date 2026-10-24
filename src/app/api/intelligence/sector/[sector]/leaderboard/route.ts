@@ -1,18 +1,20 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
- * Intelligence API — Sector Leaderboard
+ * Intelligence API — Sector vote rates
  *
- * Returns legislators ranked by alignment score for a given industry sector.
- * Supports filtering by chamber (house/senate) and party (D/R/I).
+ * Returns each House member's yes-vote rate on bills classified to an
+ * industry sector, ordered by state then name (no ranking, no dollar
+ * figures), with the chamber average as the baseline. House only:
+ * vote-finance insights are not computed for senators.
  *
  * Endpoint: GET /api/intelligence/sector/[sector]/leaderboard
- *   ?chamber=house|senate  (optional, defaults to all)
+ *   ?chamber=house|senate  (optional; senate always returns 404)
  *   ?party=D|R|I           (optional, defaults to all)
- *   ?limit=20              (optional, 1-100, defaults to 20)
+ *   ?limit=N               (optional cap, >= 1; defaults to every included member)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -50,8 +52,6 @@ const SLUG_TO_SECTOR: Record<string, IndustrySector> = {
 
 const VALID_CHAMBERS = new Set(['house', 'senate']);
 const VALID_PARTIES = new Set(['D', 'R', 'I']);
-const DEFAULT_LIMIT = 20;
-const MAX_LIMIT = 100;
 
 export async function GET(
   request: NextRequest,
@@ -83,10 +83,10 @@ export async function GET(
 
   const party = partyParam && VALID_PARTIES.has(partyParam) ? partyParam : undefined;
 
-  let limit = DEFAULT_LIMIT;
+  let limit: number | undefined;
   if (limitParam) {
     const parsed = parseInt(limitParam, 10);
-    if (!isNaN(parsed) && parsed >= 1 && parsed <= MAX_LIMIT) {
+    if (!isNaN(parsed) && parsed >= 1) {
       limit = parsed;
     }
   }
@@ -96,7 +96,7 @@ export async function GET(
       sector,
       chamber: chamber ?? 'all',
       party: party ?? 'all',
-      limit,
+      limit: limit ?? 'all',
     });
 
     const result = await buildSectorLeaderboard(sector, { chamber, party, limit });
@@ -104,7 +104,9 @@ export async function GET(
     if (!result) {
       return createErrorResponse(
         ErrorCodes.NOT_FOUND,
-        `No leaderboard data available for sector: ${sector}`,
+        chamber === 'senate'
+          ? 'Sector vote rates cover House members only; vote-finance data is not computed for senators.'
+          : `No sector vote-rate data available for sector: ${sector}`,
         404
       );
     }

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 'use client';
@@ -47,6 +47,9 @@ export function formatDistrictLabel(result: RaceResultFull): string {
     if (['PRESIDENT', 'SENATE', 'GOVERNOR'].includes(suffix)) {
       return US_STATES[stateCode as keyof typeof US_STATES] || stateCode;
     }
+    if (suffix === 'SENATE-SPECIAL') {
+      return `${US_STATES[stateCode as keyof typeof US_STATES] || stateCode} (special)`;
+    }
 
     const distNum = parseInt(suffix, 10);
     if (!isNaN(distNum) && suffix.length <= 2) {
@@ -83,7 +86,7 @@ export function raceLink(result: RaceResultFull): string | null {
   }
 
   // Statewide offices → /delegation/GA (senators + reps) or /states/ga (governor)
-  if (suffix === 'PRESIDENT' || suffix === 'SENATE') {
+  if (suffix === 'PRESIDENT' || suffix === 'SENATE' || suffix === 'SENATE-SPECIAL') {
     return `/delegation/${stateCode}`;
   }
   if (suffix === 'GOVERNOR') {
@@ -110,7 +113,7 @@ function MarginBar({ demPct, repPct, winner }: { demPct: number; repPct: number;
     <div
       className="flex h-4 w-full overflow-hidden bg-gray-100 dark:bg-gray-800"
       role="img"
-      aria-label={`${winner === 'D' ? 'Democrat' : 'Republican'} lead`}
+      aria-label={`${partyName(winner)} lead`}
     >
       {demPct > 0 && (
         <div className="bg-party-dem transition-all" style={{ width: `${demPct}%` }} />

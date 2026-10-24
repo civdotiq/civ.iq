@@ -2,6 +2,28 @@
 
 All notable changes to `@civiq/sdk` are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/).
 
+## [0.4.0] — 2026-10-14
+
+### Changed (breaking)
+
+- `SectorLeaderboardResponse` now matches the live `/intelligence/sector/{sector}/leaderboard` response. The endpoint no longer reports money or ranks (civ.iq #241): it returns each House member's yes-vote rate on bills in the sector. `legislators[]` (`totalFromSector`, `percentOfTotal`) and `metadata` are gone. New fields: `sectorLabel`, `chamber`, `party`, `coverageNote`, `entries[]` (`chamber`, `sectorAlignmentScore`, `billsVotedOn`), `stats`, `dataAvailability`, `generatedAt`, `dataAsOf`. The old type never matched what the API returned.
+
+### Added
+
+- `SectorLeaderboardEntry` type export.
+
+## [0.3.1] — 2026-10-08
+
+### Fixed
+
+- `civiq --version` and the default `User-Agent` reported `0.2.0` in the 0.3.0 release; the internal `SDK_VERSION` constant was not bumped with `package.json`. A test now fails when the two drift.
+
+## [0.3.0] — 2026-10-08
+
+### Removed
+
+- `civiq.intelligence.votePrediction(bioguideId)`. The ML vote-prediction endpoint (`/intelligence/representative/{id}/vote-prediction`) is retired: its donor-model "independence score" was an interpretive verdict, not public data, and it never produced a result in production. The underlying facts (roll-call votes and FEC contributions) remain available through `representatives.votes()` and `representatives.finance()`.
+
 ## [0.2.0] — 2026-08-21
 
 ### Added

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -413,7 +413,7 @@ function generateDataFile(
 
   return `/**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -436,7 +436,7 @@ ${entries.join('\n')}
 function generateMetadataFile(coveredStates: string[], missingStates: string[]): string {
   return `/**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -451,7 +451,7 @@ import type { ElectionMetadata } from '@/types/elections';
 export const ELECTION_2024_METADATA: ElectionMetadata = {
   year: 2024,
   source: 'MIT Election Data and Science Lab (MEDSL)',
-  doi: '10.7910/DVN/2024',
+  doi: '10.7910/DVN/NYTPDU',
   generatedAt: '${new Date().toISOString()}',
   coveredStates: ${JSON.stringify(coveredStates.sort())},
   missingStates: ${JSON.stringify(missingStates.sort())},
@@ -542,32 +542,13 @@ async function main(): Promise<void> {
   console.log('--- Phase 3: Write Output Files ---');
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
-  // House results
-  const houseContent = generateDataFile(
-    '2024 House Election Results',
-    'HOUSE_RESULTS_2024',
-    "US House race results keyed by 'STATE-DD' (e.g., 'PA-07').",
-    buckets.house
-  );
-  const housePath = path.join(OUTPUT_DIR, 'election-results-house.ts');
-  fs.writeFileSync(housePath, houseContent);
-  console.log(`  ${housePath} — ${buckets.house.size} races`);
+  // House results are NOT written from precinct data: several state files lack
+  // district codes or mix vote modes, which merged districts and flipped winners.
+  // election-results-house.ts comes from scripts/process-house-results-2024.ts.
 
-  // Statewide results (president + senate + governor merged)
-  const statewideMap = new Map<string, VoteTotals>();
-  for (const [k, v] of buckets.president) statewideMap.set(k, v);
-  for (const [k, v] of buckets.senate) statewideMap.set(k, v);
-  for (const [k, v] of buckets.governor) statewideMap.set(k, v);
-
-  const statewideContent = generateDataFile(
-    '2024 Statewide Election Results',
-    'STATEWIDE_RESULTS_2024',
-    "President, Senate, and Governor results keyed by 'STATE-OFFICE' (e.g., 'GA-SENATE').",
-    statewideMap
-  );
-  const statewidePath = path.join(OUTPUT_DIR, 'election-results-statewide.ts');
-  fs.writeFileSync(statewidePath, statewideContent);
-  console.log(`  ${statewidePath} — ${statewideMap.size} races`);
+  // Statewide results are NOT written from precinct data either: summary rows
+  // were counted as candidates and offices were matched too loosely.
+  // election-results-statewide.ts comes from scripts/process-statewide-results-2024.ts.
 
   // State legislature results
   const stateLegMap = new Map<string, VoteTotals>();

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -86,6 +86,11 @@ jest.mock('@/lib/data-sources/fred-economic-service', () => ({
 jest.mock('@/lib/intelligence/embeddings', () => ({
   classifyBillSectors: jest.fn().mockResolvedValue([]),
   classifyBillSectorsZeroShot: jest.fn().mockResolvedValue([]),
+}));
+
+const mockGetAllEnhancedRepresentatives = jest.fn();
+jest.mock('@/features/representatives/services/congress.service', () => ({
+  getAllEnhancedRepresentatives: (...args: unknown[]) => mockGetAllEnhancedRepresentatives(...args),
 }));
 
 import { analyzeInfluenceGraph } from '@/lib/intelligence/analyzers/influence-graph-analyzer';
@@ -182,6 +187,7 @@ describe('analyzeInfluenceGraph', () => {
     mockRedisSet.mockResolvedValue(undefined);
     mockRedisMget.mockResolvedValue([]);
     mockRedisKeys.mockResolvedValue([]);
+    mockGetAllEnhancedRepresentatives.mockResolvedValue([]);
     mockFindRegulationsForBill.mockResolvedValue([]);
     mockSearchAgencyCases.mockResolvedValue([]);
     mockGetStateIndicators.mockResolvedValue([]);
@@ -363,5 +369,48 @@ describe('analyzeInfluenceGraph', () => {
       expect(chain).toHaveProperty('courtCases');
       expect(chain).toHaveProperty('outcomeSignals');
     }
+  });
+});
+
+describe('analyzeInfluenceGraph peer comparison', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockRedisGet.mockResolvedValue(null);
+    mockRedisSet.mockResolvedValue(undefined);
+    mockFindRegulationsForBill.mockResolvedValue(makeRegulationNodes(1));
+    mockSearchAgencyCases.mockResolvedValue([]);
+    mockGetStateIndicators.mockResolvedValue([]);
+    mockGetAllEnhancedRepresentatives.mockResolvedValue([
+      { bioguideId: 'A000001', chamber: 'House' },
+      ...['H000001', 'H000002', 'H000003', 'H000004', 'H000005'].map(id => ({
+        bioguideId: id,
+        chamber: 'House',
+      })),
+      { bioguideId: 'S000001', chamber: 'Senate' },
+    ]);
+    const store: Record<string, number> = {
+      'graph-score:H000001': 1,
+      'graph-score:H000002': 2,
+      'graph-score:H000003': 3,
+      'graph-score:H000004': 4,
+      'graph-score:H000005': 5,
+      'graph-score:S000001': 100,
+    };
+    mockRedisMget.mockImplementation((keys: string[]) =>
+      Promise.resolve(keys.map(k => store[k] ?? null))
+    );
+  });
+
+  it('compares against same-chamber peers by exact key, never KEYS', async () => {
+    mockAnalyzeInfluenceChains.mockResolvedValueOnce(makeChainInsight(2));
+
+    const result = await analyzeInfluenceGraph('A000001');
+
+    expect(mockRedisKeys).not.toHaveBeenCalled();
+    expect(result?.peerComparison?.peerCount).toBe(5);
+    expect(result?.peerComparison?.peerAverage).toBe(3);
+    const requested = mockRedisMget.mock.calls.flatMap((c: unknown[]) => c[0] as string[]);
+    expect(requested).not.toContain('graph-score:S000001');
+    expect(requested).not.toContain('graph-score:A000001');
   });
 });

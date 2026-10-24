@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -31,3 +31,6 @@ export const LATEST_VINTAGE = 'Current_Current';
 export function currentOfficeholderVintage(now: Date = new Date()): string {
   return now.getTime() < CONGRESS_120_CONVENES_MS ? SITTING_119TH_VINTAGE : LATEST_VINTAGE;
 }
+
+/** ACS 5-year release behind district demographics (2022 = 2018–2022 estimates). */
+export const ACS_5YR_VINTAGE = 2022;

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -10,6 +10,7 @@
  * Traverses the civic intelligence graph from the industry/finance axis.
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
@@ -141,7 +142,7 @@ export async function GET(
           }
           const keywordPatterns = keywords.map(k => k.toLowerCase());
 
-          const url = new URL('https://api.congress.gov/v3/bill');
+          const url = new URL(`https://api.congress.gov/v3/bill/${getCurrentCongressNumber()}`);
           url.searchParams.set('format', 'json');
           url.searchParams.set('limit', '250');
           url.searchParams.set('sort', 'updateDate+desc');

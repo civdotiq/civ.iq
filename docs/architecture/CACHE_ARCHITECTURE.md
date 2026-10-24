@@ -389,6 +389,4 @@ jest.mock('@/lib/cache/redis-client', () => ({
 
 ## See Also
 
-- [Performance Optimization Guide](./PERFORMANCE.md)
-- [Service Architecture](../service-architecture-plan.md)
 - [API Reference](../API_REFERENCE.md)

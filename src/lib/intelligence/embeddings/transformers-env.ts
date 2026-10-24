@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -16,7 +16,7 @@
  * The other half of that outage (onnxruntime-node's shared library missing
  * from function bundles) is fixed by the ONNX_NODE_SHARED_LIB tracing include in
  * next.config.mjs.
- * See docs/EMBEDDING-PIPELINE-BROKEN-2026-04.md.
+ * See docs/archive/EMBEDDING-PIPELINE-BROKEN-2026-04.md.
  */
 
 import os from 'node:os';

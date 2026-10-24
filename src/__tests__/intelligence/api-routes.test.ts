@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -17,13 +17,19 @@ jest.mock('@/lib/logging/simple-logger', () => ({
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 
+const mockRedisGet = jest.fn().mockResolvedValue(null);
 jest.mock('@/lib/cache/redis-client', () => ({
   getRedisCache: () => ({
-    get: jest.fn().mockResolvedValue(null),
+    get: (...args: unknown[]) => mockRedisGet(...args),
     set: jest.fn().mockResolvedValue(undefined),
     keys: jest.fn().mockResolvedValue([]),
     mget: jest.fn().mockResolvedValue([]),
   }),
+}));
+
+// shared.ts pulls in the AI SDK, which needs web streams jest lacks.
+jest.mock('@/lib/intelligence/analyzers/shared', () => ({
+  withTimeout: <T>(promise: Promise<T>) => promise,
 }));
 
 // Mock all analyzers to return controlled results
@@ -226,6 +232,20 @@ describe('Intelligence API Routes', () => {
       expect(res.status).toBe(400);
     });
 
+    it('returns 503 when the analyzer times out', async () => {
+      mockAnalyzeTemporalVotes.mockRejectedValueOnce(
+        new Error('[TemporalVotes:P000197] Analyzer timed out after 50000ms')
+      );
+
+      const res = await GET(
+        mockRequest('http://localhost/') as never,
+        mockParams({ bioguideId: 'P000197' })
+      );
+      expect(res.status).toBe(503);
+      const data = await res.json();
+      expect(data.error.code).toBe('SERVICE_UNAVAILABLE');
+    });
+
     it('returns 404 when analyzer returns null', async () => {
       mockAnalyzeTemporalVotes.mockResolvedValue(null);
 
@@ -252,9 +272,8 @@ describe('Intelligence API Routes', () => {
     let GET: typeof import('@/app/api/intelligence/representative/[bioguideId]/stock-trades/route').GET;
 
     beforeAll(async () => {
-      const mod = await import(
-        '@/app/api/intelligence/representative/[bioguideId]/stock-trades/route'
-      );
+      const mod =
+        await import('@/app/api/intelligence/representative/[bioguideId]/stock-trades/route');
       GET = mod.GET;
     });
 
@@ -354,6 +373,16 @@ describe('Intelligence API Routes', () => {
       );
       const data = await res.json();
       expect(data.billId).toBe('119-hr-1');
+    });
+
+    it('returns 404 without analyzing a bill from an earlier Congress', async () => {
+      mockAnalyzeBillIntelligence.mockClear();
+      const res = await GET(
+        mockRequest('http://localhost/') as never,
+        mockParams({ billId: '114-hr-973' })
+      );
+      expect(res.status).toBe(404);
+      expect(mockAnalyzeBillIntelligence).not.toHaveBeenCalled();
     });
   });
 
@@ -465,6 +494,32 @@ describe('Intelligence API Routes', () => {
       expect(data.representatives.map((r: { bioguideId: string }) => r.bioguideId)).toEqual([
         'X000001',
       ]);
+    });
+
+    it("counts a cached vote-finance insight under the analyzer's v4 key", async () => {
+      mockGetAllEnhancedRepresentatives.mockResolvedValue([
+        {
+          bioguideId: 'X000001',
+          name: 'Rep',
+          party: 'Independent',
+          state: 'MI',
+          chamber: 'House',
+          district: '5',
+        },
+      ]);
+      mockAnalyzeFinanceJurisdiction.mockResolvedValue(null);
+      mockRedisGet.mockImplementation((key: string) =>
+        Promise.resolve(key === 'insight:vote_finance:v5:X000001' ? { cached: true } : null)
+      );
+
+      const res = await GET(
+        mockRequest('http://localhost/') as never,
+        mockParams({ districtId: 'MI-05' })
+      );
+      const data = await res.json();
+      mockRedisGet.mockReset().mockResolvedValue(null);
+
+      expect(data.representatives[0].insightsAvailable).toBe(1);
     });
   });
 });

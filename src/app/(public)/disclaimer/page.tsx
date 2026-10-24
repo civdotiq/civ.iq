@@ -76,8 +76,10 @@ export default function DisclaimerPage() {
                   available civic data in an easy-to-understand format.
                 </p>
                 <p className="text-gray-700 leading-relaxed">
-                  <strong>What we are NOT:</strong> A political advocacy platform, a voting guide, a
-                  news organization, or a source of legal or political advice.
+                  <strong>What we are NOT:</strong> A government website, a political advocacy
+                  platform, a voting guide, a news organization, or a source of legal or political
+                  advice. CIV.IQ is an independent open-source project, not affiliated with any
+                  government.
                 </p>
               </section>
 

@@ -1,7 +1,7 @@
 # Phase 4 BackboneResponse fixtures
 
 Real-upstream JSON captures of the four critical response paths introduced by
-Phase 4 of [`PLAN-backbone-gaps-2026-04.md`](../../../PLAN-backbone-gaps-2026-04.md).
+Phase 4 of the backbone-gaps plan (an internal planning doc, not in the repo).
 These exist so a future contract regression (a field rename, a status-code
 flip, a pilot-city drop) is caught by a plain diff against the committed JSON,
 not only by Jest mocks.

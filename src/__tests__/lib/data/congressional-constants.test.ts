@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -11,6 +11,8 @@
 
 import {
   getCurrentCongressNumber,
+  getServedCongressRange,
+  isServedCongress,
   getCurrentCongressSession,
   getCongressDateRange,
   getCongressNumber,
@@ -133,5 +135,32 @@ describe('getNextSenateElectionFromTermEnd', () => {
     const now = new Date('2026-07-06T12:00:00Z');
     // Term ended Jan 2025 → seat was up in 2024 → next up in 2030
     expect(getNextSenateElectionFromTermEnd(2025, now)).toBe(2030);
+  });
+});
+
+describe('isServedCongress / getServedCongressRange', () => {
+  const during119 = new Date('2026-10-13T12:00:00Z');
+  const during120 = new Date('2027-03-01T12:00:00Z');
+  const during121 = new Date('2029-03-01T12:00:00Z');
+
+  it('serves only the 119th while it sits', () => {
+    expect(getServedCongressRange(during119)).toEqual({ first: 119, last: 119 });
+    expect(isServedCongress(119, during119)).toBe(true);
+    expect(isServedCongress(118, during119)).toBe(false);
+    expect(isServedCongress(114, during119)).toBe(false);
+    expect(isServedCongress(120, during119)).toBe(false);
+  });
+
+  it('keeps the previous Congress once a new one convenes', () => {
+    expect(getServedCongressRange(during120)).toEqual({ first: 119, last: 120 });
+    expect(isServedCongress(119, during120)).toBe(true);
+    expect(isServedCongress(120, during120)).toBe(true);
+    expect(getServedCongressRange(during121)).toEqual({ first: 120, last: 121 });
+    expect(isServedCongress(119, during121)).toBe(false);
+  });
+
+  it('rejects non-integers', () => {
+    expect(isServedCongress(Number.NaN, during119)).toBe(false);
+    expect(isServedCongress(119.5, during119)).toBe(false);
   });
 });

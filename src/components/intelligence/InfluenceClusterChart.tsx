@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 'use client';
@@ -8,6 +8,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import useSWR from 'swr';
 import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
+import { SourceCitation } from './SourceCitation';
 import type {
   InfluenceClusterData,
   LegislatorClusterPoint,
@@ -276,6 +277,7 @@ export function InfluenceClusterChart({
         Clusters found by unsupervised ML on donor profiles. Position does not imply ideology.{' '}
         {data.legislatorCount} legislators analyzed, {data.clusterCount} clusters found.
       </p>
+      <SourceCitation sources={[]} dataAsOf={data.generatedAt} className="mt-1" />
     </div>
   );
 }

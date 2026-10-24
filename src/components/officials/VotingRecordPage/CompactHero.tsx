@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 'use client';
@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { CqButton, CqChip, CqLabel, CqPortrait } from '@/components/cq';
 import { partyKey, partyLong } from '@/components/officials/ProfileHybrid/types';
 import type { EnhancedRepresentative } from '@/types/representative';
+import { commonName } from '@/features/representatives/utils/common-name';
 
 interface CompactHeroProps {
   representative: EnhancedRepresentative;
@@ -66,7 +67,7 @@ export function CompactHero({ representative: r, totalVotes, loading }: CompactH
             whiteSpace: 'nowrap',
           }}
         >
-          {r.name} · Voting record
+          {commonName(r)} voting record
         </h1>
         <div
           style={{

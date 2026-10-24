@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Dynamic route for topic pages. Resolves a topic slug to a Congress.gov
  * policy area and renders the issue file. The twelve hub topics have
@@ -71,7 +71,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
   const title = `${policyArea} — Federal policy file`;
-  const description = `Bills, regulations, oversight committees, and industry contributions tied to ${policyArea} in the current Congress.`;
+  const description = `Bills, regulations, and oversight committees tied to ${policyArea} in the current Congress.`;
   return {
     title,
     description,

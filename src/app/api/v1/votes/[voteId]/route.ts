@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { XMLParser } from 'fast-xml-parser';
 import { v1Success, v1Error } from '@/lib/api/v1-response';
 import { sessionsToTry } from '@/lib/services/vote.service';
+import { isServedCongress } from '@/lib/data/congressional-constants';
 import logger from '@/lib/logging/simple-logger';
 import type { HouseXmlVoteData, SenateXmlVoteData } from '@/types/xml-vote-data';
 
@@ -64,6 +65,11 @@ export async function GET(
     }
 
     const { chamber, congress, rollNumber } = parsed;
+
+    // Older Congresses are out of scope: no vote page, no API answer.
+    if (!isServedCongress(Number(congress))) {
+      return NextResponse.json(v1Error(404, 'Vote not found'), { status: 404 });
+    }
 
     // Roll-call numbers restart each session; the vote ID carries no session,
     // so try the likeliest session first and fall back to the other.

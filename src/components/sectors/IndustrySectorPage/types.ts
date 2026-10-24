@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
@@ -9,38 +9,6 @@ export interface IndustrySectorPageProps {
   sector: IndustrySector;
   sectorSlug: string;
   displayName: string;
-}
-
-export interface SectorLeaderboardResponse {
-  sector: string;
-  sectorLabel: string;
-  chamber: 'house' | 'senate' | 'all';
-  party: string | null;
-  entries: Array<{
-    bioguideId: string;
-    name: string;
-    party: string;
-    state: string;
-    chamber: 'House' | 'Senate';
-    sectorAlignmentScore: number;
-    sectorDonationAmount: number;
-    billsVotedOn: number;
-    rank: number;
-  }>;
-  stats: {
-    mean: number;
-    median: number;
-    standardDeviation: number;
-    includedMembers: number;
-    excludedMembers: number;
-  };
-  dataAvailability: {
-    cachedInsights: number;
-    minimumRequired: number;
-    status: 'sufficient' | 'partial' | 'empty';
-  };
-  generatedAt: string;
-  dataAsOf: string;
 }
 
 export interface IndustryOrganizationsResponse {
@@ -99,7 +67,6 @@ export interface IndustryConnectionsResponse {
   };
 }
 
-export type LeaderboardEntry = SectorLeaderboardResponse['entries'][number];
 export type ContributorRow = {
   kind: 'lobby';
   // null when a corpus-merged org spans multiple registrants (no single link).

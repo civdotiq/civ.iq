@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -18,6 +18,8 @@ export interface BillTextResult {
   congress: number;
   chamber: string;
   fullText: string;
+  /** Whether fullText is the bill text itself or, when no text is published yet, the CRS summary. */
+  basedOn: 'bill-text' | 'crs-summary';
 }
 
 /**
@@ -66,6 +68,7 @@ export async function fetchBillText(billId: string): Promise<BillTextResult | nu
         congress: bill.congress,
         chamber: bill.originChamber === 'House' ? 'House' : 'Senate',
         fullText,
+        basedOn: 'bill-text',
       };
     }
 
@@ -78,6 +81,7 @@ export async function fetchBillText(billId: string): Promise<BillTextResult | nu
         congress: bill.congress,
         chamber: bill.originChamber === 'House' ? 'House' : 'Senate',
         fullText: summaryText,
+        basedOn: 'crs-summary',
       };
     }
 

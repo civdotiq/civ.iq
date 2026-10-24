@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
+import { voteFinanceCacheKey } from '@/lib/intelligence/insight-cache-keys';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { analyzeFinanceJurisdiction } from '@/lib/intelligence/analyzers/finance-jurisdiction-analyzer';
 import { classifyError } from '@/lib/intelligence/error-utils';
@@ -85,10 +86,10 @@ export async function GET(
 
         const [vfCached, temporalCached] = await Promise.all([
           getRedisCache()
-            .get(`insight:vote_finance:${rep.bioguideId}`)
+            .get(voteFinanceCacheKey(rep.bioguideId))
             .catch(() => null),
           getRedisCache()
-            .get(`insight:temporal_votes:${rep.bioguideId}`)
+            .get(`insight:temporal_votes:v2:${rep.bioguideId}`)
             .catch(() => null),
         ]);
         if (vfCached) insightsAvailable++;

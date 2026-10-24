@@ -1,18 +1,20 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
  * Warm-Intelligence Cron Job
  *
- * Pre-computes and caches the four heavy intelligence analyzers
- * (finance-jurisdiction, vote-finance, vote-prediction, influence-chain)
- * for every current member of Congress so cold-path compute never hits a real user.
+ * Pre-computes and caches four intelligence analyzers (finance-jurisdiction,
+ * vote-finance, influence-chain, temporal) for every current member of Congress
+ * so cold-path compute never hits a real user. Temporal is cheap (~2-3s, it
+ * reads the roll-call corpus) and is warmed mainly for its peer scores: the
+ * brief's party-alignment baseline needs at least 5 same-party peers cached.
  *
  * Then refreshes each rep's civic brief (the /results card summary). It runs
- * after the four because it reads the finance-jurisdiction and influence-chain
- * caches, and it always recomputes: the brief's TTL is 24h and a full cycle is
+ * after the four because it reads the finance-jurisdiction, influence-chain
+ * and temporal caches, and it always recomputes: the brief's TTL is 24h and a full cycle is
  * ~13.5h, so a cache-respecting warm would leave it cold for part of each day.
  *
  * Chunking strategy:
@@ -32,8 +34,8 @@ import { readCronCursor, writeCronCursor } from '@/lib/cron/cursor';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { analyzeFinanceJurisdiction } from '@/lib/intelligence/analyzers/finance-jurisdiction-analyzer';
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
-import { analyzeVotePrediction } from '@/lib/intelligence/analyzers/vote-prediction-analyzer';
 import { analyzeInfluenceChains } from '@/lib/intelligence/analyzers/influence-chain-analyzer';
+import { analyzeTemporalVotes } from '@/lib/intelligence/analyzers/temporal-vote-analyzer';
 import { assembleCivicBrief } from '@/lib/intelligence/analyzers/civic-brief-assembler';
 import { runWithFecPriority } from '@/lib/fec/fec-rate-limiter';
 
@@ -67,7 +69,7 @@ function getRepConcurrency(): number {
 }
 
 type AnalyzerName =
-  'finance_jurisdiction' | 'vote_finance' | 'vote_prediction' | 'influence_chain' | 'civic_brief';
+  'finance_jurisdiction' | 'vote_finance' | 'influence_chain' | 'temporal' | 'civic_brief';
 
 interface AnalyzerOutcome {
   name: AnalyzerName;
@@ -85,8 +87,8 @@ interface RepOutcome {
 const ANALYZERS: { name: AnalyzerName; run: (id: string) => Promise<unknown> }[] = [
   { name: 'finance_jurisdiction', run: analyzeFinanceJurisdiction },
   { name: 'vote_finance', run: analyzeVoteFinance },
-  { name: 'vote_prediction', run: analyzeVotePrediction },
   { name: 'influence_chain', run: analyzeInfluenceChains },
+  { name: 'temporal', run: analyzeTemporalVotes },
 ];
 
 function withTimeoutLabel<T>(
@@ -168,8 +170,8 @@ function summarize(outcomes: RepOutcome[]) {
   > = {
     finance_jurisdiction: zero(),
     vote_finance: zero(),
-    vote_prediction: zero(),
     influence_chain: zero(),
+    temporal: zero(),
     civic_brief: zero(),
   };
   for (const rep of outcomes) {

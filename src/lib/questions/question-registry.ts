@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -17,6 +17,11 @@ export interface QuestionTemplate {
   category: 'who' | 'how' | 'what' | 'where' | 'why';
   /** Question with {name} placeholder, e.g., "Where do {name}'s campaign contributions come from?" */
   questionPattern: string;
+  /**
+   * Optional `<title>` pattern when people search a different phrase than the
+   * question (e.g. "{name} stock trades"). The H1 stays the question.
+   */
+  titlePattern?: string;
   /** Meta description with placeholders like {name}, {party}, {state}, {chamber} */
   descriptionPattern: string;
   /** Entity type this template applies to */
@@ -53,7 +58,7 @@ const QUESTION_TEMPLATES: QuestionTemplate[] = [
       '/api/representative/[id]/finance/industries',
       '/api/intelligence/representative/[id]/vote-finance',
     ],
-    relatedSlugs: ['donor-voting-alignment', 'voting-record'],
+    relatedSlugs: ['donor-voting-alignment', 'voting-record', 'stock-trades'],
   },
   {
     slug: 'voting-record',
@@ -97,6 +102,17 @@ const QUESTION_TEMPLATES: QuestionTemplate[] = [
       "Statistical analysis of whether {name}'s ({party}-{state}) voting patterns correlate with campaign donor sectors. Includes sector-by-sector breakdown.",
     entityType: 'representative',
     dataSources: ['/api/representative/[id]', '/api/intelligence/representative/[id]/vote-finance'],
+    relatedSlugs: ['campaign-contributions', 'voting-record'],
+  },
+  {
+    slug: 'stock-trades',
+    category: 'what',
+    questionPattern: 'What stock trades has {name} reported?',
+    titlePattern: '{name} stock trades (119th Congress)',
+    descriptionPattern:
+      'Stock trades {name} ({party}-{state}) has reported in the 119th Congress, as filed in STOCK Act periodic transaction reports. Dates, assets, and value ranges.',
+    entityType: 'representative',
+    dataSources: ['/api/representative/[id]', '/api/representative/[id]/stock-trades'],
     relatedSlugs: ['campaign-contributions', 'voting-record'],
   },
   {
@@ -149,6 +165,11 @@ const TEMPLATE_MAP = new Map(QUESTION_TEMPLATES.map(t => [t.slug, t]));
 
 export function getTemplate(slug: string): QuestionTemplate | undefined {
   return TEMPLATE_MAP.get(slug);
+}
+
+/** `<title>` pattern: the search phrase when set, otherwise the question. */
+export function getTitlePattern(template: QuestionTemplate): string {
+  return template.titlePattern ?? template.questionPattern;
 }
 
 export function getAllTemplates(): QuestionTemplate[] {

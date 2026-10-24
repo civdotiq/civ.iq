@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -18,7 +18,10 @@ import { getRedisCache } from '@/lib/cache/redis-client';
 import { generateAIText } from '@/lib/ai/provider';
 import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
 import { PLAIN_LANGUAGE_SYSTEM_PROMPT, PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
-import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import {
+  getAllEnhancedRepresentatives,
+  getEnhancedRepresentative,
+} from '@/features/representatives/services/congress.service';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import {
   getBillsSummary,
@@ -50,6 +53,7 @@ import type {
   BriefVoting,
   BriefOversight,
   BriefPattern,
+  BriefPeerBaseline,
   FinanceJurisdictionInsight,
   InfluenceChainInsight,
   TemporalVoteInsight,
@@ -145,8 +149,8 @@ async function computeAndCache(
   const [fundingData, fjInsight, icInsight, temporalInsight] = await Promise.all([
     fetchFundingData(fecId, cycle, identity),
     fetchCachedInsight<FinanceJurisdictionInsight>(`insight:finance_jurisdiction:${bioguideId}`),
-    fetchCachedInsight<InfluenceChainInsight>(`insight:influence_chain:v2:${bioguideId}`),
-    fetchCachedInsight<TemporalVoteInsight>(`insight:temporal_votes:${bioguideId}`),
+    fetchCachedInsight<InfluenceChainInsight>(`insight:influence_chain:v4:${bioguideId}`),
+    fetchCachedInsight<TemporalVoteInsight>(`insight:temporal_votes:v2:${bioguideId}`),
   ]);
 
   // 4. Assemble voting data via direct service call
@@ -212,6 +216,10 @@ async function computeAndCache(
     voting: votingData,
     oversight: oversightData,
     patterns,
+    peerBaselines: {
+      partyAlignment: toBriefBaseline(peerPartyStats),
+      inStatePct: toBriefBaseline(peerInStateStats),
+    },
     summary,
     confidence,
     confidenceMethod: 'computed',
@@ -416,21 +424,55 @@ function cacheInStatePctScore(bioguideId: string, chamber: string, inStatePct: n
 interface PeerStats {
   mean: number;
   std: number;
+  peerCount: number;
 }
 
+/**
+ * Fewer cached peers than this and the brief reports no baseline at all. A
+ * static "congressional norm" stand-in would be estimated data shown as real.
+ */
 const MIN_PEER_COUNT = 5;
 
-/** Baseline party alignment stats derived from well-established congressional norms. */
-const BASELINE_PARTY_ALIGNMENT: Record<string, PeerStats> = {
-  Senate: { mean: 91.5, std: 5.2 },
-  House: { mean: 93.5, std: 4.3 },
-};
+/** Upstash MGET batch size for peer reads. */
+const MGET_CHUNK_SIZE = 100;
 
-/** Baseline in-state funding stats derived from congressional norms. */
-const BASELINE_IN_STATE_PCT: Record<string, PeerStats> = {
-  Senate: { mean: 35, std: 12 },
-  House: { mean: 55, std: 15 },
-};
+/**
+ * Read peers' cached numbers by exact key, built from the current roster.
+ * A KEYS pattern match is disabled in prod (it silently returns []), which
+ * left the brief with no peers at all.
+ */
+async function readPeerNumbers(
+  bioguideId: string,
+  isPeer: (rep: { chamber: string; party: string }) => boolean,
+  keyFor: (peerId: string) => string
+): Promise<number[]> {
+  const roster = await getAllEnhancedRepresentatives();
+  const peerKeys = roster
+    .filter(r => r.bioguideId !== bioguideId && isPeer(r))
+    .map(r => keyFor(r.bioguideId));
+
+  const values: number[] = [];
+  for (let i = 0; i < peerKeys.length; i += MGET_CHUNK_SIZE) {
+    const chunk = await getRedisCache().mget<number>(peerKeys.slice(i, i + MGET_CHUNK_SIZE));
+    for (const v of chunk) if (typeof v === 'number') values.push(v);
+  }
+  return values;
+}
+
+/** Summarize peer values, or null when there are too few to be a baseline. */
+function toPeerStats(values: number[]): PeerStats | null {
+  if (values.length < MIN_PEER_COUNT) return null;
+  return {
+    mean: mean(values),
+    std: sampleStandardDeviation(values),
+    peerCount: values.length,
+  };
+}
+
+function toBriefBaseline(stats: PeerStats | null): BriefPeerBaseline | null {
+  if (!stats) return null;
+  return { meanPct: Math.round(stats.mean * 10) / 10, peerCount: stats.peerCount };
+}
 
 /** Fetch peer party alignment stats from cached temporal alignment scores. */
 async function fetchPeerPartyAlignmentStats(
@@ -439,28 +481,17 @@ async function fetchPeerPartyAlignmentStats(
   party: string
 ): Promise<PeerStats | null> {
   try {
-    const pattern = `temporal-alignment-party:${chamber}:${party}:*`;
-    const keys = await getRedisCache().keys(pattern);
-    const peerKeys = keys.filter(k => !k.endsWith(`:${bioguideId}`));
-
-    if (peerKeys.length >= MIN_PEER_COUNT) {
-      const values = await getRedisCache().mget<number>(peerKeys);
-      const scores = values
-        .filter((v): v is number => v !== null && typeof v === 'number')
-        .map(v => v * 100);
-
-      if (scores.length >= MIN_PEER_COUNT) {
-        return {
-          mean: mean(scores),
-          std: sampleStandardDeviation(scores),
-        };
-      }
-    }
-
-    // Fall back to baseline when insufficient peers cached
-    return BASELINE_PARTY_ALIGNMENT[chamber] ?? null;
+    // Written by temporal-vote-analyzer's cachePeerScore.
+    const scores = (
+      await readPeerNumbers(
+        bioguideId,
+        r => r.chamber === chamber && r.party === party,
+        id => `temporal-alignment-party:${chamber}:${party}:${id}`
+      )
+    ).map(v => v * 100);
+    return toPeerStats(scores);
   } catch {
-    return BASELINE_PARTY_ALIGNMENT[chamber] ?? null;
+    return null;
   }
 }
 
@@ -470,26 +501,14 @@ async function fetchPeerInStatePctStats(
   chamber: string
 ): Promise<PeerStats | null> {
   try {
-    const pattern = `brief-instate-pct:${chamber}:*`;
-    const keys = await getRedisCache().keys(pattern);
-    const peerKeys = keys.filter(k => !k.endsWith(`:${bioguideId}`));
-
-    if (peerKeys.length >= MIN_PEER_COUNT) {
-      const values = await getRedisCache().mget<number>(peerKeys);
-      const scores = values.filter((v): v is number => v !== null && typeof v === 'number');
-
-      if (scores.length >= MIN_PEER_COUNT) {
-        return {
-          mean: mean(scores),
-          std: sampleStandardDeviation(scores),
-        };
-      }
-    }
-
-    // Fall back to baseline when insufficient peers cached
-    return BASELINE_IN_STATE_PCT[chamber] ?? null;
+    const scores = await readPeerNumbers(
+      bioguideId,
+      r => r.chamber === chamber,
+      id => `brief-instate-pct:${chamber}:${id}`
+    );
+    return toPeerStats(scores);
   } catch {
-    return BASELINE_IN_STATE_PCT[chamber] ?? null;
+    return null;
   }
 }
 

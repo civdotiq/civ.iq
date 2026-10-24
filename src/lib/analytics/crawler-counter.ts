@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -66,6 +66,7 @@ const CRAWLER_SIGNATURES: ReadonlyArray<readonly [string, string]> = [
   ['bytespider', 'bytespider'],
   ['amazonbot', 'amazonbot'],
   ['meta-externalagent', 'meta-externalagent'],
+  ['meta-webindexer', 'meta-webindexer'],
   ['facebookexternalhit', 'facebookexternalhit'],
   ['twitterbot', 'twitterbot'],
   ['linkedinbot', 'linkedinbot'],

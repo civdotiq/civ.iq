@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -28,7 +28,6 @@ import path from 'path';
 const APP_API = path.join(process.cwd(), 'src', 'app', 'api');
 
 const CONVERTED_ROUTES = [
-  'intelligence/representative/[bioguideId]/vote-prediction/route.ts',
   'intelligence/representative/[bioguideId]/influence-chain/route.ts',
   'intelligence/representative/[bioguideId]/temporal/route.ts',
   'intelligence/representative/[bioguideId]/finance-jurisdiction/route.ts',

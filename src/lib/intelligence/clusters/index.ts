@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -15,6 +15,9 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import type { InfluenceClusterData, LegislatorClusterPoint, ClusterMetadata } from './types';
 
+/** Repo-relative path; keep in sync with next.config.mjs and the Python script. */
+const CLUSTERS_PATH = 'src/lib/intelligence/clusters/influence-clusters.json';
+
 /** Module-level cache — loaded once per process. */
 let clusterCache: InfluenceClusterData | null = null;
 
@@ -24,15 +27,16 @@ let loadFailed = false;
 /**
  * Load precomputed influence clusters.
  * Returns null if the data file doesn't exist (clusters not yet computed).
- * Uses fs.readFileSync instead of require() to avoid bundler static analysis
- * errors when the JSON file doesn't exist in the deployment.
+ * Reads from process.cwd() rather than __dirname: in a bundled route __dirname
+ * points into .next/, where the JSON never lands. next.config.mjs ships the
+ * file with the route via outputFileTracingIncludes.
  */
 export function getInfluenceClusters(): InfluenceClusterData | null {
   if (clusterCache) return clusterCache;
   if (loadFailed) return null;
 
   try {
-    const filePath = join(__dirname, 'influence-clusters.json');
+    const filePath = join(process.cwd(), CLUSTERS_PATH);
     const raw = readFileSync(filePath, 'utf-8');
     clusterCache = JSON.parse(raw) as InfluenceClusterData;
     return clusterCache;

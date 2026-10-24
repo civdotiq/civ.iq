@@ -246,7 +246,7 @@ npm audit --audit-level=high   # security only
 | `diagnose:apis` shows Congress.gov red             | Typo in `CONGRESS_API_KEY` or trailing whitespace | Re-paste the key from the email — no quotes, no spaces.                                 |
 | Build fails with `Cannot find module '@civiq/...'` | `npm ci` didn't link workspace packages           | `rm -rf node_modules && npm ci`.                                                        |
 | `Redis connection refused`                         | You set `REDIS_HOST` but Redis isn't running      | Either start Redis or leave `REDIS_HOST` blank — the app falls back to in-memory cache. |
-| Embeddings fail with "ONNX session error"          | Node version mismatch (pipeline needs 20+)        | `nvm use` and rerun. See `docs/EMBEDDING-PIPELINE-BROKEN-2026-04.md`.                   |
+| Embeddings fail with "ONNX session error"          | Node version mismatch (pipeline needs 20+)        | `nvm use` and rerun. See `docs/archive/EMBEDDING-PIPELINE-BROKEN-2026-04.md`.           |
 | `/api/representative/.../finance` returns empty    | FEC key unset or bioguide→FEC mapping stale       | Check `FEC_API_KEY` is in `.env.local`; rerun `npm run sync:bioguide-fec`.              |
 | Next.js says port 3000 in use                      | Another dev server is running                     | `PORT=3001 npm run dev` or `lsof -i :3000` and kill the offender.                       |
 
@@ -258,7 +258,6 @@ Be explicit — nothing below is wired by default, and pretending otherwise woul
 
 - **State campaign finance.** FollowTheMoney.org is in maintenance during the OpenSecrets merger. Routes return `dataQuality: 'unavailable'`. See `docs/COVERAGE.md`.
 - **Non-pilot local government.** Only 10 cities are wired via Legistar (`src/lib/local-government/pilot-cities.ts`). Every other city returns `unavailable` with the pilot list included.
-- **ML training.** Trained weights are not checked into the repo. You can use the existing ONNX vote-predictor model (committed under `public/models/`), but retraining requires Python + training data — see `scripts/train-vote-model.py` and `PLAN-ml-deepening.md`.
 - **Production Redis.** A local dev server runs fine with the in-memory cache; Upstash is for production.
 
 ---

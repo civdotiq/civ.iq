@@ -11,6 +11,7 @@ import {
   mergeWithExisting,
   summarizeDiff,
   preserveSeatedMembers,
+  preserveAllExisting,
   serialize,
   scoreFecMatch,
   pickBestFecMatch,
@@ -213,6 +214,31 @@ describe('summarizeDiff', () => {
     const fresh: MappingFile = { A: entry({ lastUpdated: '2026-04-16' }) };
     const diff = summarizeDiff(fresh, existing);
     expect(diff.updated).toEqual([]);
+  });
+});
+
+describe('preserveAllExisting', () => {
+  const entry = {
+    fecId: 'S6SC04437',
+    name: 'GRAHAM, DARLINE',
+    state: 'SC',
+    office: 'S' as const,
+    lastUpdated: '2026-09-22',
+  };
+
+  it('keeps every existing entry the YAML dropped when membership is unverified', () => {
+    // 2026-10-11: Congress.gov 429'd, the YAML-only sync dropped G000608.
+    const fresh: MappingFile = {};
+    expect(preserveAllExisting(fresh, { G000608: entry })).toEqual(['G000608']);
+    expect(fresh.G000608).toEqual(entry);
+  });
+
+  it('leaves fresh entries alone and is a no-op without an existing file', () => {
+    const newer = { ...entry, fecId: 'S6SC99999' };
+    const fresh: MappingFile = { G000608: newer };
+    expect(preserveAllExisting(fresh, { G000608: entry })).toEqual([]);
+    expect(fresh.G000608).toEqual(newer);
+    expect(preserveAllExisting({}, null)).toEqual([]);
   });
 });
 

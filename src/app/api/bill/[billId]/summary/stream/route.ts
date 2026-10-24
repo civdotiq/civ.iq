@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -25,7 +25,7 @@ import type { BillSummary } from '@/features/legislation/services/ai/bill-summar
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
 import { BillTextProcessor } from '@/features/legislation/services/ai/bill-text-processor';
-import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
+import { simplifyToTargetGrade } from '@/features/legislation/services/ai/summary-simplifier';
 import { fetchBillText } from '@/features/legislation/services/bill-text-fetcher';
 import { PLAIN_LANGUAGE_ATTRIBUTION } from '@/lib/ai/plain-language';
 import { generateAIText, streamAIText } from '@/lib/ai/provider';
@@ -135,13 +135,20 @@ export async function GET(
             controller.enqueue(encoder.encode(event));
           }
 
+          // A failed stream can end with no text; never cache or show an empty summary
+          if (fullStreamedText.trim() === '') {
+            throw new Error('AI stream returned no text');
+          }
+
           // Await structured result
           const structuredResponse = await structuredPromise;
           const structured = parseStructuredResponse(structuredResponse);
 
-          // Validate reading level
-          const readingAnalysis = ReadingLevelValidator.analyzeReadingLevel(fullStreamedText, {
-            targetGrade: 8,
+          // Grade-8 target: the streamed draft is rewritten (up to two passes) when it
+          // reads harder. The complete event carries the final text, which replaces
+          // the streamed draft on the page and is what gets cached.
+          const simplified = await simplifyToTargetGrade(fullStreamedText, {
+            billNumber: billMetadata.number,
           });
 
           // Build complete summary
@@ -149,16 +156,17 @@ export async function GET(
           const summary: BillSummary = {
             billId: `${billMetadata.number}-${billMetadata.congress}`,
             title: billMetadata.title,
-            summary: fullStreamedText,
+            summary: simplified.text,
             keyPoints: structured.keyPoints,
             whoItAffects: structured.whoItAffects,
             whatItDoes: structured.whatItDoes,
             whyItMatters: structured.whyItMatters,
             affectedIndustries: structured.affectedIndustries,
-            readingLevel: readingAnalysis.gradeLevel,
+            readingLevel: simplified.gradeLevel,
             confidence: structured.confidence,
             lastUpdated: new Date().toISOString(),
             source: 'ai-generated',
+            basedOn: billText.basedOn,
           };
 
           // Cache asynchronously (don't block the response)

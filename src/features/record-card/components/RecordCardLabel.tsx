@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -30,6 +30,7 @@ import { getStateName } from '@/lib/data/us-states';
 import type { RecordCardData } from '../record-card-data';
 import { termOrdinal } from '../record-card-data';
 import { ProvenancePopover } from './ProvenancePopover';
+import { MONEY_AND_VOTES_CAVEAT, ROLL_CALL_CAVEAT } from '@/lib/constants/standing-caveats';
 
 // ── Formatting ───────────────────────────────────────────────────────
 
@@ -651,6 +652,8 @@ function CardFooter({ data }: { data: RecordCardData }) {
       {data.member.chamber === 'House' ? 'House Clerk' : 'Senate.gov'}
       <br />
       {asOfParts.join(' · ')}
+      <br />
+      {ROLL_CALL_CAVEAT} {MONEY_AND_VOTES_CAVEAT}
       <br />
       <span className="text-gray-900">
         civdotiq.org/representative/{data.member.bioguideId}/record

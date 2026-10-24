@@ -1,10 +1,11 @@
 /**
  * Copyright (c) 2019-2026 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import {
   parseBillSlug,
+  billLinkTarget,
   isValidFederalRegisterDocumentNumber,
   isValidFecCommitteeId,
   isCongressionalSystemCode,
@@ -73,9 +74,34 @@ describe('parseBillSlug', () => {
       ['letters in number', 'hr-abc'],
       ['negative sign', '-hr-7682'],
       ['unknown suffix', '119-hr-7682-extra'],
+      ['earlier Congress', '114-hr-2029'],
+      ['earlier Congress, type-first', 'hr2029-114'],
+      ['future Congress', '125-hr-1'],
     ])('rejects %s', (_label, slug) => {
       expect(parseBillSlug(slug)).toEqual({ kind: 'invalid' });
     });
+  });
+});
+
+describe('billLinkTarget', () => {
+  it('links a served bill to its CIV.IQ page', () => {
+    expect(billLinkTarget('119-hr-22')).toEqual({ href: '/bill/119-hr-22', external: false });
+  });
+
+  it('links an earlier-Congress bill out to Congress.gov', () => {
+    expect(billLinkTarget('118-hr-8281')).toEqual({
+      href: 'https://www.congress.gov/bill/118th-congress/house-bill/8281',
+      external: true,
+    });
+    expect(billLinkTarget('102-sconres-3')).toEqual({
+      href: 'https://www.congress.gov/bill/102nd-congress/senate-concurrent-resolution/3',
+      external: true,
+    });
+  });
+
+  it('returns null for ids that do not name a bill', () => {
+    expect(billLinkTarget('119-unknown-Unknown')).toBeNull();
+    expect(billLinkTarget('118-xyz-1')).toBeNull();
   });
 });
 

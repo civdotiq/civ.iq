@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * IssueTopicPage — redesigned topic file (PR 16). Reduced-scope per
  * 2026-05-08 plan: no sub-topic taxonomy, no milestones timeline, no
@@ -18,16 +18,9 @@ import { TopicHero } from './TopicHero';
 import { TopicFileAside } from './TopicFileAside';
 import { CommitteesStrip } from './CommitteesStrip';
 import { BillsTable } from './BillsTable';
-import { MoneyFlowPanel } from './MoneyFlowPanel';
-import { RecipientsList } from './RecipientsList';
 import { RegulationsList } from './RegulationsList';
-import { computePartyTotals, formatCompactDollars, isoToReadable, topRecipients } from './data';
-import type {
-  IssueTopicPageProps,
-  LeaderboardPayload,
-  OrgsPayload,
-  PolicyAreaPayload,
-} from './types';
+import { isoToReadable } from './data';
+import type { IssueTopicPageProps, OrgsPayload, PolicyAreaPayload } from './types';
 
 const fetcher = async <T,>(url: string): Promise<T | null> => {
   const res = await fetch(url);
@@ -44,9 +37,6 @@ export function IssueTopicPage({
   industrySectorLabel,
 }: IssueTopicPageProps) {
   const policyAreaUrl = `/api/search/policy-area?policyArea=${encodeURIComponent(policyArea)}&limit=20`;
-  const leaderboardUrl = industrySectorSlug
-    ? `/api/intelligence/sector/${industrySectorSlug}/leaderboard?limit=100`
-    : null;
   const orgsUrl = industrySectorSlug
     ? `/api/industry/${encodeURIComponent(industrySectorSlug)}/organizations`
     : null;
@@ -60,29 +50,15 @@ export function IssueTopicPage({
     dedupingInterval: 60_000,
   });
 
-  const { data: leaderboard, isLoading: leaderboardLoading } = useSWR<LeaderboardPayload | null>(
-    leaderboardUrl ? `leaderboard:${industrySectorSlug}` : null,
-    leaderboardUrl ? () => fetcher(leaderboardUrl) : null,
-    { revalidateOnFocus: false, dedupingInterval: 60_000 }
-  );
-
   const { data: orgs } = useSWR<OrgsPayload | null>(
     orgsUrl ? `orgs:${industrySectorSlug}` : null,
     orgsUrl ? () => fetcher(orgsUrl) : null,
     { revalidateOnFocus: false, dedupingInterval: 60_000 }
   );
 
-  const partyTotals = leaderboard?.entries ? computePartyTotals(leaderboard.entries) : null;
-  const recipients = leaderboard?.entries ? topRecipients(leaderboard.entries, 6) : [];
-  const topRecipient = recipients[0] ?? null;
-  const industryTotal = partyTotals && partyTotals.total > 0 ? partyTotals.total : null;
-
   const dataAsOf = useMemo(
-    () =>
-      isoToReadable(
-        policyAreaData?.metadata.generatedAt ?? leaderboard?.dataAsOf ?? new Date().toISOString()
-      ),
-    [policyAreaData, leaderboard]
+    () => isoToReadable(policyAreaData?.metadata.generatedAt ?? new Date().toISOString()),
+    [policyAreaData]
   );
 
   const billsShown = policyAreaData?.bills.length ?? 0;
@@ -90,14 +66,6 @@ export function IssueTopicPage({
   const billsCount = policyAreaData?.billsTotal ?? billsShown;
   const regulationsCount = policyAreaData?.regulations.length ?? 0;
   const committeesCount = policyAreaData?.committees.length ?? 0;
-  const dPct =
-    partyTotals && partyTotals.total > 0
-      ? Math.round((partyTotals.d / partyTotals.total) * 100)
-      : 0;
-  const rPct =
-    partyTotals && partyTotals.total > 0
-      ? Math.round((partyTotals.r / partyTotals.total) * 100)
-      : 0;
 
   return (
     <div
@@ -137,7 +105,9 @@ export function IssueTopicPage({
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
           <CqSourceTag compact source="Congress.gov" id="bills + committees" />
           <CqSourceTag compact source="Federal Register" id="regulations" />
-          {industrySectorSlug && <CqSourceTag compact source="FEC" id={industrySectorSlug} />}
+          {industrySectorSlug && (
+            <CqSourceTag compact source="Senate LDA" id={industrySectorSlug} />
+          )}
         </div>
       </div>
 
@@ -180,12 +150,7 @@ export function IssueTopicPage({
           industrySectorLabel={industrySectorLabel}
           policyArea={policyArea}
         />
-        <TopicFileAside
-          policyArea={policyAreaData ?? null}
-          topRecipient={topRecipient}
-          industryTotal={industryTotal}
-          loading={policyAreaLoading || leaderboardLoading}
-        />
+        <TopicFileAside policyArea={policyAreaData ?? null} loading={policyAreaLoading} />
       </div>
 
       {/* Active committees strip */}
@@ -238,16 +203,38 @@ export function IssueTopicPage({
             </Link>
           </div>
           <BillsTable bills={policyAreaData?.bills ?? []} loading={policyAreaLoading} />
-
-          <MoneyFlowPanel
-            totals={partyTotals}
-            industryLabel={industrySectorLabel}
-            loading={leaderboardLoading}
-          />
         </div>
 
         <aside style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <RecipientsList entries={recipients} loading={leaderboardLoading} />
+          {industrySectorSlug && industrySectorLabel && (
+            <Link
+              href={`/industry/${industrySectorSlug}`}
+              style={{
+                border: '2px solid var(--ink)',
+                padding: '14px 16px',
+                display: 'block',
+                textDecoration: 'none',
+                color: 'var(--fg1)',
+              }}
+            >
+              <CqLabel>Related industry</CqLabel>
+              <div style={{ fontSize: 15, fontWeight: 700, marginTop: 6 }}>
+                {industrySectorLabel}
+              </div>
+              <div
+                style={{
+                  fontSize: 11,
+                  marginTop: 6,
+                  color: 'var(--civiq-blue-active)',
+                  textDecoration: 'underline',
+                  textUnderlineOffset: 3,
+                  fontFamily: 'var(--font-mono)',
+                }}
+              >
+                House yes-vote rates on {industrySectorLabel.toLowerCase()} bills →
+              </div>
+            </Link>
+          )}
           <RegulationsList
             regulations={policyAreaData?.regulations ?? []}
             loading={policyAreaLoading}
@@ -266,14 +253,10 @@ export function IssueTopicPage({
                 regulationsCount > 0
                   ? ` and ${regulationsCount} recent Federal Register entr${regulationsCount === 1 ? 'y' : 'ies'}`
                   : ''
-              }.${
-                industryTotal !== null && industrySectorLabel
-                  ? ` ${industrySectorLabel} contributions to current members total ${formatCompactDollars(industryTotal)} this cycle — ${dPct}% to Democrats, ${rPct}% to Republicans.`
-                  : ''
-              }`
+              }.`
             : policyAreaError
               ? 'Cross-domain results are unavailable right now. Refresh in a moment — /api/search/policy-area cold-start joins can take 5–10 seconds.'
-              : 'Loading bills, regulations, committees, and industry contributions for this policy area…'}
+              : 'Loading bills, regulations, and committees for this policy area…'}
         </CqPlainReading>
       </div>
 
@@ -281,12 +264,11 @@ export function IssueTopicPage({
         <CqDisclaimer
           confidence={0.9}
           asof={dataAsOf}
-          method="Direct ingestion · Congress.gov, Federal Register, FEC.gov"
+          method="Direct ingestion · Congress.gov, Federal Register, Senate LDA"
         >
           {' '}
           Topic clustering uses Congress.gov policy-area codes plus FEC industry classifications. A
-          bill may appear under multiple topics. Industry contributions reflect cached vote-finance
-          insights computed from individual representative profiles.
+          bill may appear under multiple topics.
           {orgs?.corpusLobbying
             ? ` Lobby roll-up: ${orgs.corpusLobbying.organizationCount.toLocaleString()} organizations across ${orgs.corpusLobbying.filingCount.toLocaleString()} filings on these issue areas, from the complete Senate LDA corpus.`
             : ''}

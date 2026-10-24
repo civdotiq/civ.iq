@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -16,7 +16,7 @@
  * - legislators-social-media.yaml: Social media accounts
  */
 
-import { cachedFetch } from '@/lib/cache';
+import { cache, cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import yaml from 'js-yaml';
 import type { EnhancedRepresentative, RepresentativeRole } from '@/types/representative';
@@ -242,12 +242,14 @@ async function persistentCachedFetch<T>(
 
     logger.debug('File cache miss, checking memory cache', { key });
 
+    let fetchedFromUpstream = false;
     const data = await cachedFetch(
       key,
       async () => {
         logger.info('Downloading from GitHub', { key });
         logger.info('Fetching congress data from remote source', { key });
 
+        fetchedFromUpstream = true;
         const fetchStartTime = Date.now();
         const fetched = await fetchFn();
 
@@ -268,8 +270,23 @@ async function persistentCachedFetch<T>(
       return data;
     }
 
+    // A value copied from Redis is already part-way through its TTL. Carry
+    // that age into the file tier so the copy expires when the Redis entry
+    // does; a fresh timestamp here let the file tier serve data up to two
+    // full TTLs old. If the remaining TTL can't be read, the age is unknown,
+    // so skip the write rather than guess.
+    let ageSeconds = 0;
+    if (!fetchedFromUpstream) {
+      const remaining = await cache.ttl(key);
+      if (remaining === null) {
+        logger.warn('Skipping file cache write: Redis TTL unknown', { key });
+        return data;
+      }
+      ageSeconds = Math.max(0, ttlSeconds - remaining);
+    }
+
     const cacheStartTime = Date.now();
-    await fileCache.set(key, data, ttlSeconds);
+    await fileCache.set(key, data, ttlSeconds, ageSeconds);
 
     logger.info('Congress data cached successfully', {
       key,

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Google Civic Info API Migration Guide
  * SEO-optimized page targeting developers searching for replacements
@@ -198,7 +198,7 @@ const FAQS: FAQ[] = [
   },
   {
     q: 'Can I use this in production?',
-    a: "Yes. CIV.IQ serves real government data with no usage restrictions. MIT licensed. We appreciate attribution but don't require it.",
+    a: "Yes. CIV.IQ serves real government data with no usage restrictions. The data is public domain and the code is Apache-2.0. We appreciate attribution but don't require it.",
   },
   {
     q: 'What if I need photos and social media links?',
@@ -206,7 +206,7 @@ const FAQS: FAQ[] = [
   },
   {
     q: 'Does CIV.IQ have an MCP server for AI assistants?',
-    a: 'Yes. Connect any MCP-compatible AI assistant to https://civdotiq.org/api/mcp — 16 tools for representative lookup, legislation, voting records, campaign finance, and more.',
+    a: 'Yes. Connect any MCP-compatible AI assistant to https://civdotiq.org/api/mcp — 46 tools for representative lookup, legislation, voting records, campaign finance, and more.',
   },
 ];
 
@@ -335,7 +335,7 @@ export default function GoogleCivicMigrationPage() {
                 <tr className="border-b border-gray-200">
                   <td className="py-2 pr-4">Federal legislators</td>
                   <td className="py-2 pr-4 line-through text-gray-400">Shut down</td>
-                  <td className="py-2">535 members, updated hourly</td>
+                  <td className="py-2">535 members, refreshed every 1–2 days</td>
                 </tr>
                 <tr className="border-b border-gray-200">
                   <td className="py-2 pr-4">State legislators</td>
@@ -575,7 +575,7 @@ export default function GoogleCivicMigrationPage() {
               },
               {
                 title: 'AI/MCP Integration',
-                desc: '16-tool MCP server for AI assistants. Connect Claude, GPT, or any MCP client.',
+                desc: '46-tool MCP server for AI assistants. Connect Claude, GPT, or any MCP client.',
                 href: '/developers',
               },
             ].map(card => (

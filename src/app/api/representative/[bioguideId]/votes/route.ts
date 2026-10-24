@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -278,13 +278,10 @@ async function getHouseVotes(
     const { batchVotingService } =
       await import('@/features/representatives/services/batch-voting-service');
 
-    // Congressional sessions: odd years = Session 1, even years = Session 2
-    const currentSession = new Date().getFullYear() % 2 === 1 ? 1 : 2;
-
     const memberVotes = await batchVotingService.getHouseMemberVotes(
       bioguideId,
       119, // 119th Congress
-      currentSession,
+      undefined, // newest votes across both sessions
       limit, // Limit votes
       bypassCache // Bypass cache for testing
     );

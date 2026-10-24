@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import { getRedisCache, RedisCache } from '@/lib/cache/redis-client';
@@ -119,6 +119,16 @@ export const cache = {
     } catch (error) {
       logger.error('Cache exists check failed', error as Error, { key });
       return false;
+    }
+  },
+
+  /** Seconds until `key` expires, or null when that can't be known. */
+  ttl: async (key: string): Promise<number | null> => {
+    try {
+      return await getCache().ttl(key);
+    } catch (error) {
+      logger.error('Cache ttl failed', error as Error, { key });
+      return null;
     }
   },
 

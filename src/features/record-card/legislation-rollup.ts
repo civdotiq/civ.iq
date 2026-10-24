@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -29,7 +29,7 @@
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
-import { mapCongressStatus } from '@/lib/services/bill.service';
+import { billTypeChamber, mapCongressStatus } from '@/lib/services/bill.service';
 import {
   fetchAllMemberLegislation,
   type ProcessedBill,
@@ -164,7 +164,7 @@ export function computeLegislationRollup(
   let newestEnactedIntroduced = 0;
 
   for (const bill of countableSponsored) {
-    const status = mapCongressStatus(bill.status);
+    const status = mapCongressStatus(bill.status, billTypeChamber(bill.type));
     tally(career, status, 'sponsored');
     if (bill.congress === currentCongress) tally(current, status, 'sponsored');
 
@@ -185,7 +185,7 @@ export function computeLegislationRollup(
   }
 
   for (const bill of countableCosponsored) {
-    const status = mapCongressStatus(bill.status);
+    const status = mapCongressStatus(bill.status, billTypeChamber(bill.type));
     tally(career, status, 'cosponsored');
     if (bill.congress === currentCongress) tally(current, status, 'cosponsored');
   }

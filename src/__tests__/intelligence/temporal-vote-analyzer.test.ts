@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -50,13 +50,10 @@ jest.mock('@/features/representatives/services/congress.service', () => ({
   getEnhancedRepresentative: (...args: unknown[]) => mockGetEnhancedRepresentative(...args),
 }));
 
-const mockGetHouseMemberVotes = jest.fn();
-const mockGetSenateMemberVotes = jest.fn();
-jest.mock('@/features/representatives/services/batch-voting-service', () => ({
-  batchVotingService: {
-    getHouseMemberVotes: (...args: unknown[]) => mockGetHouseMemberVotes(...args),
-    getSenateMemberVotes: (...args: unknown[]) => mockGetSenateMemberVotes(...args),
-  },
+const mockReadChamberCorpus = jest.fn();
+jest.mock('@/lib/intelligence/analyzers/roll-corpus-reader', () => ({
+  MIN_CORPUS_COVERAGE: 0.9,
+  readChamberCorpus: (...args: unknown[]) => mockReadChamberCorpus(...args),
 }));
 
 jest.mock('@/lib/data/bioguide-fec-mapping', () => ({
@@ -78,6 +75,7 @@ jest.mock('@/lib/connections/policy-area-map', () => ({
 }));
 
 import { analyzeTemporalVotes } from '@/lib/intelligence/analyzers/temporal-vote-analyzer';
+import type { StandardizedVote } from '@/features/representatives/services/batch-voting-service';
 
 // ── Test Data ─────────────────────────────────────────────────────
 
@@ -91,43 +89,64 @@ const mockRep = {
   nextElection: '2026',
 };
 
-/** Generate votes spread across quarters with party alignment XML responses. */
-function makeTemporalVotes(quarters: number) {
-  const votes: Array<{
-    voteId: string;
-    date: string;
-    position: string;
-    rollCallNumber: number;
-  }> = [];
+const PEER_DEMOCRATS = Array.from({ length: 10 }, (_, i) => `D${String(i).padStart(6, '0')}`);
+const REPUBLICANS = Array.from({ length: 10 }, (_, i) => `R${String(i).padStart(6, '0')}`);
 
-  // Generate votes across specified number of quarters starting from 2025-Q1
+/**
+ * Build a corpus with 12 roll calls per quarter starting 2025-Q1. Democrats
+ * vote Yea on every roll; the target member breaks with them on the last 3
+ * rolls of each quarter (75% alignment). Republicans vote Nay.
+ */
+function makeCorpusRolls(quarters: number, chamber: 'House' | 'Senate' = 'House') {
+  const rolls: StandardizedVote[] = [];
   for (let q = 0; q < quarters; q++) {
     const year = 2025 + Math.floor(q / 4);
     const month = (q % 4) * 3 + 1;
     for (let v = 0; v < 12; v++) {
-      votes.push({
-        voteId: `house-${year}-${q * 20 + v}`,
-        date: `${year}-${String(month).padStart(2, '0')}-${String((v % 28) + 1).padStart(2, '0')}`,
-        position: v < 9 ? 'Yea' : 'Nay',
-        rollCallNumber: q * 20 + v + 1,
+      const roll = q * 12 + v + 1;
+      rolls.push({
+        voteId: `${chamber.toLowerCase()}-119-${year % 2 === 1 ? 1 : 2}-${roll}`,
+        congress: 119,
+        session: year % 2 === 1 ? 1 : 2,
+        chamber,
+        rollCallNumber: roll,
+        date: `${year}-${String(month).padStart(2, '0')}-${String(v + 1).padStart(2, '0')}T15:00:00Z`,
+        question: '',
+        result: '',
+        totals: { yea: 0, nay: 0, present: 0, notVoting: 0 },
+        memberVotes: [
+          {
+            bioguideId: 'P000197',
+            name: '',
+            party: 'D',
+            state: '',
+            position: v < 9 ? 'Yea' : 'Nay',
+          },
+          ...PEER_DEMOCRATS.map(b => ({
+            bioguideId: b,
+            name: '',
+            party: 'D',
+            state: '',
+            position: 'Yea' as const,
+          })),
+          ...REPUBLICANS.map(b => ({
+            bioguideId: b,
+            name: '',
+            party: 'R',
+            state: '',
+            position: 'Nay' as const,
+          })),
+        ],
+        sourceUrl: '',
+        processedAt: '',
       });
     }
   }
-
-  return votes;
+  return rolls;
 }
 
-// Build party breakdown XML for mock fetch responses
-function buildHouseXml(yeaCount: number, nayCount: number) {
-  let xml = '<rollcall-vote>';
-  for (let i = 0; i < yeaCount; i++) {
-    xml += `<recorded-vote><legislator party="D"/><vote>Yea</vote></recorded-vote>`;
-  }
-  for (let i = 0; i < nayCount; i++) {
-    xml += `<recorded-vote><legislator party="D"/><vote>Nay</vote></recorded-vote>`;
-  }
-  xml += '</rollcall-vote>';
-  return xml;
+function corpus(rolls: StandardizedVote[], coverage = 1) {
+  return { rolls, expected: Math.round(rolls.length / coverage), coverage };
 }
 
 // ── Tests ─────────────────────────────────────────────────────────
@@ -141,20 +160,7 @@ describe('analyzeTemporalVotes', () => {
     mockRedisMget.mockResolvedValue([]);
     mockGetEnhancedRepresentative.mockResolvedValue(mockRep);
 
-    const votes = makeTemporalVotes(5);
-    mockGetHouseMemberVotes.mockResolvedValue(votes);
-    mockGetSenateMemberVotes.mockResolvedValue([]);
-
-    // Mock global.fetch for roll call XML
-    (global.fetch as jest.Mock).mockImplementation((url: string) => {
-      if (typeof url === 'string' && url.includes('clerk.house.gov')) {
-        return Promise.resolve({
-          ok: true,
-          text: () => Promise.resolve(buildHouseXml(100, 50)),
-        });
-      }
-      return Promise.resolve({ ok: false, status: 404 });
-    });
+    mockReadChamberCorpus.mockResolvedValue(corpus(makeCorpusRolls(5)));
   });
 
   it('returns cached insight on cache hit', async () => {
@@ -180,9 +186,7 @@ describe('analyzeTemporalVotes', () => {
   });
 
   it('returns null when fewer than 4 quarters of data', async () => {
-    // Only provide votes for 1 quarter
-    const fewVotes = makeTemporalVotes(1);
-    mockGetHouseMemberVotes.mockResolvedValue(fewVotes);
+    mockReadChamberCorpus.mockResolvedValue(corpus(makeCorpusRolls(3)));
 
     const result = await analyzeTemporalVotes('P000197');
     expect(result).toBeNull();
@@ -195,8 +199,8 @@ describe('analyzeTemporalVotes', () => {
     expect(result).toBeNull();
   });
 
-  it('returns null when no votes', async () => {
-    mockGetHouseMemberVotes.mockResolvedValue([]);
+  it('returns null when the corpus is empty', async () => {
+    mockReadChamberCorpus.mockResolvedValue({ rolls: [], expected: 0, coverage: 0 });
 
     const result = await analyzeTemporalVotes('P000197');
     expect(result).toBeNull();
@@ -226,16 +230,64 @@ describe('analyzeTemporalVotes', () => {
 
     const setCalls = mockRedisSet.mock.calls;
     const insightCall = setCalls.find(
-      (call: unknown[]) => (call[0] as string) === 'insight:temporal_votes:P000197'
+      (call: unknown[]) => (call[0] as string) === 'insight:temporal_votes:v2:P000197'
     );
     expect(insightCall).toBeDefined();
     expect(insightCall![2]).toBe(14 * 24 * 60 * 60);
   });
 
-  it('fetches votes from both sessions', async () => {
-    await analyzeTemporalVotes('P000197');
+  it('computes quarterly alignment against the party majority on each roll', async () => {
+    const result = await analyzeTemporalVotes('P000197');
 
-    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith('P000197', 119, 1, 250);
-    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith('P000197', 119, 2, 250);
+    expect(result).not.toBeNull();
+    expect(result!.quarters.map(q => q.quarter)).toEqual([
+      '2025-Q1',
+      '2025-Q2',
+      '2025-Q3',
+      '2025-Q4',
+      '2026-Q1',
+    ]);
+    for (const q of result!.quarters) {
+      expect(q.voteCount).toBe(12);
+      expect(q.alignmentScore).toBeCloseTo(0.75);
+    }
+  });
+
+  it('returns null when corpus coverage is below 90%', async () => {
+    mockReadChamberCorpus.mockResolvedValue(corpus(makeCorpusRolls(5), 0.8));
+
+    const result = await analyzeTemporalVotes('P000197');
+    expect(result).toBeNull();
+    expect(mockRedisSet).not.toHaveBeenCalled();
+  });
+
+  it('returns null for a member without a D/R party majority', async () => {
+    mockGetEnhancedRepresentative.mockResolvedValue({ ...mockRep, party: 'Independent' });
+
+    const result = await analyzeTemporalVotes('P000197');
+    expect(result).toBeNull();
+    expect(mockReadChamberCorpus).not.toHaveBeenCalled();
+  });
+
+  it('compares against same-party chamber members from the same corpus', async () => {
+    const result = await analyzeTemporalVotes('P000197');
+
+    expect(result!.peerComparison).toEqual(
+      expect.objectContaining({
+        value: 0.75,
+        peerAverage: 1,
+        peerCount: PEER_DEMOCRATS.length,
+        peerGroupLabel: 'other House Democrats',
+      })
+    );
+  });
+
+  it("reads the member's own chamber corpus", async () => {
+    mockGetEnhancedRepresentative.mockResolvedValue({ ...mockRep, chamber: 'Senate' });
+    mockReadChamberCorpus.mockResolvedValue(corpus(makeCorpusRolls(5, 'Senate')));
+
+    const result = await analyzeTemporalVotes('P000197');
+    expect(mockReadChamberCorpus).toHaveBeenCalledWith('Senate', 119);
+    expect(result!.quarters).toHaveLength(5);
   });
 });

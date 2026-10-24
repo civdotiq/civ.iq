@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import { GET } from '@/app/api/representative/[bioguideId]/votes/route';
@@ -98,8 +98,8 @@ const mockSenateVotes = [
   },
 ];
 
-// Match the route's session calculation: odd years = 1, even years = 2
-const expectedSession = new Date().getFullYear() % 2 === 1 ? 1 : 2;
+// Newest votes across both sessions of the Congress.
+const expectedSession = undefined;
 
 describe('/api/representative/[bioguideId]/votes', () => {
   beforeEach(() => {

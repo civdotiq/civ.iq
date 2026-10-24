@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import { detectPatterns } from '@/lib/intelligence/analyzers/civic-brief-patterns';
@@ -351,10 +351,16 @@ describe('CivicBriefInsight types', () => {
 
 // ── Assembler Integration Tests (mocked) ─────────────────────────────
 
+const mockRedisKeys = jest.fn(() => Promise.resolve([] as string[]));
+const mockRedisMget = jest.fn((keys: string[]) =>
+  Promise.resolve(keys.map(() => null) as Array<number | null>)
+);
+
 describe('civic-brief-assembler', () => {
   // Mock all external dependencies
   jest.mock('@/features/representatives/services/congress.service', () => ({
     getEnhancedRepresentative: jest.fn(),
+    getAllEnhancedRepresentatives: jest.fn(() => Promise.resolve([])),
   }));
 
   jest.mock('@/lib/data/bioguide-fec-mapping', () => ({
@@ -379,8 +385,8 @@ describe('civic-brief-assembler', () => {
     getRedisCache: () => ({
       get: jest.fn(() => Promise.resolve(null)),
       set: jest.fn(() => Promise.resolve(true)),
-      keys: jest.fn(() => Promise.resolve([])),
-      mget: jest.fn(() => Promise.resolve([])),
+      keys: mockRedisKeys,
+      mget: mockRedisMget,
     }),
   }));
 
@@ -401,22 +407,19 @@ describe('civic-brief-assembler', () => {
   }));
 
   it('returns null when representative not found', async () => {
-    const { getEnhancedRepresentative } = await import(
-      '@/features/representatives/services/congress.service'
-    );
+    const { getEnhancedRepresentative } =
+      await import('@/features/representatives/services/congress.service');
     (getEnhancedRepresentative as jest.Mock).mockResolvedValue(null);
 
-    const { assembleCivicBrief } = await import(
-      '@/lib/intelligence/analyzers/civic-brief-assembler'
-    );
+    const { assembleCivicBrief } =
+      await import('@/lib/intelligence/analyzers/civic-brief-assembler');
     const result = await assembleCivicBrief('NOTFOUND');
     expect(result).toBeNull();
   });
 
   it('produces fallback summary when AI unavailable', async () => {
-    const { getEnhancedRepresentative } = await import(
-      '@/features/representatives/services/congress.service'
-    );
+    const { getEnhancedRepresentative } =
+      await import('@/features/representatives/services/congress.service');
     (getEnhancedRepresentative as jest.Mock).mockResolvedValue({
       name: 'Test Rep',
       party: 'D',
@@ -430,9 +433,8 @@ describe('civic-brief-assembler', () => {
     const { generateAIText } = await import('@/lib/ai/provider');
     (generateAIText as jest.Mock).mockRejectedValue(new Error('AI unavailable'));
 
-    const { assembleCivicBrief } = await import(
-      '@/lib/intelligence/analyzers/civic-brief-assembler'
-    );
+    const { assembleCivicBrief } =
+      await import('@/lib/intelligence/analyzers/civic-brief-assembler');
     const result = await assembleCivicBrief('T000001');
 
     expect(result).not.toBeNull();
@@ -442,5 +444,89 @@ describe('civic-brief-assembler', () => {
     expect(result!.summary).toContain('Democrat'); // citizen-friendly party name
     expect(result!.identity.name).toBe('Test Rep');
     expect(result!.disclaimer).toContain('Correlation');
+  });
+  it('reads peer baselines by exact roster key, never KEYS', async () => {
+    const congress = await import('@/features/representatives/services/congress.service');
+    const self = {
+      bioguideId: 'T000001',
+      name: 'Test Rep',
+      party: 'D',
+      state: 'CA',
+      district: '12',
+      chamber: 'House',
+      terms: [{ startYear: '2023' }],
+      committees: [],
+    };
+    const peers = Array.from({ length: 6 }, (_, i) => ({
+      ...self,
+      bioguideId: `P00000${i}`,
+    }));
+    const otherParty = { ...self, bioguideId: 'R000001', party: 'R' };
+    const senator = { ...self, bioguideId: 'S000001', chamber: 'Senate' };
+    (congress.getEnhancedRepresentative as jest.Mock).mockResolvedValue(self);
+    (congress.getAllEnhancedRepresentatives as jest.Mock).mockResolvedValue([
+      self,
+      ...peers,
+      otherParty,
+      senator,
+    ]);
+    mockRedisKeys.mockClear();
+    mockRedisMget.mockClear();
+
+    const { assembleCivicBrief } =
+      await import('@/lib/intelligence/analyzers/civic-brief-assembler');
+    await assembleCivicBrief('T000001', { refresh: true });
+
+    expect(mockRedisKeys).not.toHaveBeenCalled();
+    const requested = mockRedisMget.mock.calls.flatMap(([keys]) => keys);
+    expect(requested).toEqual(
+      expect.arrayContaining([
+        ...peers.map(p => `temporal-alignment-party:House:D:${p.bioguideId}`),
+        ...[...peers, otherParty].map(p => `brief-instate-pct:House:${p.bioguideId}`),
+      ])
+    );
+    // Self, other-chamber and other-party members are not peers.
+    expect(requested).not.toContain('temporal-alignment-party:House:D:T000001');
+    expect(requested).not.toContain('temporal-alignment-party:House:R:R000001');
+    expect(requested.some(k => k.includes('S000001'))).toBe(false);
+  });
+
+  it('reports no peer baseline when fewer than 5 peers are cached', async () => {
+    const congress = await import('@/features/representatives/services/congress.service');
+    const self = {
+      bioguideId: 'T000001',
+      name: 'Test Rep',
+      party: 'D',
+      state: 'CA',
+      district: '12',
+      chamber: 'House',
+      terms: [{ startYear: '2023' }],
+      committees: [],
+    };
+    const peers = Array.from({ length: 6 }, (_, i) => ({ ...self, bioguideId: `P00000${i}` }));
+    (congress.getEnhancedRepresentative as jest.Mock).mockResolvedValue(self);
+    (congress.getAllEnhancedRepresentatives as jest.Mock).mockResolvedValue([self, ...peers]);
+    // Only 4 party-alignment peers cached; all 6 in-state peers cached.
+    mockRedisMget.mockImplementation((keys: string[]) =>
+      Promise.resolve(
+        keys.map((k, i) => {
+          if (k.startsWith('temporal-alignment-party:')) return i < 4 ? 0.9 : null;
+          if (k.startsWith('brief-instate-pct:')) return 40 + i * 2;
+          return null;
+        })
+      )
+    );
+
+    const { assembleCivicBrief } =
+      await import('@/lib/intelligence/analyzers/civic-brief-assembler');
+    const result = await assembleCivicBrief('T000001', { refresh: true });
+
+    expect(result!.peerBaselines).toEqual({
+      partyAlignment: null,
+      inStatePct: { meanPct: 45, peerCount: 6 },
+    });
+    expect(result!.patterns.some(p => p.type === 'voting-party-divergence')).toBe(false);
+    mockRedisMget.mockReset();
+    mockRedisMget.mockImplementation((keys: string[]) => Promise.resolve(keys.map(() => null)));
   });
 });

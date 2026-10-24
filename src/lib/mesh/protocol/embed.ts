@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -71,7 +71,6 @@ export interface ScorecardData {
   state: string;
   district?: string;
   alignmentScore?: number;
-  independenceScore?: number;
   topDonorSector?: string;
   dataAsOf: string;
 }
@@ -102,10 +101,6 @@ export function renderScorecard(data: ScorecardData): string {
       <div class="card-row">
         <span class="card-label">District Match</span>
         <span class="card-value">${alignmentPct} ${alignmentBar}</span>
-      </div>
-      <div class="card-row">
-        <span class="card-label">Votes Against Party</span>
-        <span class="card-value">${data.independenceScore != null ? `${Math.round(data.independenceScore * 100)}%` : 'N/A'}</span>
       </div>
       <div class="card-row">
         <span class="card-label">Top Donor Industry</span>

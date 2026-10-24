@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -18,6 +18,7 @@ import { cachedFetch } from '@/lib/cache';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { aggregateFinanceDataFromAggregates } from '@/lib/fec/finance-aggregator';
+import { trackFecFailures } from '@/lib/fec/fec-failure-scope';
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
 import { analyzeLobbyingPipeline } from '@/lib/intelligence/analyzers/lobbying-pipeline-analyzer';
 import { getComprehensiveBillsByMember } from '@/services/congress/optimized-congress.service';
@@ -42,8 +43,10 @@ import {
   getRecentElectionCycles,
 } from '@/lib/fec/election-cycle';
 
-// Cache TTLs matching API route behavior
-const FINANCE_TTL = 30 * 60; // 30 min (FEC data)
+// FEC totals and breakdowns only move when a committee files (mostly
+// quarterly), and the shared FEC key allows ~1,000 calls/hour — a crawler
+// sweep over cold pages exhausts it. A day keeps those sweeps on Redis.
+const FINANCE_TTL = 24 * 60 * 60;
 const VOTES_TTL = 15 * 60; // 15 min (votes)
 
 // ── Bills Sponsored ───────────────────────────────────────────
@@ -116,6 +119,8 @@ export interface CampaignContributionsData {
     unattributedTotal: number;
     metadata?: { cycle?: number; lastUpdated?: string };
   } | null;
+  /** The breakdown couldn't be fetched (rate limit, outage) — not "no employer data". */
+  industriesUnavailable: boolean;
   voteFinance: InsightResponse<VoteFinanceInsight> | null;
 }
 
@@ -172,13 +177,53 @@ function wrapInsight<T>(data: T | null): InsightResponse<T> | null {
 
 // ── Fetchers ───────────────────────────────────────────────────
 
+/**
+ * cachedFetch for FEC-backed data that never caches or hides a failure.
+ *
+ * "Unavailable" covers a thrown error AND a transient failure (429, 5xx,
+ * timeout) that a lower layer swallowed into an empty result — an empty
+ * employer list from a rate limit is not "donors listed no employer". The
+ * error never reaches cachedFetch, which would re-run the fetch on a throw
+ * and double the spend exactly when the key is out of quota.
+ */
+async function cachedFecFetch<T>(
+  key: string,
+  fetchFn: () => Promise<T | null>
+): Promise<{ value: T | null; unavailable: boolean }> {
+  let unavailable = false;
+  const value = await cachedFetch<T | null>(
+    key,
+    async () => {
+      try {
+        const { value: result, transientFailures } = await trackFecFailures(fetchFn);
+        if (transientFailures > 0) unavailable = true;
+        return result;
+      } catch {
+        unavailable = true;
+        return null;
+      }
+    },
+    FINANCE_TTL,
+    () => !unavailable
+  );
+  return unavailable ? { value: null, unavailable } : { value, unavailable };
+}
+
 function industriesForCycle(bioguideId: string, fecId: string, cycle: number, state: string) {
   // v2: the unversioned key held 2024-cycle breakdowns.
-  return cachedFetch(
-    `question:industries:v2:${bioguideId}:${cycle}`,
-    () => aggregateFinanceDataFromAggregates(fecId, cycle, state),
-    FINANCE_TTL
-  ).catch(() => null);
+  return cachedFecFetch(`question:industries:v2:${bioguideId}:${cycle}`, () =>
+    aggregateFinanceDataFromAggregates(fecId, cycle, state)
+  );
+}
+
+/** Cycle totals, cached; throws when the FEC can't be reached so callers read "unavailable". */
+async function totalsForCycle(fecId: string, cycle: number) {
+  const { value, unavailable } = await cachedFecFetch(
+    `question:fec-totals:v1:${fecId}:${cycle}`,
+    () => fecApiService.getFinancialSummary(fecId, cycle)
+  );
+  if (unavailable) throw new Error(`FEC totals unavailable for ${fecId} cycle ${cycle}`);
+  return value;
 }
 
 export async function fetchCampaignContributionsData(
@@ -195,7 +240,7 @@ export async function fetchCampaignContributionsData(
   const [newestResult, currentIndustries, voteFinanceResult] = await Promise.all([
     fecId
       ? findNewestCycleWithData(getRecentElectionCycles(3), cycle =>
-          fecApiService.getFinancialSummary(fecId, cycle)
+          totalsForCycle(fecId, cycle)
         ).then(
           value => ({ ok: true as const, value }),
           () => ({ ok: false as const, value: null })
@@ -206,10 +251,11 @@ export async function fetchCampaignContributionsData(
   ]);
 
   const newest = newestResult.value;
-  const processedFinance =
+  const industriesResult =
     fecId && newest && newest.cycle !== currentCycle
       ? await industriesForCycle(bioguideId, fecId, newest.cycle, state)
       : currentIndustries;
+  const processedFinance = industriesResult?.value ?? null;
 
   const finance = newest
     ? {
@@ -270,6 +316,7 @@ export async function fetchCampaignContributionsData(
     finance,
     financeUnavailable: !newestResult.ok,
     industries,
+    industriesUnavailable: industriesResult?.unavailable ?? false,
     voteFinance: wrapInsight(voteFinanceResult),
   };
 }

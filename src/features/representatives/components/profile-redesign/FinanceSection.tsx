@@ -1,12 +1,13 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 'use client';
 
 import React from 'react';
 import { SectionBlock, SectionEmptyState, SectionSkeleton } from './SectionBlock';
+import { MONEY_AND_VOTES_CAVEAT } from '@/lib/constants/standing-caveats';
 import { formatMoney, type ProfileFinance } from './types';
 
 interface FinanceSectionProps {
@@ -112,6 +113,7 @@ export function FinanceSection({ finance, loading, onExplore }: FinanceSectionPr
               )}
             </div>
           )}
+          <p className="text-xs text-gray-500 pt-4">{MONEY_AND_VOTES_CAVEAT}</p>
         </>
       )}
     </SectionBlock>

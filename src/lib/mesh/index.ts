@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -61,14 +61,7 @@ export type {
   TemporalTrend,
 } from './temporal-types';
 
-// Propagation — influence path scoring, counterfactuals, cascade simulation
-export { runCounterfactual, maskDonorProfile } from './propagation/counterfactual';
-export type {
-  CounterfactualQuery,
-  CounterfactualResult,
-  CounterfactualPrediction,
-} from './propagation/counterfactual';
-
+// Propagation — influence path scoring
 export { scoreInfluence, scoreEdge } from './propagation/path-scorer';
 export type {
   ScoredPath,
@@ -78,9 +71,6 @@ export type {
   PathStep,
   PathSummary,
 } from './propagation/path-scorer';
-
-export { simulateCascade, perturbSectorFunding } from './propagation/cascade';
-export type { CascadeQuery, CascadeResult, CascadeRepEffect } from './propagation/cascade';
 
 // Protocol — unified entity API, Nostr feeds, embeddable widgets (Phase 5)
 export { resolveEntity, parseMeshId } from './protocol/entity-api';

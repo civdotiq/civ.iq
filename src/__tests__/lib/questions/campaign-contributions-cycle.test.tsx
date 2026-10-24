@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -11,9 +11,20 @@
 
 const mockSummary = jest.fn();
 const mockAggregate = jest.fn();
+// Keys cachedFetch would have written (it skips a write when shouldCache says no).
+const mockCacheWrites: string[] = [];
 
 jest.mock('@/lib/cache', () => ({
-  cachedFetch: (_key: string, fetcher: () => Promise<unknown>) => fetcher(),
+  cachedFetch: async (
+    key: string,
+    fetcher: () => Promise<unknown>,
+    _ttl?: number,
+    shouldCache: (data: unknown) => boolean = () => true
+  ) => {
+    const data = await fetcher();
+    if (shouldCache(data)) mockCacheWrites.push(key);
+    return data;
+  },
 }));
 jest.mock('@/lib/fec/fec-api-service', () => ({
   fecApiService: { getFinancialSummary: (...a: unknown[]) => mockSummary(...a) },
@@ -44,6 +55,7 @@ jest.mock('@/lib/services/committee-activity.service', () => ({
 
 import { render, screen } from '@testing-library/react';
 import { fetchCampaignContributionsData } from '@/lib/questions/template-data-fetchers';
+import { recordTransientFecFailure } from '@/lib/fec/fec-failure-scope';
 import { getCurrentElectionCycle } from '@/lib/fec/election-cycle';
 import { CampaignContributionsAnswer } from '@/components/questions/CampaignContributionsAnswer';
 
@@ -63,6 +75,7 @@ function industries(cycle: number) {
 }
 
 beforeEach(() => {
+  mockCacheWrites.length = 0;
   mockSummary.mockReset();
   mockAggregate
     .mockReset()
@@ -101,6 +114,41 @@ describe('fetchCampaignContributionsData', () => {
     const data = await fetchCampaignContributionsData('C001035', 'ME');
     expect(data.finance).toBeNull();
     expect(data.financeUnavailable).toBe(true);
+    expect(mockCacheWrites.some(k => k.includes(`fec-totals:v1:S0ME00000:${CURRENT}`))).toBe(false);
+  });
+
+  test('healthy totals and breakdown are both cached', async () => {
+    mockSummary.mockResolvedValue(summary(16_200_000));
+    const data = await fetchCampaignContributionsData('C001035', 'ME');
+    expect(data.industriesUnavailable).toBe(false);
+    expect(mockCacheWrites).toEqual(
+      expect.arrayContaining([
+        `question:fec-totals:v1:S0ME00000:${CURRENT}`,
+        `question:industries:v2:C001035:${CURRENT}`,
+      ])
+    );
+  });
+
+  test('a 429 swallowed inside the breakdown reads unavailable and is not cached', async () => {
+    mockSummary.mockResolvedValue(summary(16_200_000));
+    // What a lower layer does on a 429: record it, hand back an empty breakdown.
+    mockAggregate.mockImplementation(async (_id: string, cycle: number) => {
+      recordTransientFecFailure();
+      return { ...industries(cycle), industryBreakdown: [] };
+    });
+    const data = await fetchCampaignContributionsData('C001035', 'ME');
+    expect(data.finance).toMatchObject({ totalRaised: 16_200_000 });
+    expect(data.industries).toBeNull();
+    expect(data.industriesUnavailable).toBe(true);
+    expect(mockCacheWrites.some(k => k.startsWith('question:industries:'))).toBe(false);
+  });
+
+  test('a thrown breakdown error reads unavailable', async () => {
+    mockSummary.mockResolvedValue(summary(16_200_000));
+    mockAggregate.mockRejectedValue(new Error('FEC API error: 429'));
+    const data = await fetchCampaignContributionsData('C001035', 'ME');
+    expect(data.industriesUnavailable).toBe(true);
+    expect(mockAggregate).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -153,5 +201,19 @@ describe('CampaignContributionsAnswer wording', () => {
     );
     expect(screen.getByText(/temporarily unavailable from the FEC/)).toBeTruthy();
     expect(screen.queryByText(/not yet available/)).toBeNull();
+  });
+
+  test('an unreachable breakdown never claims donors listed no employer', () => {
+    render(
+      <CampaignContributionsAnswer
+        finance={{ ...base, cycle: CURRENT, isCurrentCycle: true }}
+        financeUnavailable={false}
+        industries={null}
+        industriesUnavailable
+        voteFinanceInsight={null}
+      />
+    );
+    expect(screen.getByText(/industry breakdown is temporarily unavailable/)).toBeTruthy();
+    expect(screen.queryByText(/did not list an employer/)).toBeNull();
   });
 });

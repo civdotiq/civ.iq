@@ -2,7 +2,7 @@
 
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import { useState, useEffect } from 'react';
@@ -28,6 +28,9 @@ import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import type { FAQItem } from '@/components/seo/WikipediaStyleSEO';
 import { DistrictFooter } from '@/components/seo/DistrictFooter';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
+import { DataProvenance } from '@/shared/components/ui/DataProvenance';
+import { districtPageSources } from '@/lib/provenance/page-sources';
+import { METHOD_AI } from '@/lib/provenance/source-registry';
 import { getVacancyInfo, formatVacancyMessage } from '@/lib/data/congressional-vacancies';
 import type { DistrictDetails } from '@/lib/districts/district-details';
 import { getStateName } from '@/lib/data/us-states';
@@ -373,6 +376,20 @@ export default function DistrictPageClient({
 
         {/* Wikipedia-style SEO Section */}
         <div className="mt-12 space-y-8">
+          <DataProvenance
+            variant="block"
+            sources={districtPageSources(district)}
+            note={
+              <>
+                The spending narrative is written by AI from USAspending.gov data and is labeled
+                where it appears. It is not a source itself.{' '}
+                <Link href={METHOD_AI} className="text-civiq-blue hover:underline">
+                  How we analyze data →
+                </Link>
+              </>
+            }
+          />
+
           {/* FAQ Section - Common questions about the district */}
           <FAQSection
             faqs={[

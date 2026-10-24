@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 'use client';
@@ -15,9 +15,26 @@ import {
 import { ElectionSummary } from '@/components/elections/ElectionSummary';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import type { RaceResultFull } from '@/types/elections';
-import { ELECTION_2024_METADATA } from '@/data/election-results-metadata';
 
 type FederalTab = 'president' | 'senate' | 'house';
+
+const SOURCES: Record<FederalTab, { title: string; doi: string; coverage: string }> = {
+  president: {
+    title: 'U.S. President 1976–2024',
+    doi: '10.7910/DVN/42MVDX',
+    coverage: 'all 50 states and DC',
+  },
+  senate: {
+    title: 'U.S. Senate statewide 1976–2024',
+    doi: '10.7910/DVN/PEJ5QU',
+    coverage: 'all 35 races, including the California and Nebraska special elections',
+  },
+  house: {
+    title: 'U.S. House 1976–2024',
+    doi: '10.7910/DVN/IG0UN2',
+    coverage: 'all 435 districts and DC',
+  },
+};
 
 const TABS: { id: FederalTab; label: string }[] = [
   { id: 'president', label: 'President' },
@@ -200,22 +217,6 @@ export default function FederalElectionsPage() {
           )}
         </div>
 
-        {/* Missing state notice */}
-        {stateFilter && ELECTION_2024_METADATA.missingStates.includes(stateFilter) && !loading && (
-          <div className="border-2 border-gray-300 dark:border-gray-600 p-8 text-center mb-6">
-            <p className="text-gray-600 dark:text-gray-300 font-medium mb-2">
-              {US_STATES.find(s => s.code === stateFilter)?.name || stateFilter} is not yet covered
-              in this dataset.
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              The MIT Election Data and Science Lab (MEDSL) 2024 dataset covers 46 of 51
-              jurisdictions. {US_STATES.find(s => s.code === stateFilter)?.name || stateFilter} is
-              among 5 states not yet included (AZ, CA, MS, NY, OR). Results will be added when the
-              source data is updated.
-            </p>
-          </div>
-        )}
-
         {/* Results */}
         {loading ? (
           <div className="flex items-center justify-center py-16 gap-2 text-gray-500">
@@ -226,7 +227,7 @@ export default function FederalElectionsPage() {
           <div className="border-2 border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 p-4">
             <p className="text-amber-800 dark:text-amber-200">{error}</p>
           </div>
-        ) : stateFilter && ELECTION_2024_METADATA.missingStates.includes(stateFilter) ? null : (
+        ) : (
           <>
             <ElectionSummary results={results} raceLabel={raceLabels[activeTab]} />
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
@@ -244,11 +245,20 @@ export default function FederalElectionsPage() {
             DATA SOURCE
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            MIT Election Data and Science Lab (MEDSL). &ldquo;U.S. President, U.S. Senate, and U.S.
-            House 2024 General Election Results.&rdquo; Harvard Dataverse, 2024.
+            MIT Election Data and Science Lab (MEDSL). &ldquo;{SOURCES[activeTab].title}.&rdquo;
+            Harvard Dataverse.
           </p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-            DOI: 10.7910/DVN/2024. Coverage: 46 of 51 jurisdictions. Missing: AZ, CA, MS, NY, OR.
+            DOI:{' '}
+            <a
+              href={`https://doi.org/${SOURCES[activeTab].doi}`}
+              className="underline hover:no-underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {SOURCES[activeTab].doi}
+            </a>
+            {`. Coverage: ${SOURCES[activeTab].coverage}.`}
           </p>
         </div>
       </div>

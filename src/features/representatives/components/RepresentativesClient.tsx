@@ -2,7 +2,7 @@
 
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import { useState, useCallback, useEffect } from 'react';
@@ -335,7 +335,7 @@ export function RepresentativesClient({
         throw new Error(data.error?.message || 'Could not determine district from address');
       }
     } catch (error) {
-      logger.error('Address geocoding failed', error as Error, { address });
+      logger.error('Address geocoding failed', error as Error);
       setSearchState(prev => ({
         ...prev,
         isLoading: false,

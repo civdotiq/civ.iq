@@ -1,19 +1,19 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
  * Tests for BillSummarizer — the AI bill-summarization service that 8 modules
- * import. Covers the summarizeBill pipeline (Redis cache, AI call, reading-level
- * regeneration, rule-based fallback on unparseable AI output), IndustrySector
- * validation with the policy-area-map fallback, outer fallback-chain delegation,
- * the public reading-metrics calculator, and the static prompt builders.
+ * import. Covers the summarizeBill pipeline (AI call, no caching of its own, reading-level
+ * regeneration, BillSummaryUnavailableError on any failure — never template
+ * filler, never cached), IndustrySector validation with the policy-area-map
+ * fallback, the public reading-metrics calculator, and the static prompt builders.
  *
  * generateAIText (the provider wrapper) is THE key mock — the summarizer never
- * touches the AI SDK directly. Redis, the reading-level tracker, and the
- * fallback chain are mocked; IndustrySector and policy-area-map are real so
- * sector validation runs against the true enum values.
+ * touches the AI SDK directly. Redis is mocked only to prove the summarizer never
+ * touches it, and the reading-level tracker is mocked; IndustrySector and
+ * policy-area-map are real so sector validation runs against the true enum values.
  */
 
 jest.mock('@/lib/logging/simple-logger', () => ({
@@ -38,17 +38,12 @@ jest.mock('@/lib/analytics/reading-level-tracker', () => ({
   trackReadingLevel: jest.fn(),
 }));
 
-// The outer catch delegates to this chain; its internals get their own suite.
-jest.mock('@/features/legislation/services/ai/bill-summary-fallbacks', () => ({
-  BillSummaryFallbacks: { executeFallbackChain: jest.fn() },
-}));
-
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { generateAIText } from '@/lib/ai/provider';
 import { trackReadingLevel } from '@/lib/analytics/reading-level-tracker';
-import { BillSummaryFallbacks } from '@/features/legislation/services/ai/bill-summary-fallbacks';
 import {
   BillSummarizer,
+  BillSummaryUnavailableError,
   type BillSummary,
   type BillMetadata,
 } from '@/features/legislation/services/ai/bill-summarizer';
@@ -57,9 +52,6 @@ import { IndustrySector } from '@/lib/fec/industry-taxonomy';
 const mockRedis = getRedisCache() as unknown as { get: jest.Mock; set: jest.Mock };
 const mockGenerateAIText = generateAIText as jest.Mock;
 const mockTrackReadingLevel = trackReadingLevel as jest.Mock;
-const mockExecuteFallbackChain = BillSummaryFallbacks.executeFallbackChain as jest.Mock;
-
-const DAY_SECONDS = 24 * 60 * 60;
 
 const BILL_METADATA: BillMetadata = {
   number: 'hr-1234',
@@ -68,7 +60,6 @@ const BILL_METADATA: BillMetadata = {
   chamber: 'house',
 };
 
-// "to provide ..." and "shall ..." feed the rule-based key-phrase extractor.
 const BILL_TEXT =
   'A bill to provide funds to repair public school buildings. ' +
   'Each state shall report spending each year.';
@@ -137,7 +128,7 @@ beforeEach(() => {
 });
 
 describe('summarizeBill', () => {
-  it('parses the AI JSON into a BillSummary and caches it for 24 hours', async () => {
+  it('parses the AI JSON into a BillSummary without touching any cache', async () => {
     const result = await BillSummarizer.summarizeBill(BILL_TEXT, BILL_METADATA);
 
     expect(result.billId).toBe('hr-1234-119');
@@ -158,8 +149,10 @@ describe('summarizeBill', () => {
     // lastUpdated is a valid ISO timestamp.
     expect(new Date(result.lastUpdated).toISOString()).toBe(result.lastUpdated);
 
-    // Cached under bill-summary:{number}:{congress} with a 24h TTL.
-    expect(mockRedis.set).toHaveBeenCalledWith('bill-summary:hr-1234:119', result, DAY_SECONDS);
+    // No cache of its own: a key built from the bare number ("1") would let
+    // H.R. 1 and S. 1 collide. Callers cache under the canonical bill id.
+    expect(mockRedis.get).not.toHaveBeenCalled();
+    expect(mockRedis.set).not.toHaveBeenCalled();
 
     // Reading level is tracked fire-and-forget under {congress}-{number}.
     expect(mockTrackReadingLevel).toHaveBeenCalledWith(
@@ -169,68 +162,60 @@ describe('summarizeBill', () => {
     );
   });
 
-  it('returns the cached summary without calling the AI provider', async () => {
-    const cached = makeBillSummary();
-    mockRedis.get.mockResolvedValue(cached);
-
-    const result = await BillSummarizer.summarizeBill(BILL_TEXT, BILL_METADATA);
-
-    expect(result).toBe(cached);
-    expect(mockGenerateAIText).not.toHaveBeenCalled();
-    expect(mockRedis.set).not.toHaveBeenCalled();
-  });
-
-  it('never touches the cache when useCache is false', async () => {
-    const result = await BillSummarizer.summarizeBill(BILL_TEXT, BILL_METADATA, {
-      useCache: false,
-    });
-
-    expect(result.summary).toBe(SIMPLE_SUMMARY);
-    expect(mockRedis.get).not.toHaveBeenCalled();
-    expect(mockRedis.set).not.toHaveBeenCalled();
-  });
-
-  it('regenerates with the simplification prompt when the summary exceeds grade 8', async () => {
+  it('rewrites the summary itself when it reads above grade 8', async () => {
     const simplified = 'This bill helps kids. It gives schools money.';
     mockGenerateAIText
       .mockResolvedValueOnce(makeAIResponse({ summary: COMPLEX_SUMMARY }))
-      .mockResolvedValueOnce(
-        JSON.stringify({ summary: simplified, keyPoints: ['Simple point one', 'Simple point two'] })
-      );
+      .mockResolvedValueOnce(simplified);
 
     const result = await BillSummarizer.summarizeBill(BILL_TEXT, BILL_METADATA);
 
     expect(mockGenerateAIText).toHaveBeenCalledTimes(2);
 
-    // The second call is the simplification prompt. Quirk: it embeds the
-    // preprocessed BILL TEXT, not the failed summary.
+    // The rewrite prompt carries the summary to simplify, not the bill text.
     const secondUserPrompt = mockGenerateAIText.mock.calls[1]?.[1] as string;
-    expect(secondUserPrompt).toContain('too complex');
-    expect(secondUserPrompt).toContain('A bill to provide funds');
+    expect(secondUserPrompt).toContain('Rewrite it so it reads at grade 8 or below');
+    expect(secondUserPrompt).toContain(COMPLEX_SUMMARY);
+    expect(secondUserPrompt).not.toContain('A bill to provide funds');
 
-    // Simplified text replaces summary and keyPoints; other fields survive.
+    // Only the summary text is rewritten; the other fields survive.
     expect(result.summary).toBe(simplified);
-    expect(result.keyPoints).toEqual(['Simple point one', 'Simple point two']);
+    expect(result.keyPoints).toEqual(['Schools get repair money', 'Old buildings get fixed']);
     expect(result.whoItAffects).toEqual(['Students', 'Teachers']);
     expect(result.readingLevel).toBeLessThanOrEqual(8);
   });
 
-  it('falls back to a rule-based summary when the AI response has no JSON', async () => {
-    mockGenerateAIText.mockResolvedValue('Sorry, I cannot summarize this bill right now.');
+  it('keeps the original AI summary when the simplification rewrite fails', async () => {
+    mockGenerateAIText
+      .mockResolvedValueOnce(makeAIResponse({ summary: COMPLEX_SUMMARY }))
+      .mockRejectedValueOnce(new Error('quota exceeded'));
 
     const result = await BillSummarizer.summarizeBill(BILL_TEXT, BILL_METADATA);
 
-    // Rule-based fallback inside generateAISummary — NOT the outer chain.
-    expect(mockExecuteFallbackChain).not.toHaveBeenCalled();
-    expect(mockGenerateAIText).toHaveBeenCalledTimes(1);
+    expect(result.summary).toBe(COMPLEX_SUMMARY);
+    expect(result.keyPoints).toEqual(['Schools get repair money', 'Old buildings get fixed']);
+    // The grade level reported is the real one, not the target.
+    expect(result.readingLevel).toBeGreaterThan(8);
+  });
 
-    expect(result.confidence).toBe(0.6);
-    expect(result.summary).toContain('School Repair Act');
-    // Key phrases extracted from the real bill text feed the summary.
-    expect(result.summary).toContain('to provide funds');
-    expect(result.keyPoints).toHaveLength(3);
-    expect(result.source).toBe('ai-generated');
-    expect(result.billId).toBe('hr-1234-119');
+  it.each([
+    ['the AI call throws', () => mockGenerateAIText.mockRejectedValue(new Error('No AI provider'))],
+    [
+      'the AI response has no JSON',
+      () => mockGenerateAIText.mockResolvedValue('Sorry, I cannot summarize this bill right now.'),
+    ],
+    [
+      'the AI JSON has an empty summary',
+      () => mockGenerateAIText.mockResolvedValue(makeAIResponse({ summary: '' })),
+    ],
+  ])('throws BillSummaryUnavailableError and caches nothing when %s', async (_label, arrange) => {
+    arrange();
+
+    await expect(BillSummarizer.summarizeBill(BILL_TEXT, BILL_METADATA)).rejects.toBeInstanceOf(
+      BillSummaryUnavailableError
+    );
+    expect(mockRedis.set).not.toHaveBeenCalled();
+    expect(mockTrackReadingLevel).not.toHaveBeenCalled();
   });
 
   describe('affectedIndustries validation', () => {
@@ -241,9 +226,7 @@ describe('summarizeBill', () => {
         })
       );
 
-      const result = await BillSummarizer.summarizeBill(BILL_TEXT, BILL_METADATA, {
-        useCache: false,
-      });
+      const result = await BillSummarizer.summarizeBill(BILL_TEXT, BILL_METADATA);
 
       expect(result.affectedIndustries).toEqual([IndustrySector.HEALTH, IndustrySector.DEFENSE]);
     });
@@ -253,11 +236,10 @@ describe('summarizeBill', () => {
         makeAIResponse({ affectedIndustries: ['Not A Sector', 'Also Wrong'] })
       );
 
-      const result = await BillSummarizer.summarizeBill(
-        BILL_TEXT,
-        { ...BILL_METADATA, policyArea: 'Health' },
-        { useCache: false }
-      );
+      const result = await BillSummarizer.summarizeBill(BILL_TEXT, {
+        ...BILL_METADATA,
+        policyArea: 'Health',
+      });
 
       // Real policy-area-map lookup: 'Health' → [IndustrySector.HEALTH].
       expect(result.affectedIndustries).toEqual([IndustrySector.HEALTH]);
@@ -266,41 +248,19 @@ describe('summarizeBill', () => {
     it('returns an empty array with garbage sectors and no policyArea', async () => {
       mockGenerateAIText.mockResolvedValue(makeAIResponse({ affectedIndustries: ['Nonsense'] }));
 
-      const result = await BillSummarizer.summarizeBill(BILL_TEXT, BILL_METADATA, {
-        useCache: false,
-      });
+      const result = await BillSummarizer.summarizeBill(BILL_TEXT, BILL_METADATA);
 
       expect(result.affectedIndustries).toEqual([]);
     });
   });
 
-  it('delegates to the fallback chain when the pipeline throws outside the AI call', async () => {
-    mockRedis.get.mockRejectedValue(new Error('redis down'));
-
-    const fallbackSummary = makeBillSummary({
-      summary: 'Congressional summary text.',
-      confidence: 0.5,
-      source: 'congressional-summary',
-    });
-    mockExecuteFallbackChain.mockResolvedValue({
-      summary: fallbackSummary,
-      fallbackMethod: 'congressional',
-      success: true,
-      errors: ['redis down'],
+  it('throws BillSummaryUnavailableError when the pipeline throws outside the AI call', async () => {
+    mockTrackReadingLevel.mockImplementationOnce(() => {
+      throw new Error('tracker down');
     });
 
-    const result = await BillSummarizer.summarizeBill(BILL_TEXT, BILL_METADATA);
-
-    expect(result).toBe(fallbackSummary);
-    expect(mockExecuteFallbackChain).toHaveBeenCalledWith(
-      BILL_TEXT,
-      BILL_METADATA,
-      expect.any(Error),
-      {
-        useCongressionalSummary: true,
-        useKeywordExtraction: true,
-        useSimpleExtraction: true,
-      }
+    await expect(BillSummarizer.summarizeBill(BILL_TEXT, BILL_METADATA)).rejects.toThrow(
+      'AI summary unavailable for hr-1234: tracker down'
     );
   });
 });

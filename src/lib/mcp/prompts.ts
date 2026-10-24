@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import { z } from 'zod';
@@ -26,8 +26,7 @@ export function registerPrompts(server: McpServer): void {
               '1. get_representative_profile — get their committee assignments and basic info',
               '2. get_campaign_finance — see who funds them',
               '3. get_voting_history — see how they vote',
-              '4. analyze_vote_prediction — ML analysis of donor influence on voting',
-              '5. get_influence_chain — trace lobbying money to votes',
+              '4. get_influence_chain — trace lobbying money to votes',
               '',
               'Then synthesize the findings into a factual, nonpartisan accountability summary.',
               'Focus on patterns between funding sources and legislative behavior.',

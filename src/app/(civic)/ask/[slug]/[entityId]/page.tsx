@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -16,6 +16,7 @@
  */
 
 import { notFound } from 'next/navigation';
+import { unstable_cache } from 'next/cache';
 import { Suspense, type ReactNode } from 'react';
 import { getCachedRepresentative } from '@/lib/questions/get-representative';
 import { getCachedCommittee } from '@/lib/questions/get-committee';
@@ -37,9 +38,11 @@ import {
   type CommitteeActivityData,
   type CommitteeLobbyingData,
 } from '@/lib/questions/template-data-fetchers';
+import { fetchStockTradesData, type StockTradesData } from '@/lib/questions/stock-trades';
 import { resolvePolicyAreaSlug } from '@/lib/services/policy-area-search.service';
 import { displaySector } from '@/lib/mesh/sector-display';
 import { FAQPageSchema } from '@/components/seo/JsonLd';
+import { commonName } from '@/features/representatives/utils/common-name';
 import { QuestionLayout } from '@/components/questions/QuestionLayout';
 import { RelatedQuestions } from '@/components/questions/RelatedQuestions';
 import { CampaignContributionsAnswer } from '@/components/questions/CampaignContributionsAnswer';
@@ -50,6 +53,7 @@ import {
   DonorVotingAlignmentAnswer,
   DonorVotingAlignmentSkeleton,
 } from '@/components/questions/DonorVotingAlignmentAnswer';
+import { StockTradesAnswer } from '@/components/questions/StockTradesAnswer';
 import { TopicBillsAnswer } from '@/components/questions/TopicBillsAnswer';
 import { CommitteeMembersAnswer } from '@/components/questions/CommitteeMembersAnswer';
 import { CommitteeActivityAnswer } from '@/components/questions/CommitteeActivityAnswer';
@@ -70,6 +74,13 @@ export async function generateStaticParams(): Promise<Array<{ slug: string; enti
   return [];
 }
 
+// A render that couldn't reach the FEC must not be served for the full hour.
+// Next keeps the lowest revalidate seen during a render, so calling this
+// unstable_cache entry (revalidate 300) shortens just that render's ISR life.
+const markFecDegradedRender = unstable_cache(async () => true, ['ask-fec-degraded-render'], {
+  revalidate: 300,
+});
+
 interface PageProps {
   params: Promise<{ slug: string; entityId: string }>;
 }
@@ -84,6 +95,7 @@ function buildFaqAnswer(
     campaign?: CampaignContributionsData;
     voting?: VotingRecordTemplateData;
     billsSponsored?: BillsSponsoredData;
+    stockTrades?: StockTradesData;
     topicBills?: TopicBillsData;
     committeeMembers?: CommitteeMembersData;
     committeeActivity?: CommitteeActivityData;
@@ -131,6 +143,22 @@ function buildFaqAnswer(
     }
     case 'contact-info':
       return `Contact information for ${repName} is sourced from official congressional records.`;
+    case 'stock-trades': {
+      const trades = data.stockTrades?.trades ?? [];
+      if (trades.length) {
+        const latest = new Date(trades[0]!.transactionDate).toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+          timeZone: 'UTC',
+        });
+        return `${repName} has reported ${trades.length.toLocaleString()} stock trade${trades.length !== 1 ? 's' : ''} in the 119th Congress, most recently on ${latest}, according to STOCK Act periodic transaction reports.`;
+      }
+      if (data.stockTrades && !data.stockTrades.unavailable) {
+        return `CIV.IQ found no stock trades reported by ${repName} in the 119th Congress.`;
+      }
+      return `Stock trade data for ${repName} is sourced from STOCK Act periodic transaction reports.`;
+    }
     case 'donor-voting-alignment':
       return `${repName}'s yea-rate on bills touching top donor industries, based on FEC contributions and Congress.gov roll-call votes.`;
     case 'topic-bills': {
@@ -196,6 +224,7 @@ function computeConfidence(
     campaign?: CampaignContributionsData;
     voting?: VotingRecordTemplateData;
     billsSponsored?: BillsSponsoredData;
+    stockTrades?: StockTradesData;
     topicBills?: TopicBillsData;
     committeeMembers?: CommitteeMembersData;
     committeeActivity?: CommitteeActivityData;
@@ -210,6 +239,12 @@ function computeConfidence(
         return {
           score: 0.91,
           basis: 'FEC cycle totals and industry classification both resolved.',
+        };
+      }
+      if ((finance?.totalRaised || hasIndustries) && data.campaign?.industriesUnavailable) {
+        return {
+          score: 0.74,
+          basis: 'Partial FEC data; the industry breakdown could not be reached for this render.',
         };
       }
       if (finance?.totalRaised || hasIndustries) {
@@ -261,6 +296,23 @@ function computeConfidence(
         score: 0.91,
         basis: 'Directory entry resolved from the canonical congress-legislators record.',
       };
+    case 'stock-trades': {
+      const trades = data.stockTrades?.trades ?? [];
+      if (trades.length) {
+        const filings = new Set(trades.map(t => t.filingId)).size;
+        return {
+          score: 0.91,
+          basis: `Resolved ${trades.length.toLocaleString()} trades from ${filings.toLocaleString()} periodic transaction reports in the 119th Congress.`,
+        };
+      }
+      if (data.stockTrades && !data.stockTrades.unavailable) {
+        return {
+          score: 0.74,
+          basis: 'No periodic transaction reports found for trades in the 119th Congress.',
+        };
+      }
+      return { score: 0.4, basis: 'The financial disclosure source could not be reached.' };
+    }
     case 'donor-voting-alignment':
       return {
         score: 0.74,
@@ -501,9 +553,10 @@ export default async function QuestionPage({ params }: PageProps) {
   const rep = await getCachedRepresentative(entityId.toUpperCase());
   if (!rep) notFound();
 
-  const entity = { name: rep.name, party: rep.party, state: rep.state };
+  const name = commonName(rep);
+  const entity = { name, party: rep.party, state: rep.state };
   const question = fillPattern(template.questionPattern, entity);
-  const relatedQuestions = computeRelatedQuestions(slug, entityId, rep.name);
+  const relatedQuestions = computeRelatedQuestions(slug, entityId, name);
   const id = entityId.toUpperCase();
 
   // Fetch template-specific data via direct service calls (no self-fetch).
@@ -512,16 +565,23 @@ export default async function QuestionPage({ params }: PageProps) {
   let campaign: CampaignContributionsData | undefined;
   let voting: VotingRecordTemplateData | undefined;
   let billsSponsored: BillsSponsoredData | undefined;
+  let stockTrades: StockTradesData | undefined;
 
   switch (slug) {
     case 'campaign-contributions':
       campaign = await fetchCampaignContributionsData(id, rep.state);
+      if (campaign.financeUnavailable || campaign.industriesUnavailable) {
+        await markFecDegradedRender();
+      }
       break;
     case 'voting-record':
       voting = await fetchVotingRecordData(id, rep.chamber);
       break;
     case 'bills-sponsored':
       billsSponsored = await fetchBillsSponsoredData(id);
+      break;
+    case 'stock-trades':
+      stockTrades = await fetchStockTradesData(id, rep.chamber);
       break;
     case 'contact-info':
     case 'donor-voting-alignment':
@@ -530,10 +590,11 @@ export default async function QuestionPage({ params }: PageProps) {
       notFound();
   }
 
-  const faqAnswer = buildFaqAnswer(slug, rep.name, {
+  const faqAnswer = buildFaqAnswer(slug, name, {
     campaign,
     voting,
     billsSponsored,
+    stockTrades,
   });
 
   const podBody: ReactNode = (
@@ -543,17 +604,30 @@ export default async function QuestionPage({ params }: PageProps) {
           finance={campaign.finance}
           financeUnavailable={campaign.financeUnavailable}
           industries={campaign.industries}
+          industriesUnavailable={campaign.industriesUnavailable}
           voteFinanceInsight={campaign.voteFinance}
         />
       )}
       {slug === 'voting-record' && voting && (
-        <VotingRecordAnswer votes={voting.votes} bills={voting.bills} />
+        <VotingRecordAnswer
+          votes={voting.votes}
+          bills={voting.bills}
+          fullRecord={{ href: `/representative/${id}/votes`, name }}
+        />
       )}
       {slug === 'bills-sponsored' && billsSponsored && (
         <BillsSponsoredAnswer
           bills={billsSponsored.bills}
           sponsoredCount={billsSponsored.sponsoredCount}
           cosponsoredCount={billsSponsored.cosponsoredCount}
+        />
+      )}
+      {slug === 'stock-trades' && stockTrades && (
+        <StockTradesAnswer
+          trades={stockTrades.trades}
+          unavailable={stockTrades.unavailable}
+          name={name}
+          chamber={rep.chamber}
         />
       )}
       {slug === 'contact-info' && (
@@ -583,12 +657,13 @@ export default async function QuestionPage({ params }: PageProps) {
       campaign,
       voting,
       billsSponsored,
+      stockTrades,
     });
     const earliestTerm = rep.terms?.[0]?.startYear;
     const tenureCaption = earliestTerm ? `In office since ${earliestTerm}` : undefined;
     const repEntity: AskEntity = {
       type: 'representative',
-      name: rep.name,
+      name,
       bioguideId: id,
       party: partyVariant(rep.party),
       chamber: rep.chamber,

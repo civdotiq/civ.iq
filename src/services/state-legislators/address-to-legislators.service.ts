@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -136,11 +136,10 @@ export class AddressToLegislatorsService {
     const startTime = Date.now();
     const warnings: string[] = [];
 
+    // Privacy: log city and state only, never the street (PRIVACY.md).
     logger.info('Address-to-legislators lookup starting', {
-      street: request.street,
       city: request.city,
       state: request.state,
-      zip: request.zip,
     });
 
     try {
@@ -177,7 +176,6 @@ export class AddressToLegislatorsService {
       const censusTime = Date.now() - censusStart;
 
       logger.info('Census geocoding successful', {
-        matchedAddress: districtInfo.matchedAddress,
         upperDistrict: districtInfo.upperDistrict?.number,
         lowerDistrict: districtInfo.lowerDistrict?.number,
         responseTime: censusTime,
@@ -218,7 +216,8 @@ export class AddressToLegislatorsService {
       const totalTime = Date.now() - startTime;
 
       logger.info('Address-to-legislators lookup complete', {
-        address: request,
+        city: request.city,
+        state: request.state,
         senator: senator?.name,
         representative: representative?.name,
         censusTime,
@@ -253,7 +252,8 @@ export class AddressToLegislatorsService {
       };
     } catch (error) {
       logger.error('Address-to-legislators lookup failed', error as Error, {
-        address: request,
+        city: request.city,
+        state: request.state,
         responseTime: Date.now() - startTime,
       });
 

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -34,6 +34,7 @@ import {
   fecCircuitBreaker,
   FECApiService,
 } from '@/lib/fec/fec-api-service';
+import { trackFecFailures } from '@/lib/fec/fec-failure-scope';
 
 type FetchMock = jest.Mock<Promise<Response>, [RequestInfo | URL, RequestInit?]>;
 
@@ -468,6 +469,54 @@ describe('fec-api-service', () => {
       expect(info).toEqual({ candidate_id: 'H0XX00000', name: 'DOE, JANE' });
       expect(fetchMock).toHaveBeenCalledTimes(1);
       expect(fecCircuitBreaker.getState()).toBe('CLOSED');
+    });
+  });
+
+  describe('committee lookup under a rate limit', () => {
+    afterEach(() => {
+      fecCircuitBreaker.reset();
+    });
+
+    // Retry-After beyond the 5s backoff cap makes makeRequest fail fast, so
+    // each logical call is exactly one fetch.
+    function rateLimitedFetch() {
+      const fetchMock = jest.fn(
+        async () =>
+          ({
+            ok: false,
+            status: 429,
+            statusText: 'Too Many Requests',
+            headers: new Headers({ 'retry-after': '3000' }),
+            json: async () => ({}),
+          }) as unknown as Response
+      );
+      global.fetch = fetchMock as unknown as typeof fetch;
+      return fetchMock;
+    }
+
+    // Committee IDs are cached on the class, so each test uses its own candidate.
+    it('stops at the first 429 instead of walking every fallback', async () => {
+      const fetchMock = rateLimitedFetch();
+      const ids = await new FECApiService().findCandidateCommitteeIds('H0RL00001', 2026);
+      expect(ids).toEqual([]);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not remember a rate-limited empty result', async () => {
+      const fetchMock = rateLimitedFetch();
+      const service = new FECApiService();
+      await service.findCandidateCommitteeIds('H0RL00002', 2026);
+      await service.findCandidateCommitteeIds('H0RL00002', 2026);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('a 429 swallowed into [] is still visible to a failure scope', async () => {
+      rateLimitedFetch();
+      const { value, transientFailures } = await trackFecFailures(() =>
+        new FECApiService().getContributionsByEmployer('H0RL00003', 2026)
+      );
+      expect(value).toEqual([]);
+      expect(transientFailures).toBeGreaterThan(0);
     });
   });
 });

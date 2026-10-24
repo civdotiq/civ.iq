@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -9,6 +9,7 @@
  * server-rendered /districts/[districtId] page so both read one cache entry.
  */
 
+import { ACS_5YR_VINTAGE } from '@/lib/census-vintage';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
 import { cachedFetch } from '@/lib/cache';
@@ -17,7 +18,8 @@ import { getStateFromWikidata, getDistrictFromWikidata } from '@/lib/api/wikidat
 import districtGeography from '@/data/district-geography.json';
 import gazetteerData from '@/data/district-gazetteer.json';
 import { US_STATES, censusCongressionalDistrictCode } from '@/lib/data/us-states';
-import { getHouseResult2024 } from '@/lib/services/election-results.service';
+import { electionPartyLabel, getHouseResult2024 } from '@/lib/services/election-results.service';
+import type { RaceCandidateResult } from '@/types/elections';
 import { canonicalizeDistrictId } from '@/lib/helpers/url-builders';
 import { checkDistrictId } from '@/lib/districts/known-districts';
 
@@ -74,6 +76,8 @@ export interface DistrictDetails {
       winner: string;
       margin: number;
       turnout: number;
+      /** 2024 candidates, most votes first; absent when no result is available. */
+      candidates?: RaceCandidateResult[];
     };
     registeredVoters: number;
   };
@@ -92,6 +96,8 @@ export interface DistrictDetails {
     motto?: string;
     nickname?: string;
   } | null;
+  /** When CIV.IQ assembled this record (set inside the 7-day cached fetch). */
+  fetchedAt?: string;
 }
 
 /**
@@ -253,7 +259,7 @@ async function fetchAgeDistribution(
     const variables = [...maleVars, ...femaleVars].join(',');
 
     const geoParams = buildCensusGeoParams(state, district, apiKey, isStatewideQuery);
-    const url = `https://api.census.gov/data/2022/acs/acs5?get=${variables}&${geoParams}`;
+    const url = `https://api.census.gov/data/${ACS_5YR_VINTAGE}/acs/acs5?get=${variables}&${geoParams}`;
 
     const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
     if (!response.ok) return [];
@@ -359,7 +365,7 @@ async function fetchIncomeAndEmployment(
     const variables = [...incomeVars, ...maleOccVars, ...femaleOccVars].join(',');
 
     const geoParams = buildCensusGeoParams(state, district, apiKey, isStatewideQuery);
-    const url = `https://api.census.gov/data/2022/acs/acs5?get=${variables}&${geoParams}`;
+    const url = `https://api.census.gov/data/${ACS_5YR_VINTAGE}/acs/acs5?get=${variables}&${geoParams}`;
 
     const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
     if (!response.ok) return { income: [], employment: [] };
@@ -426,7 +432,7 @@ async function getDistrictDemographics(
     const apiKey = process.env.CENSUS_API_KEY || '';
 
     // Get comprehensive data from Census American Community Survey 5-Year estimates
-    const acsUrl = 'https://api.census.gov/data/2022/acs/acs5';
+    const acsUrl = `https://api.census.gov/data/${ACS_5YR_VINTAGE}/acs/acs5`;
     const variables = [
       // Demographics
       'B01003_001E', // Total population
@@ -1968,9 +1974,10 @@ export async function getDistrictDetails(districtId: string): Promise<DistrictDe
           );
           if (houseResult.dataAvailable) {
             return {
-              winner: houseResult.winner === 'D' ? 'Democrat' : 'Republican',
+              winner: electionPartyLabel(houseResult.winner),
               margin: houseResult.margin,
               turnout: houseResult.total,
+              candidates: houseResult.candidates,
             };
           }
           return { winner: 'Data unavailable', margin: 0, turnout: 0 };
@@ -1979,6 +1986,7 @@ export async function getDistrictDetails(districtId: string): Promise<DistrictDe
       },
       geography,
       wikidata,
+      fetchedAt: new Date().toISOString(),
     };
 
     return districtDetails;
@@ -2027,7 +2035,7 @@ export function districtDetailsResponse(district: DistrictDetails) {
  */
 export function getCachedDistrictDetails(districtId: string): Promise<DistrictDetails | null> {
   return cachedFetch(
-    `district-details-v2-${districtId}`,
+    `district-details-v3-${districtId}`,
     () => getDistrictDetails(districtId),
     // Seconds. Was 15552000000 (a ms value) → clamped to 90 days; the payload
     // also carries the representative, so keep it to a week.

@@ -6,7 +6,7 @@
 
 ## Base URLs
 
-- Production: `https://civdotiq.org/api`
+- Base URL: `https://civdotiq.org/api`
 - Versioned: `https://civdotiq.org/api/v1`
 - OpenAPI 3.0 spec: `https://civdotiq.org/openapi.json`
 
@@ -63,7 +63,7 @@ Server-rendered HTML, listed in `https://civdotiq.org/sitemap.xml` and `https://
 | `/state-districts/{state}/{upper\|lower}/{district}` | State legislative district: members and population | `/state-districts/mi/upper/8` |
 | `/bill/{congress}-{type}-{number}` | Bill status, sponsors, actions, summary | `/bill/119-hr-1` |
 | `/vote/{chamber}-{congress}-{session}-{rollNumber}` | Roll-call vote | `/vote/senate-119-2-1` |
-| `/ask/{question}/{bioguideId}` | Question pages (campaign contributions, party alignment, voting record) | `/ask/voting-record/T000481` |
+| `/ask/{question}/{entityId}` | Question pages. Members (`{bioguideId}`): `voting-record`, `bills-sponsored`, `campaign-contributions`, `donor-voting-alignment`, `contact-info`, `stock-trades`. Committees (`{committeeId}`): `committee-members`, `committee-activity`, `committee-lobbying`. Policy areas (`{topic}`): `topic-bills` | `/ask/voting-record/T000481`, `/ask/committee-members/HSAG`, `/ask/topic-bills/health` |
 
 Unknown member, legislator, state, district and bill IDs return HTTP 404.
 
@@ -323,21 +323,22 @@ Detailed committee information.
 
 ## Campaign Finance (FEC)
 
-### GET /api/fec/candidate/{candidateId}/summary
+### GET /api/fec/contributions-by-employer?candidateId={candidateId}
 
-FEC financial summary for a candidate.
-
-**Path parameter:** `candidateId` — FEC candidate ID
-
-### GET /api/fec/contributions
-
-Search individual contributions.
+Itemized individual contributions to a candidate, grouped by contributor employer.
 
 **Parameters:**
-- `candidateId` (string, optional): FEC candidate ID
-- `state` (string, optional): contributor state
-- `employer` (string, optional): contributor employer
-- `limit` (integer, optional): default 20
+- `candidateId` (string, required): FEC candidate ID (e.g. `H8CA05035`)
+- `cycle` (integer, optional): two-year election cycle; defaults to the current cycle
+- `limit` (integer, optional): 1-100, default 25
+
+### GET /api/fec/contributions-by-size?candidateId={candidateId}
+
+Individual contributions to a candidate, bucketed by contribution size.
+
+**Parameters:**
+- `candidateId` (string, required): FEC candidate ID
+- `cycle` (integer, optional): two-year election cycle; defaults to the current cycle
 
 ---
 
@@ -367,14 +368,12 @@ Lobbying filings related to a legislator's committees.
 
 ## Federal Spending (USASpending)
 
-### GET /api/spending/{state}
+### GET /api/spending/district/{districtId}
 
-Federal contracts and grants in a state.
+Federal contracts and grants with a place of performance in a congressional district, current fiscal year.
 
 **Parameters:**
-- `state` (path): two-letter state code
-- `district` (query, optional): district number
-- `type` (query, optional): "contracts" or "grants"
+- `districtId` (path): state and district, e.g. `MI-12`
 
 ---
 
@@ -453,70 +452,43 @@ Education, healthcare, and public health data.
 
 ## Intelligence & Analysis
 
-ML-powered analysis endpoints. All insights carry: confidence (0-1), dataAsOf, methodology, disclaimer.
-
-### GET /api/intelligence/vote-prediction/{bioguideId}
-
-XGBoost model predicts votes based on donor profile. Returns independence score — how often the legislator votes against their donor-predicted position.
-
-**Response shape:**
-```json
-{
-  "bioguideId": "string",
-  "independenceScore": {
-    "score": 0.35,
-    "confidentPredictions": 87,
-    "deviations": 30,
-    "peerPercentile": 72
-  },
-  "modelAccuracy": 0.78,
-  "notableDeviations": [
-    {
-      "billId": "string",
-      "billTitle": "string",
-      "predictedVote": "yea",
-      "actualVote": "nay",
-      "yeaProbability": 0.85,
-      "billSectors": ["Health"]
-    }
-  ],
-  "shapFactors": [
-    {
-      "feature": "donor_pct_health",
-      "humanLabel": "Health sector donations",
-      "importance": 0.15,
-      "featureValue": 0.23,
-      "direction": "toward_yea"
-    }
-  ],
-  "narrative": "string",
-  "confidence": 0.82,
-  "methodology": "string",
-  "disclaimer": "string"
-}
-```
+Statistical analysis endpoints. All insights carry: confidence (0-1), dataAsOf, methodology, disclaimer.
 
 ### GET /api/intelligence/representative/{bioguideId}/influence-chain
 
-Traces lobbying money through contributions, committee assignments, and votes.
+Association chains for one legislator: an organization lobbied the member's committees, people who list that organization as their employer gave to the member's campaign (FEC itemized contributions aggregated by employer), and the member voted on bills in the sectors the organization lobbied on. Patterns, not causation. Returns 404 when no chain reaches 0.5 confidence, for example a member with no committee seats.
 
 **Response shape:**
 ```json
 {
-  "bioguideId": "string",
+  "bioguideId": "C001035",
   "chains": [
     {
-      "organization": "string",
+      "organization": "GENERAL DYNAMICS",
+      "registrantId": "string (optional)",
       "lobbyingSpending": 500000,
-      "contributionAmount": 25000,
-      "billId": "string",
+      "contributionAmount": 26287,
+      "billId": "HR7008-119",
       "billTitle": "string",
-      "vote": "yea",
-      "textSimilarity": 0.72,
-      "chainConfidence": 0.65
+      "vote": "yea | nay | not_voting",
+      "textSimilarity": null,
+      "links": [{ "type": "lobbying | contribution | committee | bill_match | vote", "label": "string", "confidence": 0.9, "data": {} }],
+      "chainConfidence": 0.7,
+      "hasContributionEvidence": true
     }
   ],
-  "totalChainsDetected": 12
+  "totalChainsDetected": 276,
+  "chainsDropped": 266,
+  "peerComparison": null,
+  "peerComparisonUnavailableReason": "string (when peerComparison is null)",
+  "narrative": "string",
+  "confidence": 0.6,
+  "dataAsOf": "ISO date",
+  "methodology": "string",
+  "disclaimer": "string",
+  "sources": [{ "name": "string", "coverage": "string", "recordCount": 200 }],
+  "errors": [],
+  "status": "complete | partial"
 }
 ```
 
@@ -528,17 +500,41 @@ Overlap between campaign donors' industry sectors and committee jurisdictions.
 
 Correlation between campaign donors (by sector) and voting record.
 
-### GET /api/intelligence/representative/{bioguideId}/temporal-votes
+### GET /api/intelligence/representative/{bioguideId}/temporal
 
-Temporal shifts in party-line voting alignment over calendar quarters.
+Party-line voting alignment per calendar quarter of the current Congress, computed from every roll call in the chamber. Flags quarters more than 10 percentage points from the trailing 4-quarter average and compares overall alignment with other members of the same party in the chamber. Needs at least 4 quarters of votes; returns 404 for independents or when the roll-call corpus is incomplete, 503 if the analysis times out.
 
-### GET /api/intelligence/committee/{committeeId}/lobbying-pipeline
+**Response shape:**
+```json
+{
+  "bioguideId": "P000197",
+  "quarters": [
+    { "quarter": "2025-Q1", "alignmentScore": 1, "voteCount": 51, "rollingAverage": null }
+  ],
+  "shifts": [],
+  "overallTrend": "stable",
+  "peerComparison": {
+    "value": 0.992,
+    "peerAverage": 0.964,
+    "peerCount": 222,
+    "peerGroupLabel": "other House Democrats",
+    "percentileRank": 99
+  },
+  "narrative": "string",
+  "confidence": 1,
+  "dataAsOf": "2026-09-16T19:05:00-04:00",
+  "methodology": "string",
+  "disclaimer": "string"
+}
+```
 
-Lobbying expenditures to committee activity to legislative output.
+### GET /api/intelligence/committee/{committeeId}
 
-### GET /api/intelligence/representative/{bioguideId}/stock-committee
+Lobbying pipeline for a committee: lobbying expenditures to committee activity to legislative output. `committeeId` is the committee code, e.g. `HSAG`.
 
-Stock trades in sectors regulated by the legislator's committees.
+### GET /api/intelligence/representative/{bioguideId}/stock-trades
+
+Stock trades in sectors regulated by the legislator's committees. House members only; returns 404 when a member has too few trades or committee seats to analyze.
 
 ### GET /api/intelligence/bill/{billId}
 
@@ -546,12 +542,12 @@ Sponsor/cosponsor funding analysis and related lobbying for a bill.
 
 ### GET /api/intelligence/sector/{sector}/leaderboard
 
-Legislators ranked by voting alignment with a specific industry sector.
+House members' yes-vote rates on bills classified to an industry sector: yea votes / (yea + nay votes) on recent House roll calls, as a 0-1 fraction. Every included member is returned, ordered by state then name; there is no rank and no dollar figure. `stats.mean` is the House average to compare against. Members with fewer than 10 such votes are excluded. House only: senators are not covered. Rates describe voting patterns, not support for or opposition to the industry.
 
 **Parameters:**
-- `sector` (path): industry sector name
-- `chamber` (query, optional): "house" or "senate"
+- `sector` (path): industry sector slug, e.g. `defense`, `health`, `finance-insurance-real-estate`
 - `party` (query, optional): "D", "R", or "I"
+- `limit` (query, optional): cap on entries; omit for all
 
 ### POST /api/intelligence/address/money-report
 
@@ -634,14 +630,14 @@ CIV.IQ provides a Model Context Protocol server for AI assistant integration.
 **Transport:** Streamable HTTP (POST for messages)
 **Manifest:** `https://civdotiq.org/.well-known/mcp.json` (MCP registry server.json format)
 
-### Tools (47, all read-only)
+### Tools (46, all read-only)
 
 By domain:
 
 - **Representatives:** `lookup_representatives` (full street address — not ZIP; returns US Senators, House member and every state legislator), `list_state_delegation`, `get_representative_profile`, `compare_legislators`
 - **Legislation:** `search_legislation`, `get_bill_details`, `get_voting_history`, `get_vote_record`
 - **Finance:** `get_campaign_finance`, `search_lobbying`, `get_federal_spending`
-- **Intelligence:** `analyze_vote_prediction`, `get_influence_chain`, `analyze_district_comprehensive`, `analyze_industry_regulatory_landscape`, `analyze_policy_area_ecosystem`
+- **Intelligence:** `get_influence_chain`, `analyze_district_comprehensive`, `analyze_industry_regulatory_landscape`, `analyze_policy_area_ecosystem`
 - **Civic:** `get_committee_info`, `get_federal_register`, `get_district_info`
 - **Environment:** `search_epa_facilities`, `get_district_environmental_profile`, `analyze_environmental_influence`, `get_climate_data`, `get_state_climate_profile`
 - **Safety:** `search_fema_disasters`, `get_district_disaster_history`, `search_crime_statistics`, `get_state_public_safety_profile`, `search_consumer_complaints`, `get_district_consumer_complaints`, `analyze_consumer_protection_influence`, `get_housing_affordability`, `get_district_housing_profile`, `search_vehicle_recalls`, `search_vehicle_complaints`
@@ -699,7 +695,7 @@ Resource templates (returned by `resources/templates/list`):
     "apiVersion": "v1",
     "timestamp": "2026-08-21T00:00:00Z",
     "source": "error",
-    "license": "MIT",
+    "license": "Public Domain",
     "documentation": "https://civdotiq.org/docs/api"
   }
 }
@@ -775,4 +771,4 @@ List endpoints use offset-based pagination:
 - No data is fabricated — if a source is unavailable, the response returns empty arrays or null
 - Intelligence analysis never claims causation, only correlation and patterns
 - ML model accuracy is always disclosed alongside predictions
-- The platform is open source under MIT license
+- The platform is open source under the Apache-2.0 license; the government data it serves is public domain

@@ -4,16 +4,16 @@ TypeScript client for the [CIV.IQ](https://civdotiq.org) civic data API.
 
 ## What you can build with this
 
-CIV.IQ resolves and cross-references 23 government data sources. This SDK gives you programmatic access to the results:
+CIV.IQ resolves and cross-references 29 government data sources and 11 open datasets. This SDK gives you programmatic access to the results:
 
 - **Find representatives by address** — geocode a street address to congressional district and return federal and state legislators
 - **Trace campaign finance** — see who funds a legislator, broken down by industry sector
 - **Read voting records** — every roll-call vote in the 119th Congress, by member
 - **Follow legislation** — bill status, sponsors, cosponsors, committee assignments
-- **See intelligence analysis** — vote prediction, influence chains, sector leaderboards, all with confidence scores and methodology disclosure
+- **See intelligence analysis** — influence chains, stock-trade and committee overlap, bill intelligence, all with confidence scores and methodology disclosure
 - **Explore the civic graph** — navigate connections between representatives, bills, committees, districts, and organizations
 
-All data comes from real government APIs. No mock data. When a source is unavailable, the response says so.
+Data comes from official government records, some read through named open datasets such as OpenStates. No mock data. When a source is unavailable, the response says so.
 
 ## Install
 
@@ -51,12 +51,9 @@ const reps = await civiq.districts.geocode({
 // What's their voting record?
 const detail = await civiq.representatives.get('P000197');
 
-// How independent are they from donor interests?
-const prediction = await civiq.intelligence.votePrediction('P000197');
-
-// What industries fund legislators on this committee?
+// How often do House members vote yes on energy-sector bills?
 const leaderboard = await civiq.intelligence.sectorLeaderboard('Energy', {
-  chamber: 'senate',
+  chamber: 'house',
 });
 ```
 
@@ -103,7 +100,6 @@ civiq.committees.get(committeeId);
 ### intelligence
 
 ```typescript
-civiq.intelligence.votePrediction(bioguideId)
 civiq.intelligence.influenceChain(bioguideId)
 civiq.intelligence.sectorLeaderboard(sector, { chamber })
 civiq.intelligence.moneyReportByAddress({ street, city, state })

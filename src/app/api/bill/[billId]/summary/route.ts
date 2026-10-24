@@ -1,19 +1,24 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
  * Bill Summary API Endpoint
  *
  * Provides AI-generated summaries of bills at an 8th grade reading level.
- * Includes caching, validation, and error handling.
+ * Includes caching, validation, and error handling. When the AI call fails the
+ * route answers 503 "unavailable" and caches nothing; it never substitutes
+ * template text.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
-import { BillSummarizer } from '@/features/legislation/services/ai/bill-summarizer';
+import {
+  BillSummarizer,
+  BillSummaryUnavailableError,
+} from '@/features/legislation/services/ai/bill-summarizer';
 import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
 import { BillTextProcessor } from '@/features/legislation/services/ai/bill-text-processor';
 import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
@@ -21,6 +26,8 @@ import { fetchBillText } from '@/features/legislation/services/bill-text-fetcher
 import { PLAIN_LANGUAGE_ATTRIBUTION } from '@/lib/ai/plain-language';
 import logger from '@/lib/logging/simple-logger';
 import { InputValidator } from '@/lib/validation/input-validator';
+import { isServedCongress } from '@/lib/data/congressional-constants';
+import { parseBillNumber } from '@/types/bill';
 
 interface _BillSummaryRequest {
   includeFull?: boolean;
@@ -55,6 +62,11 @@ export async function GET(
         },
         { status: 400 }
       );
+    }
+
+    // Older Congresses are out of scope — don't fetch text or spend an LLM call.
+    if (!isServedCongress(Number(parseBillNumber(billId).congress))) {
+      return NextResponse.json({ error: 'Bill not found' }, { status: 404 });
     }
 
     // Parse query parameters
@@ -158,20 +170,35 @@ export async function GET(
     const keyContent = BillTextProcessor.extractKeyContent(processedText, 3000);
 
     // Generate AI summary
-    const summary = await BillSummarizer.summarizeBill(
-      keyContent,
-      {
-        number: billText.number,
-        title: billText.title,
-        congress: billText.congress,
-        chamber: billText.chamber,
-      },
-      {
-        targetReadingLevel,
-        maxLength: format === 'brief' ? 150 : format === 'detailed' ? 300 : 500,
-        useCache: !forceRefresh,
-      }
-    );
+    let summary;
+    try {
+      summary = await BillSummarizer.summarizeBill(
+        keyContent,
+        {
+          number: billText.number,
+          title: billText.title,
+          congress: billText.congress,
+          chamber: billText.chamber,
+        },
+        {
+          targetReadingLevel,
+          maxLength: format === 'brief' ? 150 : format === 'detailed' ? 300 : 500,
+        }
+      );
+    } catch (error) {
+      if (!(error instanceof BillSummaryUnavailableError)) throw error;
+      return NextResponse.json(
+        {
+          summary: null,
+          unavailable: true,
+          message:
+            'A plain-language summary is unavailable right now. The official CRS summary and the full text are on the bill page.',
+          billUrl: `/bill/${billId}`,
+        },
+        { status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '300' } }
+      );
+    }
+    summary.basedOn = billText.basedOn;
 
     // Validate reading level
     const readingAnalysis = ReadingLevelValidator.analyzeReadingLevel(summary.summary, {

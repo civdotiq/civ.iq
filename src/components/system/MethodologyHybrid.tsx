@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2026 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * MethodologyHybrid — redesigned /methodology page (PR 8).
  *
@@ -201,7 +201,7 @@ const CITATIONS: ReadonlyArray<{ id: string; n: number; cite: string; url: strin
 const PAGE_META: ReadonlyArray<readonly [string, string]> = [
   ['Effective', 'Apr 2026'],
   ['Sources', `${CORE_SOURCES.length} core · 18 supplementary`],
-  ['Code', 'MIT licensed'],
+  ['Code', 'Apache-2.0 licensed'],
   ['Citations', `${CITATIONS.length} peer-reviewed`],
 ] as const;
 

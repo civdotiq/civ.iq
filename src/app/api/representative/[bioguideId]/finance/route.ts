@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -10,7 +10,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
-import { fecApiService, FECContribution, classifyPACType } from '@/lib/fec/fec-api-service';
+import {
+  fecApiService,
+  FECContribution,
+  FECFinancialSummary,
+  classifyPACType,
+} from '@/lib/fec/fec-api-service';
 import { bioguideToFECMapping } from '@/lib/data/bioguide-fec-mapping';
 import { govCache } from '@/services/cache';
 import {
@@ -34,6 +39,72 @@ import {
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
+
+// The full response (contribution sample, PAC and committee lookups) costs a
+// dozen or more FEC calls to rebuild, so it is cached for 30 days. The
+// headline totals move with every filing: a 30-day copy written the day
+// before a quarterly deadline showed the previous quarter until after the
+// next one. Totals older than a day are re-read with a single call.
+const FULL_RESPONSE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const TOTALS_FRESH_MS = 24 * 60 * 60 * 1000;
+
+function totalsFromSummary(summary: FECFinancialSummary) {
+  return {
+    totalRaised: summary.receipts || summary.total_receipts || 0,
+    totalSpent: summary.disbursements || summary.total_disbursements || 0,
+    cashOnHand: summary.last_cash_on_hand_end_period || summary.cash_on_hand_end_period || 0,
+    individualContributions: summary.individual_contributions || 0,
+    pacContributions: summary.other_political_committee_contributions || 0,
+    partyContributions: summary.political_party_committee_contributions || 0,
+    candidateContributions: summary.candidate_contribution || 0,
+    coverageEndDate: summary.coverage_end_date?.slice(0, 10) || null,
+  };
+}
+
+/**
+ * Re-read a cached response's FEC totals once they are a day old. The rest of
+ * the cached response is kept, and so is its original expiry, so daily
+ * visits never stretch the 30-day contribution analysis. Any FEC failure
+ * serves the cached copy unchanged.
+ */
+async function refreshCachedTotals(
+  cacheKey: string,
+  cached: FinanceResponse
+): Promise<FinanceResponse> {
+  if (!cached.metadata?.hasFecMapping || !cached.candidateId) return cached;
+
+  const checkedAt = Date.parse(cached.totalsCheckedAt ?? cached.lastUpdated);
+  if (Date.now() - checkedAt < TOTALS_FRESH_MS) return cached;
+
+  try {
+    const summary = await fecApiService.getFinancialSummary(cached.candidateId, cached.cycle);
+    if (!summary) return cached;
+
+    const refreshed: FinanceResponse = {
+      ...cached,
+      ...totalsFromSummary(summary),
+      totalsCheckedAt: new Date().toISOString(),
+    };
+
+    const builtAt = Date.parse(cached.lastUpdated);
+    const remainingMs = FULL_RESPONSE_TTL_MS - (Date.now() - builtAt);
+    if (Number.isFinite(remainingMs) && remainingMs > 60_000) {
+      await govCache.set(cacheKey, refreshed, {
+        ttl: remainingMs,
+        source: 'fec-api',
+        dataType: 'finance',
+      });
+    }
+
+    return refreshed;
+  } catch (error) {
+    logger.warn('[Finance API] Totals refresh failed; serving cached totals', {
+      candidateId: cached.candidateId,
+      error: (error as Error).message,
+    });
+    return cached;
+  }
+}
 
 /**
  * Analyze industry breakdown from contribution employer data
@@ -198,10 +269,12 @@ export async function GET(
         responseTime: Date.now() - startTime,
       });
 
+      const current = await refreshCachedTotals(cacheKey, cached);
+
       return NextResponse.json({
-        ...cached,
+        ...current,
         metadata: {
-          ...cached.metadata,
+          ...current.metadata,
           cacheHit: true,
         },
       });
@@ -731,11 +804,7 @@ export async function GET(
       const expenditureRecord = {
         pacName: expenditure.committee_name,
         pacType: (pacType || 'unknown') as
-          | 'superPac'
-          | 'traditional'
-          | 'leadership'
-          | 'hybrid'
-          | 'unknown',
+          'superPac' | 'traditional' | 'leadership' | 'hybrid' | 'unknown',
         amount: expenditure.expenditure_amount,
         date: expenditure.expenditure_date,
         description: expenditure.expenditure_description,
@@ -750,16 +819,7 @@ export async function GET(
 
     // Process FEC financial summary into our response format
     const response: FinanceResponse = {
-      totalRaised: financialSummary.receipts || financialSummary.total_receipts || 0,
-      totalSpent: financialSummary.disbursements || financialSummary.total_disbursements || 0,
-      cashOnHand:
-        financialSummary.last_cash_on_hand_end_period ||
-        financialSummary.cash_on_hand_end_period ||
-        0,
-      individualContributions: financialSummary.individual_contributions || 0,
-      pacContributions: financialSummary.other_political_committee_contributions || 0,
-      partyContributions: financialSummary.political_party_committee_contributions || 0,
-      candidateContributions: financialSummary.candidate_contribution || 0,
+      ...totalsFromSummary(financialSummary),
 
       // Real analyzed data from FEC contributions
       industryBreakdown,
@@ -851,9 +911,10 @@ export async function GET(
       interestGroupMetrics,
     };
 
-    // Cache successful response - FEC data updates quarterly (30 day cache)
+    // Cache the full response for 30 days; refreshCachedTotals keeps its
+    // totals within a day of the FEC.
     await govCache.set(cacheKey, response, {
-      ttl: 2592000000, // 30 days (FEC quarterly reporting cycle)
+      ttl: FULL_RESPONSE_TTL_MS,
       source: 'fec-api',
       dataType: 'finance',
     });

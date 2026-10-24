@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -8,6 +8,7 @@
  *
  * Generates plain language summaries for state bills using OpenStates bill data.
  * Mirrors the federal bill-summarizer pattern with state-specific adaptations.
+ * Returns null when the AI call fails: no template text stands in for a summary.
  */
 
 import logger from '@/lib/logging/simple-logger';
@@ -80,7 +81,7 @@ export class StateBillSummarizer {
   /**
    * Generate a plain language summary for a state bill.
    */
-  static async summarize(bill: StateBill, state: string): Promise<StateBillAISummary> {
+  static async summarize(bill: StateBill, state: string): Promise<StateBillAISummary | null> {
     const cacheKey = `state-bill-summary:${state}:${bill.id}`;
 
     try {
@@ -111,12 +112,12 @@ export class StateBillSummarizer {
 
       return summary;
     } catch (error) {
-      logger.error('State bill summary failed, using fallback', error as Error, {
+      logger.error('State bill summary failed; summary unavailable', error as Error, {
         state,
         billId: bill.id,
       });
 
-      return this.generateFallbackSummary(bill, state);
+      return null;
     }
   }
 
@@ -188,12 +189,15 @@ Return JSON:
     }
 
     const parsed = JSON.parse(jsonMatch[0]);
+    if (typeof parsed.summary !== 'string' || parsed.summary.trim() === '') {
+      throw new Error('AI response has no summary text');
+    }
 
     return {
       billId: bill.id,
       state,
       identifier: bill.identifier,
-      summary: parsed.summary || '',
+      summary: parsed.summary,
       keyPoints: parsed.keyPoints || [],
       whoItAffects: parsed.whoItAffects || '',
       whatItDoes: parsed.whatItDoes || '',
@@ -201,39 +205,6 @@ Return JSON:
       confidence: parsed.confidence || 0.7,
       lastUpdated: new Date().toISOString(),
       source: 'ai-generated',
-      plainLanguage: PLAIN_LANGUAGE_ATTRIBUTION,
-    };
-  }
-
-  /**
-   * Template-based fallback when AI is unavailable
-   */
-  private static generateFallbackSummary(bill: StateBill, state: string): StateBillAISummary {
-    const stateName = STATE_NAMES[state.toUpperCase()] ?? state;
-    const primarySponsor = bill.sponsorships.find(s => s.primary)?.name ?? 'Unknown';
-    const latestAction = bill.actions.length > 0 ? bill.actions[bill.actions.length - 1] : null;
-
-    const summary =
-      `${bill.identifier} is a ${stateName} bill titled "${bill.title}."` +
-      (primarySponsor !== 'Unknown' ? ` It was introduced by ${primarySponsor}.` : '') +
-      (latestAction
-        ? ` The latest action was on ${latestAction.date}: ${latestAction.description}.`
-        : '');
-
-    return {
-      billId: bill.id,
-      state,
-      identifier: bill.identifier,
-      summary,
-      keyPoints: [],
-      whoItAffects: 'Information not available without AI analysis.',
-      whatItDoes: bill.abstract ?? bill.title,
-      currentStatus: latestAction
-        ? `${latestAction.date}: ${latestAction.description}`
-        : 'Status unavailable',
-      confidence: 0.2,
-      lastUpdated: new Date().toISOString(),
-      source: 'fallback',
       plainLanguage: PLAIN_LANGUAGE_ATTRIBUTION,
     };
   }

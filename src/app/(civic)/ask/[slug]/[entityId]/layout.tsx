@@ -1,21 +1,42 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getCachedRepresentative } from '@/lib/questions/get-representative';
 import { getCachedCommittee } from '@/lib/questions/get-committee';
-import { getTemplate, fillPattern, getCategoryLabel } from '@/lib/questions/question-registry';
+import {
+  getTemplate,
+  getTitlePattern,
+  fillPattern,
+  getCategoryLabel,
+} from '@/lib/questions/question-registry';
 import { resolvePolicyAreaSlug } from '@/lib/services/policy-area-search.service';
 import { fetchTopicBillsData } from '@/lib/questions/template-data-fetchers';
+import { fetchStockTradesData } from '@/lib/questions/stock-trades';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
+import { commonName } from '@/features/representatives/utils/common-name';
 
 interface LayoutProps {
   children: React.ReactNode;
   params: Promise<{ slug: string; entityId: string }>;
+}
+
+/**
+ * Most members report no stock trades; those pages carry only the empty
+ * state, so keep them out of the index (the sitemap omits them too).
+ */
+async function representativeRobots(
+  slug: string,
+  bioguideId: string,
+  chamber: 'House' | 'Senate'
+): Promise<Metadata['robots']> {
+  if (slug !== 'stock-trades') return undefined;
+  const { trades } = await fetchStockTradesData(bioguideId, chamber);
+  return trades.length ? undefined : { index: false, follow: true };
 }
 
 export async function generateMetadata({
@@ -52,9 +73,10 @@ export async function generateMetadata({
     } else {
       const rep = await getCachedRepresentative(entityId.toUpperCase());
       if (!rep) return { title: 'Representative not found' };
-      const entity = { name: rep.name, party: rep.party, state: rep.state };
-      title = fillPattern(template.questionPattern, entity);
+      const entity = { name: commonName(rep), party: rep.party, state: rep.state };
+      title = fillPattern(getTitlePattern(template), entity);
       description = fillPattern(template.descriptionPattern, entity);
+      robots = await representativeRobots(slug, entityId.toUpperCase(), rep.chamber);
     }
 
     return {
@@ -104,7 +126,7 @@ export default async function AskLayout({ children, params }: LayoutProps) {
     entityName = 'Representative';
     try {
       const rep = await getCachedRepresentative(entityId.toUpperCase());
-      if (rep) entityName = rep.name;
+      if (rep) entityName = commonName(rep);
     } catch {
       // Breadcrumb falls back to generic label
     }

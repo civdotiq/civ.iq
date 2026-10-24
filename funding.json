@@ -6,7 +6,7 @@
     "role": "owner",
     "name": "Mark Sandford",
     "email": "contact@civdotiq.org",
-    "description": "CIV.IQ is a civic intelligence platform that connects 19 government data sources to give citizens organized, nonpartisan information about their elected officials. The platform uses machine learning and statistical analysis to surface vote-finance correlations, influence chains, and bill-lobbying similarity from public records. Every insight carries a confidence score, methodology disclosure, and citation to the original government source. Open source, no editorializing, no causation claims.",
+    "description": "CIV.IQ is a civic intelligence platform that connects 29 government data sources and 11 open datasets to give citizens organized, nonpartisan information about their elected officials. The platform uses machine learning and statistical analysis to surface vote-finance correlations, influence chains, and bill-lobbying similarity from public records. Every insight carries a confidence score, methodology disclosure, and citation to its source. Open source, no editorializing, no causation claims.",
     "webpageUrl": {
       "url": "https://civdotiq.org"
     }
@@ -15,14 +15,14 @@
     {
       "guid": "civiq",
       "name": "CIV.IQ",
-      "description": "Civic intelligence platform serving 198 API endpoints across 19 government data sources (Congress.gov, FEC, USASpending, Senate lobbying disclosures, Federal Register, OpenStates, Census Bureau, and more). Covers all 535 federal legislators and 50 states. ML-powered vote prediction, influence chain tracing, bill-lobbying similarity, and temporal pattern detection — all from verified public data.",
+      "description": "Civic intelligence platform with a public API of 39 documented endpoints, built on 29 government data sources and 11 open datasets (Congress.gov, FEC, USASpending, LDA lobbying disclosures, Federal Register, Census Bureau, OpenStates, and more). Covers all 535 federal legislators and 50 states. Influence chain tracing, bill-lobbying similarity, stock-trade and committee overlap, and temporal pattern detection — all from verified public data.",
       "webpageUrl": {
         "url": "https://civdotiq.org"
       },
       "repositoryUrl": {
         "url": "https://github.com/civdotiq/civ.iq"
       },
-      "licenses": ["spdx:MIT"],
+      "licenses": ["spdx:Apache-2.0"],
       "tags": [
         "civic-tech",
         "government-transparency",

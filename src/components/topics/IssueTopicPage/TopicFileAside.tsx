@@ -1,16 +1,14 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import { CqLabel } from '@/components/cq';
-import { formatCompactDollars, formatCount } from './data';
-import type { LeaderboardEntry, PolicyAreaPayload } from './types';
+import { formatCount } from './data';
+import type { PolicyAreaPayload } from './types';
 
 interface TopicFileAsideProps {
   policyArea: PolicyAreaPayload | null;
-  topRecipient: LeaderboardEntry | null;
-  industryTotal: number | null;
   loading: boolean;
 }
 
@@ -19,12 +17,7 @@ interface Row {
   value: string;
 }
 
-export function TopicFileAside({
-  policyArea,
-  topRecipient,
-  industryTotal,
-  loading,
-}: TopicFileAsideProps) {
+export function TopicFileAside({ policyArea, loading }: TopicFileAsideProps) {
   const rows: Row[] = [
     {
       label: 'Bills active',
@@ -37,14 +30,6 @@ export function TopicFileAside({
     {
       label: 'Committees with jurisdiction',
       value: policyArea ? formatCount(policyArea.committees.length) : loading ? '…' : '—',
-    },
-    {
-      label: 'Industry money (cycle)',
-      value: industryTotal !== null ? formatCompactDollars(industryTotal) : loading ? '…' : '—',
-    },
-    {
-      label: 'Top recipient',
-      value: topRecipient ? topRecipient.name : loading ? '…' : '—',
     },
   ];
 

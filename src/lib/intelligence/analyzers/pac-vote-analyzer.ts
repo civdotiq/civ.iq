@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -86,7 +86,8 @@ const DISCLAIMER =
  * Returns null if the PAC can't be classified or has insufficient data.
  */
 export async function analyzePACVotes(committeeId: string): Promise<PACVoteInsight | null> {
-  const cacheKey = `insight:pac_votes:${committeeId}`;
+  // v2: unversioned entries counted each recipient's votes twice.
+  const cacheKey = `insight:pac_votes:v2:${committeeId}`;
 
   // 1. Check cache
   try {
@@ -378,25 +379,25 @@ async function fetchAndClassifyRecipientVotes(
   return { records, billIdsByRecipient, freshestVoteDate };
 }
 
-/** Fetch a recipient's votes across both sessions of the 119th Congress. */
+/**
+ * Fetch a recipient's newest votes across both sessions of the current
+ * Congress in one call (session undefined). Separate session-1 and session-2
+ * fetches used to return the same votes twice.
+ */
 async function fetchRecipientRawVotes(recipient: LinkedRecipient) {
-  const fetchSession = (session: 1 | 2) =>
-    recipient.chamber === 'House'
-      ? batchVotingService.getHouseMemberVotes(
-          recipient.bioguideId,
-          getCurrentCongressNumber(),
-          session,
-          MAX_VOTES
-        )
-      : batchVotingService.getSenateMemberVotes(
-          recipient.bioguideId,
-          getCurrentCongressNumber(),
-          session,
-          MAX_VOTES
-        );
-
-  const [session1, session2] = await Promise.all([fetchSession(1), fetchSession(2)]);
-  return [...session1, ...session2];
+  return recipient.chamber === 'House'
+    ? batchVotingService.getHouseMemberVotes(
+        recipient.bioguideId,
+        getCurrentCongressNumber(),
+        undefined,
+        MAX_VOTES
+      )
+    : batchVotingService.getSenateMemberVotes(
+        recipient.bioguideId,
+        getCurrentCongressNumber(),
+        undefined,
+        MAX_VOTES
+      );
 }
 
 /**
@@ -560,16 +561,43 @@ function computeAggregateStats(recipients: PACRecipientVoteRecord[]): AggregateS
 
 // ── Peer Comparison ──────────────────────────────────────────────────
 
+/**
+ * One Redis hash per sector, one row per analyzed PAC: committeeId →
+ * {yeaRate, asOf}. PAC IDs have no roster to build exact keys from, and KEYS
+ * is disabled in prod (it silently returned [], so every PAC lacked peers).
+ * Hash fields can't expire, so readers drop rows older than the insight TTL.
+ */
+function peerIndexKey(sector: IndustrySector): string {
+  return `pac-alignment-index:v1:${sector}`;
+}
+
+interface PeerIndexRow {
+  yeaRate: number;
+  asOf: string;
+}
+
 async function cacheAggregateYeaRate(
   committeeId: string,
   sector: IndustrySector,
   yeaRate: number
 ): Promise<void> {
-  const key = `pac-alignment:${sector}:${committeeId}`;
+  const row: PeerIndexRow = { yeaRate, asOf: new Date().toISOString() };
   try {
-    await getRedisCache().set(key, yeaRate, CACHE_TTL);
+    await getRedisCache().hashSet(peerIndexKey(sector), committeeId, JSON.stringify(row));
   } catch {
     // Non-fatal
+  }
+}
+
+function parsePeerRow(raw: string, oldestAllowedMs: number): number | null {
+  try {
+    const row = JSON.parse(raw) as Partial<PeerIndexRow>;
+    if (typeof row.yeaRate !== 'number' || typeof row.asOf !== 'string') return null;
+    const at = Date.parse(row.asOf);
+    if (Number.isNaN(at) || at < oldestAllowedMs) return null;
+    return row.yeaRate;
+  } catch {
+    return null;
   }
 }
 
@@ -578,15 +606,15 @@ async function computePeerComparison(
   sector: IndustrySector,
   aggregateYeaRate: number
 ): Promise<PeerComparison | null> {
-  const pattern = `pac-alignment:${sector}:*`;
-
   try {
-    const keys = await getRedisCache().keys(pattern);
-    const peerKeys = keys.filter(k => !k.endsWith(`:${committeeId}`));
-    if (peerKeys.length < MIN_PEERS) return null;
+    const rows = await getRedisCache().hashGetAll(peerIndexKey(sector));
+    if (!rows) return null;
 
-    const values = await getRedisCache().mget<number>(peerKeys);
-    const peerScores = values.filter((v): v is number => v !== null && typeof v === 'number');
+    const oldestAllowedMs = Date.now() - CACHE_TTL * 1000;
+    const peerScores = Object.entries(rows)
+      .filter(([id]) => id !== committeeId)
+      .map(([, raw]) => parsePeerRow(raw, oldestAllowedMs))
+      .filter((v): v is number => v !== null);
 
     if (peerScores.length < MIN_PEERS) return null;
 

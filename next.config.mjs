@@ -29,7 +29,8 @@
 // Vercel builds and runs on linux/x64. This must be an include, applied inside
 // `next build`: Vercel's build adapter collects each function's files from the
 // traces before any postbuild script runs.
-const ONNX_NODE_SHARED_LIB = './node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime.so.1';
+const ONNX_NODE_SHARED_LIB =
+  './node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime.so.1';
 
 const nextConfig = {
   typescript: {
@@ -39,16 +40,8 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // Next.js 16 uses Turbopack by default
   turbopack: {},
-  // Force-ship the ONNX model + metadata AND the onnxruntime-web WASM runtime
-  // with intelligence routes. Without this, `require('onnxruntime-web')` inside
-  // vote-predictor.ts is a runtime lookup the tracer may miss, causing a
-  // MODULE_NOT_FOUND on Vercel's read-only fs → 500 on /vote-prediction.
   outputFileTracingIncludes: {
-    '/api/intelligence/**': [
-      './models/**/*',
-      './node_modules/onnxruntime-web/**/*',
-      ONNX_NODE_SHARED_LIB,
-    ],
+    '/api/intelligence/**': [ONNX_NODE_SHARED_LIB],
     // Every other function that imports @huggingface/transformers (via the
     // analyzers) needs the shared library too. `npm run check:onnx-trace`
     // fails validate:all if a new route loads the binding without it.
@@ -65,6 +58,10 @@ const nextConfig = {
     // those functions explicitly.
     '/api/lda/**': ['./data/lda-aggregates.meta.json', './data/lda-filings.meta.json'],
     '/api/health': ['./data/lda-aggregates.meta.json'],
+    // Precomputed influence clusters, read with fs at runtime.
+    '/api/intelligence/influence-clusters': [
+      './src/lib/intelligence/clusters/influence-clusters.json',
+    ],
     // The rep lobbying route reads the full corpus for per-committee totals.
     '/api/representative/[bioguideId]/lobbying': ['./data/lda-aggregates.json'],
     // The industry organizations route reads it for per-sector issue totals.

@@ -1,15 +1,15 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
  * Unknown /api/* paths must return structured JSON 404s, never the HTML
- * app shell. Exercises src/app/api/[...path]/route.ts directly.
+ * app shell. Exercises src/app/api/[[...path]]/route.ts directly.
  */
 
 import { NextRequest } from 'next/server';
-import { GET, POST } from '@/app/api/[...path]/route';
+import { GET, POST } from '@/app/api/[[...path]]/route';
 
 describe('API catch-all 404', () => {
   it('returns the v1 error envelope for unknown /api/v1/* paths', async () => {

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2026 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Congress.gov occasionally stalls for minutes at a time. With no fetch
  * timeout, /api/v1/bills/[billId] and /api/feed/bill/[billId] hung until the
@@ -117,5 +117,14 @@ describe('GET /api/feed/bill/[billId]', () => {
     expect(res.status).toBe(200);
     expect(xml.match(/<entry>/g)).toHaveLength(2);
     expect(xml).not.toContain('undefined');
+  });
+
+  it('404s an old-Congress bill without calling Congress.gov', async () => {
+    const fetchMock = jest.spyOn(global, 'fetch');
+
+    const res = await getBillFeed(req, { params: Promise.resolve({ billId: '118-hr-3413' }) });
+
+    expect(res.status).toBe(404);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

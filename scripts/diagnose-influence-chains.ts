@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -19,8 +19,7 @@
  * member's cached insight first so every run recomputes.
  */
 
-import * as dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
+import './load-env';
 
 import { ALL_COMMITTEE_MAPPINGS, normalizeCompanyName } from '@civiq/entity-resolution';
 import {
@@ -104,7 +103,7 @@ async function diagnose(bioguideId: string): Promise<void> {
   );
 
   await getRedisCache()
-    .delete(`insight:influence_chain:v2:${bioguideId}`)
+    .delete(`insight:influence_chain:v4:${bioguideId}`)
     .catch(() => undefined);
 
   const started = Date.now();

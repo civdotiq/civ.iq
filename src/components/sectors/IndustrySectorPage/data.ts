@@ -1,13 +1,13 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Helpers for the redesigned IndustrySectorPage. Pure functions only —
  * data fetching is done client-side via SWR (matches IndustrySectorClient).
  */
 
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
-import type { ContributorRow, IndustryOrganizationsResponse, LeaderboardEntry } from './types';
+import type { ContributorRow, IndustryOrganizationsResponse } from './types';
 
 const SECTOR_TO_LEADERBOARD_SLUG: Record<IndustrySector, string> = {
   [IndustrySector.AGRIBUSINESS]: 'agribusiness',
@@ -42,54 +42,6 @@ export function formatCompactDollars(n: number): string {
 export function formatExactDollars(n: number): string {
   if (!Number.isFinite(n)) return '—';
   return `$${n.toLocaleString('en-US')}`;
-}
-
-/** Two-letter party code → 'd' | 'r' | 'i'. */
-export function partyChipVariant(party: string): 'd' | 'r' | 'i' {
-  const upper = party?.toUpperCase?.() ?? '';
-  if (upper === 'D' || upper === 'DEM' || upper === 'DEMOCRAT') return 'd';
-  if (upper === 'R' || upper === 'REP' || upper === 'REPUBLICAN') return 'r';
-  return 'i';
-}
-
-export function partyShort(party: string): string {
-  const v = partyChipVariant(party);
-  if (v === 'd') return 'D';
-  if (v === 'r') return 'R';
-  return 'I';
-}
-
-interface PartyTotals {
-  d: number;
-  r: number;
-  other: number;
-  total: number;
-}
-
-export function computePartyTotals(entries: LeaderboardEntry[]): PartyTotals {
-  const totals: PartyTotals = { d: 0, r: 0, other: 0, total: 0 };
-  for (const e of entries) {
-    const v = partyChipVariant(e.party);
-    if (v === 'd') totals.d += e.sectorDonationAmount;
-    else if (v === 'r') totals.r += e.sectorDonationAmount;
-    else totals.other += e.sectorDonationAmount;
-    totals.total += e.sectorDonationAmount;
-  }
-  return totals;
-}
-
-/** Top recipients by raw sector donation amount. */
-export function topRecipients(entries: LeaderboardEntry[], limit = 8): LeaderboardEntry[] {
-  return [...entries]
-    .sort((a, b) => b.sectorDonationAmount - a.sectorDonationAmount)
-    .slice(0, limit);
-}
-
-/** Format chamber + state into a compact district label, e.g. "D-NY-08" or "R-SC · S". */
-export function memberDistrictLabel(entry: LeaderboardEntry): string {
-  const party = partyShort(entry.party);
-  if (entry.chamber === 'Senate') return `${party}-${entry.state} · S`;
-  return `${party}-${entry.state}`;
 }
 
 /**

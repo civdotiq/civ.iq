@@ -59,12 +59,12 @@ PulseMCP. Also auto-indexes popular registries.
 
 ## Suggested listing copy
 
-> **CIV.IQ** — U.S. civic data for AI agents. 47 tools over live
-> government sources: representatives by address, voting records,
+> **CIV.IQ** — U.S. civic data for AI agents. 46 tools over official
+> government records: representatives by address, voting records,
 > bills (full-text keyword search), campaign finance by industry,
 > lobbying filings, federal spending, and district profiles
 > (environment, health, safety, economy). Every answer cites its
-> government source. Free, no API key, MIT-licensed.
+> source. Free, no API key, open source (Apache-2.0).
 
 ## After submitting
 

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -29,7 +29,7 @@ import { slugifyPolicyArea } from '@/lib/questions/question-registry';
 import type { FederalRegisterAPIResponse, FederalRegisterItem } from '@/types/federal-register';
 import type { PolicyAreaResults, JoinMetadata } from '@/types/joins';
 import type { BillStatus } from '@/types/bill';
-import { mapCongressStatus } from '@/lib/services/bill.service';
+import { billTypeChamber, mapCongressStatus } from '@/lib/services/bill.service';
 import { getBillsByPolicyArea } from '@/lib/data-sources/bill-policy-areas/load';
 
 const FEDERAL_REGISTER_API = 'https://www.federalregister.gov/api/v1';
@@ -221,7 +221,9 @@ export async function searchPolicyArea(
       const bills = (corpus?.bills ?? []).map(b => ({
         id: b.id,
         title: b.title,
-        status: mapCongressStatus(b.latestActionText ?? undefined) ?? ('introduced' as BillStatus),
+        status:
+          mapCongressStatus(b.latestActionText ?? undefined, billTypeChamber(b.type)) ??
+          ('introduced' as BillStatus),
         introducedDate: b.introducedDate,
       }));
 

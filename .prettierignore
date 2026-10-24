@@ -9,3 +9,6 @@ data/lda-filings.meta.json
 # formatting it here would diverge from what the bot commits.
 data/member-sponsored-counts.json
 data/member-sponsored-counts.meta.json
+# Contributor Covenant 2.1, kept word for word (including its * bullets) so
+# GitHub detects it; see CODE_OF_CONDUCT.md.
+CODE_OF_CONDUCT.md

@@ -29,6 +29,7 @@
  *
  * Environment: FEC_API_KEY and CONGRESS_API_KEY enable the two fallback
  * paths. When absent, the script still runs but only from YAML data.
+ * Without a confirmed Congress.gov membership list, no entry is removed.
  *
  * Sources: https://github.com/unitedstates/congress-legislators
  *          https://api.congress.gov/
@@ -225,6 +226,17 @@ export function preserveSeatedMembers(
     }
   }
   return preserved;
+}
+
+/**
+ * Carry forward every existing entry missing from `fresh`. Used when the
+ * Congress.gov membership check didn't run (429, bad key, no key,
+ * --no-congress): without it we can't tell a departed member from a seated
+ * one the YAML hasn't caught up on, so nothing is removed this run. Removals
+ * wait for a run where membership is confirmed. Mutates `fresh`.
+ */
+export function preserveAllExisting(fresh: MappingFile, existing: MappingFile | null): string[] {
+  return preserveSeatedMembers(fresh, existing, Object.keys(existing ?? {}));
 }
 
 export function summarizeDiff(
@@ -658,6 +670,7 @@ async function main(): Promise<void> {
   const fecKey = process.env.FEC_API_KEY;
   let fallbackProposals: FallbackProposal[] = [];
   const existing = readExisting(PACKAGE_JSON_PATH);
+  let membershipVerified = false;
 
   if (!skipCongressCheck && congressKey) {
     try {
@@ -698,6 +711,7 @@ async function main(): Promise<void> {
       if (preserved.length > 0) {
         console.log(`  Preserved existing mapping for seated member(s): ${preserved.join(', ')}`);
       }
+      membershipVerified = true;
     } catch (error) {
       console.warn(
         `Congress.gov membership check failed — continuing with YAML-only sync. ` +
@@ -709,6 +723,16 @@ async function main(): Promise<void> {
       'No CONGRESS_API_KEY set — skipping current-membership cross-check. ' +
         'Syncing from congress-legislators YAML only.'
     );
+  }
+
+  if (!membershipVerified) {
+    const kept = preserveAllExisting(fresh, existing);
+    if (kept.length > 0) {
+      console.warn(
+        `  Membership not verified this run — keeping ${kept.length} existing mapping(s) ` +
+          `the YAML no longer lists: ${kept.join(', ')}`
+      );
+    }
   }
 
   const merged = mergeWithExisting(fresh, existing);

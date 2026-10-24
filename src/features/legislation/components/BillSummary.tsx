@@ -2,7 +2,7 @@
 
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import { LoadingState } from '@/components/shared/ui/LoadingState';
@@ -209,11 +209,20 @@ export function BillSummary({
         <div className="flex items-center justify-between text-xs text-gray-500">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-3 w-3" />
-            <span>AI-generated summary • Simplified to {summary.readingLevel}th grade level</span>
+            <span>
+              AI-generated summary • Reading level: grade {summary.readingLevel}
+              {summary.readingLevel > 8 && ' (above our grade-8 target)'}
+            </span>
           </div>
-          <div className="flex items-center gap-1">
-            <span>Source: {summary.source}</span>
-          </div>
+          {summary.basedOn && (
+            <div className="flex items-center gap-1">
+              <span>
+                {summary.basedOn === 'crs-summary'
+                  ? 'Written from the CRS summary'
+                  : 'Written from the full bill text'}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>

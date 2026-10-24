@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateAtomFeed } from '@/lib/feeds/atom-generator';
 import type { AtomFeedConfig, AtomEntry } from '@/lib/feeds/atom-generator';
 import { parseBillNumber } from '@/types/bill';
+import { isServedCongress } from '@/lib/data/congressional-constants';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
@@ -51,6 +52,12 @@ export async function GET(
     }
 
     const { type, number: billNumber, congress } = parsed;
+
+    // Older Congresses are out of scope: no bill page, so no feed either.
+    if (!isServedCongress(Number(congress))) {
+      return new NextResponse('Bill not found', { status: 404 });
+    }
+
     const baseUrl = 'https://civdotiq.org';
 
     // Fetch bill info
@@ -129,7 +136,7 @@ export async function GET(
       updated: entries.length > 0 && entries[0] ? entries[0].updated : now,
       author: { name: 'CIV.IQ', uri: baseUrl },
       icon: `${baseUrl}/favicon.ico`,
-      rights: 'Data sourced from Congress.gov. MIT License.',
+      rights: 'Data sourced from Congress.gov. Public domain.',
     };
 
     const xml = generateAtomFeed(feedConfig, entries);

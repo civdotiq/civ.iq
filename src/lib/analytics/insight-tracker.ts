@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -39,7 +39,6 @@ const TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
 export const ANALYZER_NAMES = [
   'finance-jurisdiction',
   'vote-finance',
-  'vote-prediction',
   'temporal-votes',
   'temporal-proximity',
   'pac-votes',

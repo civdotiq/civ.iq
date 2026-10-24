@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 'use client';
@@ -43,7 +43,7 @@ function getHeadline(data: BillIntelligenceInsight): {
         ? 'with bipartisan support'
         : '';
     return {
-      text: `This bill ${v.result.toLowerCase()} in the ${v.chamber} ${v.yea}-${v.nay}${voteDesc ? ' ' + voteDesc : ''}. ${sponsorPct.toFixed(1)}% of ${sponsorName}'s funding comes from related industries.`,
+      text: `This bill ${v.result.toLowerCase()} in the ${v.chamber} ${v.yea}-${v.nay}${voteDesc ? ' ' + voteDesc : ''}. ${sponsorPct.toFixed(1)}% of ${sponsorName}'s itemized individual donations come from people in related industries.`,
       notable: true,
     };
   }
@@ -55,7 +55,7 @@ function getHeadline(data: BillIntelligenceInsight): {
       : '';
     const amt = formatDollars(data.sponsorAnalysis.sectorDonationAmount);
     return {
-      text: `${sponsorName} introduced this bill and sits on the ${data.sponsorCommitteeConnection?.committeeName ?? 'relevant committee'}, which oversees it. ${sponsorName} received ${amt} from related industries${totalContext}.`,
+      text: `${sponsorName} introduced this bill and sits on the ${data.sponsorCommitteeConnection?.committeeName ?? 'relevant committee'}, which oversees it. ${sponsorName} received ${amt} in itemized donations from people in related industries${totalContext}.`,
       notable: true,
     };
   }
@@ -64,7 +64,7 @@ function getHeadline(data: BillIntelligenceInsight): {
   if (sponsorPct >= 5) {
     const amt = formatDollars(data.sponsorAnalysis?.sectorDonationAmount ?? 0);
     return {
-      text: `${sponsorPct.toFixed(1)}% of ${sponsorName}'s campaign funding (${amt}) comes from industries related to this bill.`,
+      text: `${sponsorPct.toFixed(1)}% of ${sponsorName}'s itemized individual donations (${amt}) come from people in industries related to this bill.`,
       notable: true,
     };
   }
@@ -72,7 +72,7 @@ function getHeadline(data: BillIntelligenceInsight): {
   // Notable: cosponsors receive significant funding even if sponsor doesn't
   if (cosponsorPct >= 5 && data.cosponsorSummary.analyzedCosponsors >= 2) {
     return {
-      text: `The sponsor has no notable funding connection, but cosponsors average ${cosponsorPct.toFixed(1)}% of their funding from related industries.`,
+      text: `The sponsor has no notable funding connection, but cosponsors average ${cosponsorPct.toFixed(1)}% of their itemized individual donations from related industries.`,
       notable: true,
     };
   }
@@ -182,10 +182,8 @@ export function BillIntelligenceSection({ billId }: BillIntelligenceSectionProps
                   {sponsorPct.toFixed(1)}%
                 </div>
                 <div className="type-xs text-gray-500">
-                  of {data.sponsorAnalysis.name}&apos;s funding from related industries
-                  {data.sponsorFundingContext && (
-                    <> ({formatDollars(data.sponsorFundingContext.totalRaised)} total)</>
-                  )}
+                  of {data.sponsorAnalysis.name}&apos;s itemized individual donations from related
+                  industries
                 </div>
               </div>
             )}
@@ -308,6 +306,7 @@ export function BillIntelligenceSection({ billId }: BillIntelligenceSectionProps
 
       {/* Disclaimer + methodology */}
       <InsightDisclaimer
+        pattern
         disclaimer={data.disclaimer}
         methodology={data.methodology}
         source={data.source}

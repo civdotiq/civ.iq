@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Open Data Page
  *
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/open' },
   title: 'Open Data',
   description:
-    'CIV.IQ publishes civic data through open protocols: REST API, Atom feeds, Nostr, and ActivityPub. No API key required. MIT licensed.',
+    'CIV.IQ publishes civic data through open protocols: REST API, Atom feeds, Nostr, and ActivityPub. No API key required. Open source (Apache-2.0).',
 };
 
 const BASE = 'https://civdotiq.org/api/v1';
@@ -358,8 +358,8 @@ export default function OpenDataPage() {
         </p>
         <p className="text-sm text-gray-600 max-w-3xl mb-grid-6">
           Every piece of data on CIV.IQ is available through open protocols. No account. No API key.
-          No tracking. We pull from official government sources and publish to decentralized
-          networks so these records exist independently of this website.
+          We pull from official government sources and publish to decentralized networks so these
+          records exist independently of this website.
         </p>
 
         {/* Stat cards */}
@@ -455,7 +455,7 @@ export default function OpenDataPage() {
                     apiVersion: 'v1',
                     timestamp: '...',
                     source: 'congress.gov',
-                    license: 'MIT',
+                    license: 'Public Domain',
                     documentation: 'https://civdotiq.org/docs/api',
                   },
                 },
@@ -666,7 +666,7 @@ done`}</pre>
                   apiVersion: 'v1',
                   timestamp: '...',
                   source: 'error',
-                  license: 'MIT',
+                  license: 'Public Domain',
                   documentation: 'https://civdotiq.org/docs/api',
                 },
               },
@@ -1162,14 +1162,15 @@ const sub = pool.subscribeMany(relays, [{
         <section className="mb-grid-6">
           <h2 className="text-2xl font-bold mb-grid-2">Data Sources</h2>
           <p className="text-gray-600 mb-grid-3">
-            Making publicly accessible data easier to understand. Licensed under{' '}
+            Making publicly accessible data easier to understand. The government data is in the
+            public domain; the code is licensed under{' '}
             <a
-              href="https://opensource.org/licenses/MIT"
+              href="https://www.apache.org/licenses/LICENSE-2.0"
               className="text-civiq-blue underline hover:no-underline"
               target="_blank"
               rel="noopener noreferrer"
             >
-              MIT
+              Apache-2.0
             </a>
             .
           </p>

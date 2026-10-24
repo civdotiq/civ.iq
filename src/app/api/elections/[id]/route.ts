@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Election race header endpoint (PR 19, widened for 2026).
  *
@@ -12,15 +12,13 @@
  * filing is NOT ballot access — copy downstream must say "filed",
  * never "on the ballot".
  *
- * Falls through MEDSL 2024 results when the year is 2024 and the
- * state is in coveredStates.
+ * Falls through MEDSL 2024 results when the year is 2024.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { reserveFecCall } from '@/lib/fec/fec-rate-limiter';
 import logger from '@/lib/logging/simple-logger';
 import {
-  ELECTION_2024_METADATA,
   getHouseResult2024,
   getStatewideResult2024,
 } from '@/lib/services/election-results.service';
@@ -246,7 +244,6 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
   const result2024 = (() => {
     if (parsed.year !== 2024) return null;
-    if (!ELECTION_2024_METADATA.coveredStates.includes(parsed.state)) return null;
     if (parsed.office === 'US_HOUSE' && parsed.district) {
       const r = getHouseResult2024(parsed.state, parsed.district);
       return r.dataAvailable ? r : null;

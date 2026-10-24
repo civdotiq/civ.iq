@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -14,14 +14,15 @@
  * Pattern: vote-finance-analyzer.ts
  */
 
-import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
-import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import {
+  getAllEnhancedRepresentatives,
+  getEnhancedRepresentative,
+} from '@/features/representatives/services/congress.service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
-import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
 import { forEachFilingForCommittees } from '@/lib/data-sources/lda-corpus/load-filings';
 import { reportedFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
@@ -44,6 +45,7 @@ import {
   SourceCollector,
   peerComparisonUnavailable,
 } from './shared';
+import { fetchMemberBillVotes, type RawBillVote } from './member-bill-votes';
 import type {
   InfluenceChainInsight,
   InfluenceChain,
@@ -63,14 +65,33 @@ import {
 /** Redis cache TTL: 7 days */
 const CACHE_TTL = 7 * 24 * 60 * 60;
 
-/** Max votes to fetch per session */
+/**
+ * Max recent votes to fetch, newest first across both sessions of the
+ * Congress (one fetch with session undefined).
+ */
 const MAX_VOTES = 200;
 
-/** Max contributions to sample from FEC */
-const MAX_CONTRIBUTIONS = 250;
+/** Employer rows to read from FEC's by_employer aggregate (its per_page maximum). */
+const MAX_EMPLOYERS = 100;
+
+/** Keys per MGET; Upstash REST puts them in the URL path, so keep it short. */
+const MGET_CHUNK_SIZE = 100;
 
 /** Max chains to return */
 const MAX_CHAINS = 10;
+
+/**
+ * Max chains per organization. One organization lobbying on many bills would
+ * otherwise fill every slot and the card would show a single organization.
+ */
+const MAX_CHAINS_PER_ORG = 3;
+
+/**
+ * Minimum folded employer total (USD, current cycle) that counts as
+ * contribution evidence. A few hundred dollars from one or two employees of a
+ * large employer is not evidence of an organization-level money pattern.
+ */
+const MIN_EMPLOYER_CONTRIBUTION = 1000;
 
 /** Max organizations carried into chain assembly */
 const MAX_ORGS = 50;
@@ -188,7 +209,7 @@ const DISCLAIMER =
 export async function analyzeInfluenceChains(
   bioguideId: string
 ): Promise<InfluenceChainInsight | null> {
-  const cacheKey = `insight:influence_chain:v2:${bioguideId}`;
+  const cacheKey = `insight:influence_chain:v4:${bioguideId}`;
 
   // 1. Check cache
   try {
@@ -235,16 +256,7 @@ interface ContributionMatch {
   isExactMatch: boolean;
 }
 
-interface RawVote {
-  billType: string;
-  billNumber: string;
-  billCongress: number;
-  billTitle: string;
-  billPolicyArea?: string;
-  billSubjects?: string[];
-  position: string;
-  date: string;
-}
+type RawVote = RawBillVote;
 
 interface ClassifiedVote extends RawVote {
   billId: string;
@@ -291,6 +303,9 @@ async function computeAndCache(
 
   if (chains.length === 0) {
     logger.info('[InfluenceChain] No chains met confidence threshold', { bioguideId });
+    // A member whose analysis ran and found nothing is a real zero for the
+    // peer baseline; leaving it out would average only members with chains.
+    await recordChainCount(bioguideId, 0, rep.chamber);
     return null;
   }
 
@@ -321,7 +336,7 @@ async function computeAndCache(
       : 'Senate LDA filings (API sample)',
     '119th Congress'
   );
-  sc.add('FEC individual filings', `${getCurrentElectionCycle()} cycle`);
+  sc.add('FEC itemized contributions aggregated by employer', `${getCurrentElectionCycle()} cycle`);
   sc.add('Congress.gov roll calls', '119th Congress', votes.length);
 
   const insight: InfluenceChainInsight = {
@@ -340,7 +355,7 @@ async function computeAndCache(
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(conf, 0.5) : conf,
     confidenceMethod: 'mixed',
-    dataAsOf: freshestDate(...votes.map(v => v.date))!,
+    dataAsOf: freshestDate(...votes.map(v => v.date)) ?? new Date().toISOString(),
     methodology:
       'Traces lobbying filings → campaign contributions → committee membership → ' +
       'bill sector classification → voting records. ' +
@@ -349,9 +364,15 @@ async function computeAndCache(
           'member’s committees. '
         : 'Lobbying rows come from a small sample of recent filings, so coverage ' +
           'is partial. ') +
-      'Organization names matched via ' +
-      'Levenshtein similarity (threshold > 0.8). Bills classified by sector using ' +
-      'AI summaries with keyword fallback.',
+      'Contributions come from FEC itemized contributions aggregated by employer ' +
+      `(the campaign committee's top ${MAX_EMPLOYERS} employers by total); ` +
+      `employers totaling under $${MIN_EMPLOYER_CONTRIBUTION.toLocaleString()} are ignored. ` +
+      'Organization names are matched to employer names after normalizing ' +
+      'legal suffixes and punctuation, with a Levenshtein fallback (similarity ' +
+      '>= 0.8 plus shared tokens) that caps the link at lower confidence. ' +
+      'Bills classified by sector using ' +
+      'AI summaries with keyword fallback. ' +
+      `At most ${MAX_CHAINS_PER_ORG} chains per organization are shown.`,
     disclaimer: DISCLAIMER,
     signal: classifySignal({
       value: chains.length,
@@ -434,9 +455,20 @@ type LobbyingSource = 'corpus' | 'sample';
  */
 function committeeCodesForRep(rep: RepData): Map<string, string> {
   const chamberPrefix = rep.chamber === 'House' ? 'H' : 'S';
+  const mappedCodes = new Set(ALL_COMMITTEE_MAPPINGS.map(m => m.committeeCode));
   const codes = new Map<string, string>();
 
   for (const name of rep.committeeNames) {
+    // The member's own committee code is authoritative. Name matching let a
+    // subcommittee such as "Military Construction, Veterans Affairs…" resolve
+    // to the Veterans' Affairs committee; a subcommittee code (HSFA05) is
+    // simply not in the mappings, and the parent committee is listed itself.
+    const ownCode = rep.committeeCodesByName.get(name);
+    if (ownCode) {
+      if (mappedCodes.has(ownCode) && !codes.has(ownCode)) codes.set(ownCode, name);
+      continue;
+    }
+
     const norm = normalizeCommitteeName(name);
     if (!norm) continue;
     const match = ALL_COMMITTEE_MAPPINGS.find(m => {
@@ -663,30 +695,31 @@ async function fetchContributionMatches(
   }
 
   try {
-    const contributions = await fecApiService.getSampleContributions(
+    // FEC's own per-employer totals for the campaign committee. The 250-row
+    // receipt sample this replaced is dominated by transfers from the member's
+    // joint fundraising committees and PACs, so almost no employer survived it.
+    const employerRows = await fecApiService.getContributionsByEmployer(
       fecId,
       getCurrentElectionCycle(),
-      MAX_CONTRIBUTIONS
+      MAX_EMPLOYERS
     );
 
-    if (!contributions || contributions.length === 0) return matches;
+    if (employerRows.length === 0) return matches;
 
-    // Normalize all employer names from contributions
+    // Donors spell one employer several ways; fold them by normalized name.
     const employerContributions = new Map<string, number>();
-    const employerRawNames = new Map<string, string>();
 
-    for (const c of contributions) {
-      const employer = c.contributor_employer;
-      if (!employer) continue;
-
-      const normalized = normalizeCompanyName(employer);
+    for (const row of employerRows) {
+      const normalized = normalizeCompanyName(row.employer);
       if (normalized.length === 0) continue;
+      employerContributions.set(
+        normalized,
+        (employerContributions.get(normalized) ?? 0) + row.total
+      );
+    }
 
-      const existing = employerContributions.get(normalized) ?? 0;
-      employerContributions.set(normalized, existing + (c.contribution_receipt_amount ?? 0));
-      if (!employerRawNames.has(normalized)) {
-        employerRawNames.set(normalized, employer);
-      }
+    for (const [normalized, total] of employerContributions) {
+      if (total < MIN_EMPLOYER_CONTRIBUTION) employerContributions.delete(normalized);
     }
 
     // Exact matching is a hash lookup, so every organization gets it. Fuzzy
@@ -809,46 +842,8 @@ async function fetchAndClassifyVotes(
   }
 }
 
-async function fetchVotes(bioguideId: string, chamber: 'House' | 'Senate'): Promise<RawVote[]> {
-  try {
-    const fetchSession = async (session: 1 | 2) => {
-      const rawVotes =
-        chamber === 'House'
-          ? await batchVotingService.getHouseMemberVotes(
-              bioguideId,
-              getCurrentCongressNumber(),
-              session,
-              MAX_VOTES
-            )
-          : await batchVotingService.getSenateMemberVotes(
-              bioguideId,
-              getCurrentCongressNumber(),
-              session,
-              MAX_VOTES
-            );
-      return rawVotes
-        .filter(v => v.bill && v.position)
-        .map(v => ({
-          billType: v.bill?.type ?? '',
-          billNumber: String(v.bill?.number ?? ''),
-          billCongress: v.bill?.congress ?? 0,
-          billTitle: v.bill?.title ?? '',
-          billPolicyArea: v.bill?.policyArea,
-          billSubjects: v.bill?.subjects,
-          position: v.position,
-          date: v.date,
-        }));
-    };
-
-    const [session1, session2] = await Promise.all([fetchSession(1), fetchSession(2)]);
-    return [...session1, ...session2];
-  } catch (error) {
-    logger.warn('[InfluenceChain] Vote fetch failed', {
-      bioguideId,
-      error: (error as Error).message,
-    });
-    return [];
-  }
+function fetchVotes(bioguideId: string, chamber: 'House' | 'Senate'): Promise<RawVote[]> {
+  return fetchMemberBillVotes(bioguideId, chamber, MAX_VOTES, '[InfluenceChain]');
 }
 
 // ── Step 7: Assemble Chains ─────────────────────────────────────────
@@ -919,10 +914,17 @@ function assembleChains(
 
   const totalDetected = allChains.length;
 
-  // Filter by confidence threshold and cap at MAX_CHAINS
+  // Filter by confidence threshold, then cap per organization and overall
+  const perOrg = new Map<string, number>();
   const validChains = allChains
     .filter(c => c.chainConfidence >= MIN_CHAIN_CONFIDENCE)
     .sort((a, b) => b.chainConfidence - a.chainConfidence)
+    .filter(c => {
+      const count = perOrg.get(c.organization) ?? 0;
+      if (count >= MAX_CHAINS_PER_ORG) return false;
+      perOrg.set(c.organization, count + 1);
+      return true;
+    })
     .slice(0, MAX_CHAINS);
 
   return {
@@ -1086,31 +1088,45 @@ function findMatchingCommittee(org: LobbyingOrgSummary, rep: RepData): string {
 
 // ── Step 8: Peer Comparison ─────────────────────────────────────────
 
+/** v3: counts from the employer-aggregate method; never mix with earlier runs. */
+const chainCountKey = (chamber: 'House' | 'Senate', bioguideId: string): string =>
+  `influence-chain-count:v4:${chamber}:${bioguideId}`;
+
+async function recordChainCount(
+  bioguideId: string,
+  chainCount: number,
+  chamber: 'House' | 'Senate'
+): Promise<void> {
+  try {
+    await getRedisCache().set(chainCountKey(chamber, bioguideId), chainCount, CACHE_TTL);
+  } catch {
+    // Non-fatal
+  }
+}
+
+/**
+ * Reads same-chamber peers' counts by exact key from the current roster. A
+ * KEYS pattern match is disabled in prod (it silently returns []), so the
+ * comparison was always unavailable.
+ */
 async function computePeerComparison(
   bioguideId: string,
   chainCount: number,
   chamber: 'House' | 'Senate'
 ): Promise<PeerComparison | null> {
-  const myKey = `influence-chain-count:${chamber}:${bioguideId}`;
-
-  // Cache this rep's chain count
-  try {
-    await getRedisCache().set(myKey, chainCount, CACHE_TTL);
-  } catch {
-    // Non-fatal
-  }
-
-  // Look up cached chain counts for peers in same chamber
-  const pattern = `influence-chain-count:${chamber}:*`;
+  await recordChainCount(bioguideId, chainCount, chamber);
 
   try {
-    const keys = await getRedisCache().keys(pattern);
-    const peerKeys = keys.filter(k => !k.endsWith(`:${bioguideId}`));
+    const roster = await getAllEnhancedRepresentatives();
+    const peerKeys = roster
+      .filter(r => r.chamber === chamber && r.bioguideId !== bioguideId)
+      .map(r => chainCountKey(chamber, r.bioguideId));
 
-    if (peerKeys.length < MIN_PEERS) return null;
-
-    const values = await getRedisCache().mget<number>(peerKeys);
-    const peerScores = values.filter((v): v is number => v !== null && typeof v === 'number');
+    const peerScores: number[] = [];
+    for (let i = 0; i < peerKeys.length; i += MGET_CHUNK_SIZE) {
+      const values = await getRedisCache().mget<number>(peerKeys.slice(i, i + MGET_CHUNK_SIZE));
+      for (const v of values) if (typeof v === 'number') peerScores.push(v);
+    }
 
     if (peerScores.length < MIN_PEERS) return null;
 
@@ -1166,7 +1182,7 @@ async function generateNarrative(
       // led the model to write that the legislator received or reported it.
       c =>
         `- ${c.organization} reported spending $${c.lobbyingSpending.toLocaleString()} on lobbying; ` +
-        `people and PACs linked to it gave $${c.contributionAmount.toLocaleString()} to ${rep.name}'s campaign; ` +
+        `people who list it as their employer gave $${c.contributionAmount.toLocaleString()} to ${rep.name}'s campaign; ` +
         `${rep.name} voted ${c.vote} on ${c.billId} (confidence: ${(c.chainConfidence * 100).toFixed(0)}%)`
     )
     .join('\n');

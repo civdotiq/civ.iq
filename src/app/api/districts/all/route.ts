@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  getCookPVI as getRealCookPVI,
-  estimateMarginFromPVI,
-  isCompetitiveDistrict,
-} from '../cook-pvi-data';
+import { getCookPVI as getRealCookPVI, isCompetitiveDistrict } from '../cook-pvi-data';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 15; // Can take ~9s for full district data load
@@ -11,7 +7,7 @@ import { fetchAllDistrictDemographics } from '../census-helpers';
 import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
 import type { CongressApiMember, CongressApiMembersResponse } from '@/types/api-responses';
-import { getHouseResult2024 } from '@/lib/services/election-results.service';
+import { electionPartyLabel, getHouseResult2024 } from '@/lib/services/election-results.service';
 
 // Define district data structure
 interface District {
@@ -37,8 +33,9 @@ interface District {
     isCompetitive: boolean;
     lastElection: {
       winner: string;
-      margin: number; // Estimated from Cook PVI
+      margin: number; // 0 when winner is 'Data unavailable'
       turnout: number | null; // null = data unavailable
+      unopposed: boolean;
     };
     votingAgePopulation: number; // From Census (more accurate than "registered voters")
   };
@@ -63,7 +60,7 @@ export async function GET(request: NextRequest) {
     );
     const fieldsParam = searchParams.get('fields'); // Comma-separated list of fields to include
 
-    const cacheKey = 'districts:all';
+    const cacheKey = 'districts:all:v2';
 
     // Check unified cache first
     if (!bustCache) {
@@ -406,17 +403,15 @@ export async function GET(request: NextRequest) {
             const electionResult = getHouseResult2024(stateAbbr, districtNumber);
             if (electionResult.dataAvailable) {
               return {
-                winner: electionResult.winner === 'D' ? 'Democrat' : 'Republican',
+                winner: electionPartyLabel(electionResult.winner),
                 margin: electionResult.margin,
                 turnout: electionResult.total,
+                unopposed: electionResult.candidates?.length === 1,
               };
             }
-            // Fallback to PVI estimate for missing states
-            return {
-              winner: member.partyName || 'Unknown',
-              margin: estimateMarginFromPVI(getRealCookPVI(stateAbbr, districtNumber)),
-              turnout: null,
-            };
+            // No 2024 result (e.g. state not in the MEDSL dataset). Cook PVI is a
+            // partisan lean index, not an election margin — never present it as one.
+            return { winner: 'Data unavailable', margin: 0, turnout: null, unopposed: false };
           })(),
           // Use voting age population from Census (registered voters requires state SoS data)
           votingAgePopulation: censusData.votingAgePopulation || 0,

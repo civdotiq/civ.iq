@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -182,7 +182,12 @@ export interface FinanceResponse {
   };
   candidateId: string;
   cycle: number;
+  /** When the full response (contribution analysis included) was built. */
   lastUpdated: string;
+  /** When the headline totals were last read from the FEC; absent means lastUpdated. */
+  totalsCheckedAt?: string;
+  /** End of the FEC report period the totals cover (YYYY-MM-DD). */
+  coverageEndDate?: string | null;
   fecDataSources: {
     financialSummary: string;
     contributions: string;

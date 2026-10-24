@@ -265,17 +265,49 @@ export interface IntelligenceInsight {
   [key: string]: unknown;
 }
 
+export interface SectorLeaderboardEntry {
+  bioguideId: string;
+  name: string;
+  party: string;
+  state: string;
+  chamber: 'House' | 'Senate';
+  /** Yea votes / (yea + nay votes) on bills classified to this sector, 0-1. */
+  sectorAlignmentScore: number;
+  /** Yea + nay votes counted for this sector. */
+  billsVotedOn: number;
+}
+
+/**
+ * Each House member's yes-vote rate on bills classified to one industry
+ * sector. No money figures and no ranking: entries are ordered by state,
+ * then name. House only; members with fewer than 10 yea/nay votes on the
+ * sector's bills are excluded.
+ */
 export interface SectorLeaderboardResponse {
   sector: string;
-  legislators: Array<{
-    bioguideId: string;
-    name: string;
-    party: string;
-    state: string;
-    totalFromSector: number;
-    percentOfTotal: number;
-  }>;
-  metadata?: Record<string, unknown>;
+  sectorLabel: string;
+  chamber: 'house' | 'senate' | 'all';
+  party: string | null;
+  /** Plain-language scope caveat (House only; how the rate is computed). */
+  coverageNote: string;
+  entries: SectorLeaderboardEntry[];
+  /** Peer baseline across all included members, not just the returned entries. */
+  stats: {
+    mean: number;
+    median: number;
+    standardDeviation: number;
+    includedMembers: number;
+    excludedMembers: number;
+  };
+  dataAvailability: {
+    cachedInsights: number;
+    minimumRequired: number;
+    status: 'sufficient' | 'partial' | 'empty';
+  };
+  generatedAt: string;
+  dataAsOf: string;
+  errors?: unknown[];
+  status?: string;
 }
 
 export interface MoneyReportResponse {

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -15,7 +15,7 @@ import type { ElectionMetadata } from '@/types/elections';
 export const ELECTION_2024_METADATA: ElectionMetadata = {
   year: 2024,
   source: 'MIT Election Data and Science Lab (MEDSL)',
-  doi: '10.7910/DVN/2024',
+  doi: '10.7910/DVN/NYTPDU',
   generatedAt: '2026-03-04T17:27:44.056Z',
   coveredStates: [
     'AK',

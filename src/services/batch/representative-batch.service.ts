@@ -271,7 +271,7 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
             const memberVotes = await batchVotingService.getHouseMemberVotes(
               bioguideId,
               119, // 119th Congress
-              1, // Session 1
+              undefined, // newest votes across both sessions
               limit
             );
 
@@ -424,6 +424,8 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
               candidateId,
               matchedCycle,
               lastUpdated: new Date().toISOString(),
+              // End of the latest FEC report period in these totals.
+              coverageEndDate: summaryData.coverage_end_date || undefined,
               bioguideId,
             },
           };
@@ -622,7 +624,7 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
 
 // v3: v2 entries could hold 2024-cycle money (hardcoded cycle list).
 function summaryCacheKey(bioguideId: string): string {
-  return `representative-summary:v3:${bioguideId}`;
+  return `representative-summary:v4:${bioguideId}`;
 }
 
 /**
@@ -657,6 +659,10 @@ export async function getRepresentativeSummary(bioguideId: string) {
     totalSpent?: number;
     cashOnHand?: number;
     votesParticipated?: number;
+    votesAppearances?: number;
+    votesMissed?: number;
+    votesMedianMissedPct?: number | null;
+    votesFullCoverage?: boolean;
     financeCycle?: number;
     financeUnavailable?: boolean;
     legislationUnavailable?: boolean;
@@ -719,6 +725,12 @@ export async function getRepresentativeSummary(bioguideId: string) {
       totalSpent: financeUnavailable ? undefined : (finance?.totalSpent ?? 0),
       cashOnHand: financeUnavailable ? undefined : (finance?.cashOnHand ?? 0),
       votesParticipated: record?.voting?.stats.cast,
+      // Denominator + chamber baseline from the same sweep, so the band can
+      // say "missed 61 of 676 · chamber median 2.1%" instead of a bare count.
+      votesAppearances: record?.voting?.stats.appearances,
+      votesMissed: record?.voting?.stats.missed,
+      votesMedianMissedPct: record?.voting?.medianMissedPct ?? null,
+      votesFullCoverage: record?.voting?.fullCoverage,
       financeCycle: finance?.metadata?.matchedCycle,
       financeUnavailable,
       legislationUnavailable,

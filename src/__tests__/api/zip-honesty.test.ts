@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -236,11 +236,6 @@ jest.mock('@/lib/intelligence/analyzers/vote-finance-analyzer', () => ({
 jest.mock('@/lib/intelligence/analyzers/finance-jurisdiction-analyzer', () => ({
   analyzeFinanceJurisdiction: jest.fn(() => Promise.resolve(null)),
   analyzeFinanceJurisdictionWithReason: jest.fn(() => Promise.resolve({ insight: null })),
-}));
-
-jest.mock('@/lib/intelligence/analyzers/vote-prediction-analyzer', () => ({
-  analyzeVotePrediction: jest.fn(() => Promise.resolve(null)),
-  analyzeVotePredictionWithReason: jest.fn(() => Promise.resolve({ insight: null })),
 }));
 
 jest.mock('@/lib/intelligence/analyzers/influence-chain-analyzer', () => ({

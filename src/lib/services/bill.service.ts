@@ -6,12 +6,18 @@
  * fetchBillFromCongress and mapCongressStatus without duplicating logic.
  *
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
+import { isServedCongress } from '@/lib/data/congressional-constants';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
+import {
+  CongressRateLimitError,
+  isCongressRateLimited,
+  throwIfCongressRateLimited,
+} from './congress-rate-limit';
 import type { Bill, BillStatus, BillVote } from '@/types/bill';
 import { parseBillNumber } from '@/types/bill';
 import { formatBillNumber } from '@/lib/bill-label';
@@ -145,6 +151,8 @@ interface CongressBillData {
   shortTitle?: string;
   originChamber: string;
   introducedDate: string;
+  updateDate?: string;
+  updateDateIncludingText?: string;
   latestAction?: {
     actionDate: string;
     text: string;
@@ -189,6 +197,7 @@ async function fetchBillText(
         },
       }
     );
+    await throwIfCongressRateLimited(textVersionsResponse);
 
     if (!textVersionsResponse.ok) {
       logger.warn('Failed to fetch text versions', { congress, type, number });
@@ -295,8 +304,90 @@ async function fetchBillText(
       date: latestVersion.date,
     };
   } catch (error) {
+    if (error instanceof CongressRateLimitError) throw error;
     logger.error('Error fetching bill text', error as Error, { congress, type, number });
     return null;
+  }
+}
+
+interface CongressTitle {
+  title: string;
+  titleType: string;
+  billTextVersionCode?: string;
+}
+
+/**
+ * Bill text stages, latest first. A short title can change as a bill moves
+ * (or be stripped, as the Senate did to H.R. 1 in the 119th), so the most
+ * advanced stage that still carries one wins.
+ */
+const TITLE_STAGE_ORDER = ['ENR', 'EAS', 'EAH', 'ES', 'EH', 'PCS', 'PCH', 'RS', 'RH', 'IS', 'IH'];
+
+function titleStageRank(t: CongressTitle): number {
+  if (/as enacted/i.test(t.titleType)) return -1;
+  const i = TITLE_STAGE_ORDER.indexOf(t.billTextVersionCode ?? '');
+  return i === -1 ? TITLE_STAGE_ORDER.length : i;
+}
+
+/**
+ * The names people actually search a bill by, from Congress.gov's /titles list.
+ * `popularTitle` is the Library of Congress "Popular Titles" entry (e.g. "One
+ * Big Beautiful Bill Act" for 119 H.R. 1, whose official title is reconciliation
+ * boilerplate). `shortTitle` is the latest-stage short title for the whole
+ * bill — titles "for portions of this bill" name a single title within it.
+ */
+export function pickBillTitles(titles: CongressTitle[]): {
+  popularTitle?: string;
+  shortTitle?: string;
+} {
+  const popularTitle = titles.find(t => /^popular title/i.test(t.titleType))?.title.trim();
+  const shortTitle = titles
+    .filter(t => /^short title/i.test(t.titleType) && !/portions/i.test(t.titleType))
+    .sort((a, b) => titleStageRank(a) - titleStageRank(b))[0]
+    ?.title.trim();
+  return {
+    ...(popularTitle ? { popularTitle } : {}),
+    ...(shortTitle ? { shortTitle } : {}),
+  };
+}
+
+/** Congress.gov sub-endpoints can stall for minutes; a missing title only costs the nicer page title. */
+const TITLES_TIMEOUT_MS = 8000;
+
+async function fetchBillTitles(
+  congress: string,
+  type: string,
+  number: string
+): Promise<CongressTitle[]> {
+  try {
+    const response = await fetch(
+      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/titles?format=json&limit=250`,
+      {
+        headers: {
+          'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+          Accept: 'application/json',
+          'X-API-Key': process.env.CONGRESS_API_KEY || '',
+        },
+        signal: AbortSignal.timeout(TITLES_TIMEOUT_MS),
+      }
+    );
+    const monitor = monitorExternalApi('congress', 'bill-titles', response.url);
+    if (!response.ok) {
+      monitor.end(false, response.status);
+      logger.warn('Failed to fetch bill titles', {
+        status: response.status,
+        congress,
+        type,
+        number,
+      });
+      return [];
+    }
+    const data: { titles?: CongressTitle[] } = await response.json();
+    monitor.end(true, 200);
+    return data.titles ?? [];
+  } catch (error) {
+    logger.error('Error fetching bill titles', error as Error, { congress, type, number });
+    return [];
   }
 }
 
@@ -324,6 +415,7 @@ async function fetchBillList<T>(
       }
     );
     const monitor = monitorExternalApi('congress', `bill-${path}`, response.url);
+    await throwIfCongressRateLimited(response);
     if (!response.ok) {
       monitor.end(false, response.status);
       logger.warn(`Failed to fetch bill ${path}`, {
@@ -338,6 +430,7 @@ async function fetchBillList<T>(
     monitor.end(true, 200);
     return data[key] ?? [];
   } catch (error) {
+    if (error instanceof CongressRateLimitError) throw error;
     logger.error(`Error fetching bill ${path}`, error as Error, { congress, type, number });
     return [];
   }
@@ -374,6 +467,8 @@ async function fetchBillDetails(
       }
     );
 
+    await throwIfCongressRateLimited(subjectsResponse);
+
     let subjects: { legislativeSubjects: CongressSubject[] } | undefined;
     let policyArea: CongressPolicyArea | undefined;
 
@@ -398,6 +493,8 @@ async function fetchBillDetails(
       }
     );
 
+    await throwIfCongressRateLimited(textResponse);
+
     let textVersions: CongressTextVersion[] | undefined;
     if (textResponse.ok) {
       const textData = await textResponse.json();
@@ -406,6 +503,7 @@ async function fetchBillDetails(
 
     return { subjects, policyArea, textVersions };
   } catch (error) {
+    if (error instanceof CongressRateLimitError) throw error;
     logger.error('Error fetching bill details', error as Error, { congress, type, number });
     return {};
   }
@@ -432,6 +530,7 @@ async function fetchBillCosponsors(
     );
 
     const monitor = monitorExternalApi('congress', 'bill-cosponsors', cosponsorsResponse.url);
+    await throwIfCongressRateLimited(cosponsorsResponse);
 
     if (!cosponsorsResponse.ok) {
       monitor.end(false, cosponsorsResponse.status);
@@ -457,6 +556,7 @@ async function fetchBillCosponsors(
 
     return cosponsors;
   } catch (error) {
+    if (error instanceof CongressRateLimitError) throw error;
     logger.error('Error fetching bill cosponsors', error as Error, { congress, type, number });
     return [];
   }
@@ -483,6 +583,7 @@ async function fetchBillActions(
     );
 
     const monitor = monitorExternalApi('congress', 'bill-actions', actionsResponse.url);
+    await throwIfCongressRateLimited(actionsResponse);
 
     if (!actionsResponse.ok) {
       monitor.end(false, actionsResponse.status);
@@ -509,6 +610,7 @@ async function fetchBillActions(
 
     return actions;
   } catch (error) {
+    if (error instanceof CongressRateLimitError) throw error;
     logger.error('Error fetching bill actions', error as Error, { congress, type, number });
     return [];
   }
@@ -681,11 +783,29 @@ export async function fetchBillVotes(
 
 // ── Exported functions ─────────────────────────────────────────────────
 
+/** The chamber a bill or resolution type belongs to: hr/hres/hjres/hconres → House. */
+export function billTypeChamber(type: string): 'House' | 'Senate' | undefined {
+  const t = type.toLowerCase();
+  if (t.startsWith('h')) return 'House';
+  if (t.startsWith('s')) return 'Senate';
+  return undefined;
+}
+
 /**
  * Map Congress.gov action text to a BillStatus enum value.
  * Used by the bill route and by lifecycle/join endpoints.
+ *
+ * `chamber` is the chamber the action took place in — the action's own
+ * chamber when known, else the bill's chamber of origin. House floor actions
+ * name no chamber ("Motion to reconsider laid on the table Agreed to without
+ * objection"; "On motion to suspend the rules and pass the bill Agreed to by
+ * the Yeas and Nays"), so a bare "agreed to" needs it to tell House passage
+ * from Senate passage.
  */
-export function mapCongressStatus(actionText?: string): BillStatus | null {
+export function mapCongressStatus(
+  actionText?: string,
+  chamber?: 'House' | 'Senate'
+): BillStatus | null {
   if (!actionText) return null;
 
   const lowerText = actionText.toLowerCase();
@@ -695,15 +815,12 @@ export function mapCongressStatus(actionText?: string): BillStatus | null {
 
   if (lowerText.includes('passed house') || lowerText.includes('agreed to in house'))
     return 'passed_house';
-  if (
-    lowerText.includes('passed senate') ||
-    lowerText.includes('agreed to in senate') ||
-    lowerText.includes('agreed to without amendment')
-  )
+  if (lowerText.includes('passed senate') || lowerText.includes('agreed to in senate'))
     return 'passed_senate';
   if (lowerText.includes('passed both')) return 'passed_both';
 
-  if (lowerText.includes('agreed to') && !lowerText.includes('not agreed')) return 'passed_senate';
+  if (lowerText.includes('agreed to') && !lowerText.includes('not agreed'))
+    return chamber === 'House' ? 'passed_house' : 'passed_senate';
 
   if (
     lowerText.includes('failed') ||
@@ -743,15 +860,24 @@ export async function fetchBillFromCongress(billId: string): Promise<Bill | null
  */
 export async function lookupBill(billId: string): Promise<BillLookup> {
   const { type, number, congress } = parseBillNumber(billId);
+  // Bills from Congresses CIV.IQ doesn't cover have no page, API or MCP answer.
+  if (!isServedCongress(Number(congress))) return { status: 'not_found' };
   // v2: standard bill labels (H.R.) and per-action chamber
   // v3: de-duplicated roll calls + vote session
   // v4: committees, related bills, summaries from their sub-endpoints
   // v6: official roll-call question/result (House + Senate) — bump drops stale entries
-  const cacheKey = `bill-v6-${type}-${number}-${congress}`;
+  // v7: popular and short titles from the /titles sub-endpoint
+  // v8: status uses the acting chamber (House "Agreed to" was "Passed Senate")
+  const cacheKey = `bill-v8-${type}-${number}-${congress}`;
 
   const result = await cachedFetch<Bill | BillMiss>(
     cacheKey,
     async () => {
+      // The key is out of requests: don't spend calls that will all 429.
+      if (await isCongressRateLimited()) {
+        logger.warn('Skipping Congress.gov bill fetch while rate limited', { billId });
+        return 'unavailable';
+      }
       try {
         logger.info('Fetching bill data from Congress.gov', {
           billId,
@@ -772,6 +898,10 @@ export async function lookupBill(billId: string): Promise<BillLookup> {
         );
 
         const monitor = monitorExternalApi('congress', 'bill-detail', billResponse.url);
+        // A 429 here or in any sub-request below lands in the catch as
+        // 'unavailable', so a half-fetched bill (no cosponsors, no actions)
+        // is never cached as if it were complete.
+        await throwIfCongressRateLimited(billResponse);
 
         if (!billResponse.ok) {
           monitor.end(false, billResponse.status);
@@ -804,6 +934,7 @@ export async function lookupBill(billId: string): Promise<BillLookup> {
           committees,
           relatedBills,
           summaries,
+          titles,
         ] = await Promise.all([
           fetchBillCosponsors(c, type, n),
           fetchBillDetails(c, type, n),
@@ -812,8 +943,17 @@ export async function lookupBill(billId: string): Promise<BillLookup> {
           fetchBillList<CongressCommittee>(c, type, n, 'committees', 'committees'),
           fetchBillList<CongressRelatedBill>(c, type, n, 'relatedbills', 'relatedBills'),
           fetchBillList<CongressSummary>(c, type, n, 'summaries', 'summaries'),
+          fetchBillTitles(c, type, n),
         ]);
         const summary = latestSummary(summaries);
+        const { popularTitle, shortTitle } = pickBillTitles(titles);
+        // latestAction carries no chamber info; borrow it from the matching action
+        const latestActionChamber = actionChamber(
+          billActions.find(
+            (a: CongressAction) =>
+              a.actionDate === bill.latestAction?.actionDate && a.text === bill.latestAction?.text
+          )
+        );
 
         const result: Bill = {
           // Lowercase type so the id is the true canonical slug (119-hr-8814);
@@ -822,25 +962,23 @@ export async function lookupBill(billId: string): Promise<BillLookup> {
           id: `${bill.congress}-${bill.type.toLowerCase()}-${bill.number}`,
           number: formatBillNumber(bill.type, bill.number),
           title: bill.title || formatBillNumber(bill.type, bill.number),
-          shortTitle: bill.shortTitle,
+          shortTitle: shortTitle ?? bill.shortTitle,
+          ...(popularTitle ? { popularTitle } : {}),
           congress: bill.congress.toString(),
           session: bill.congress.toString(),
           type: bill.type.toLowerCase() as Bill['type'],
           chamber: bill.originChamber === 'House' ? 'House' : 'Senate',
 
           status: {
-            current: mapCongressStatus(bill.latestAction?.text) || 'introduced',
+            current:
+              mapCongressStatus(
+                bill.latestAction?.text,
+                latestActionChamber ?? billTypeChamber(bill.type)
+              ) || 'introduced',
             lastAction: {
               date: bill.latestAction?.actionDate || bill.introducedDate,
               description: bill.latestAction?.text || 'Introduced',
-              // latestAction carries no chamber info; borrow it from the matching action
-              chamber: actionChamber(
-                billActions.find(
-                  (a: CongressAction) =>
-                    a.actionDate === bill.latestAction?.actionDate &&
-                    a.text === bill.latestAction?.text
-                )
-              ),
+              chamber: latestActionChamber,
             },
             timeline: billActions.flatMap((action: CongressAction) =>
               action.text
@@ -994,6 +1132,7 @@ export async function lookupBill(billId: string): Promise<BillLookup> {
           textUrl: bill.textVersions?.[0]?.formats?.find(
             (f: CongressTextFormat) => f.type === 'Formatted HTML'
           )?.url,
+          sourceUpdatedAt: bill.updateDateIncludingText ?? bill.updateDate,
           lastUpdated: new Date().toISOString(),
         };
 

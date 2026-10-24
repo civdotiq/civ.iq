@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -82,18 +82,6 @@ export async function GET(): Promise<NextResponse> {
       description: 'Influence path scoring between two entities',
       cache: '1 hour',
       example: '/api/mesh/influence/path?from=org:lockheed-martin&to=rep:A000360',
-    },
-    {
-      path: '/api/mesh/influence/counterfactual',
-      method: 'POST',
-      description: 'Counterfactual query — mask donor sectors and re-predict votes',
-      cache: 'none',
-    },
-    {
-      path: '/api/mesh/influence/cascade',
-      method: 'POST',
-      description: 'Cascade simulation — perturb sector funding and measure vote shifts',
-      cache: 'none',
     },
     {
       path: '/api/mesh/feed/{entityType}',

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -413,8 +413,9 @@ export class CongressRollCallAPI {
 
       // Parse XML to find the specific member's vote
       // Actual structure: <recorded-vote><legislator name-id="A000370"...>Adams</legislator><vote>Present</vote></recorded-vote>
+      // The Clerk indents these across lines, so allow whitespace between tags.
       const memberPattern = new RegExp(
-        `<recorded-vote><legislator name-id="${bioguideId}"[^>]*>.*?</legislator><vote>([^<]+)</vote></recorded-vote>`,
+        `<recorded-vote>\\s*<legislator name-id="${bioguideId}"[^>]*>.*?</legislator>\\s*<vote>([^<]+)</vote>\\s*</recorded-vote>`,
         'i'
       );
 

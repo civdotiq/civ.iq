@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -16,6 +16,7 @@
  * (see chamber-baselines.ts). No AI text on this card.
  */
 
+import { currentFederalFiscalYear } from '@/lib/helpers/federal-fiscal-year';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import type { EnhancedRepresentative } from '@/types/representative';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
@@ -405,7 +406,8 @@ async function fetchDistrictMoneySection(
   district: string | undefined,
   chamber: 'House' | 'Senate'
 ): Promise<DistrictMoneySection | null> {
-  const fiscalYear = new Date().getFullYear();
+  // Both spending queries use the federal fiscal-year window (Oct–Sep).
+  const fiscalYear = currentFederalFiscalYear();
 
   // Senators: statewide place-of-performance total (all award types).
   if (chamber === 'Senate') {
@@ -453,14 +455,13 @@ async function fetchKeyVotes(
   congress: number
 ): Promise<KeyVote[]> {
   try {
-    const session = new Date().getFullYear() % 2 === 1 ? 1 : 2;
     // Senate reads come from the cheap mirrored corpus, so a deeper window
     // is free — and needed, since nomination votes (no bill) dominate the
     // Senate's recent roll calls and would starve the substantive filter.
     const votes =
       chamber === 'House'
-        ? await batchVotingService.getHouseMemberVotes(bioguideId, congress, session, 20)
-        : await batchVotingService.getSenateMemberVotes(bioguideId, congress, session, 60);
+        ? await batchVotingService.getHouseMemberVotes(bioguideId, congress, undefined, 20)
+        : await batchVotingService.getSenateMemberVotes(bioguideId, congress, undefined, 60);
 
     // Rule-based selection, no editorial judgment: the member's most recent
     // substantive (Yea/Nay) roll calls attached to a bill, preferring final

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -46,8 +46,10 @@ jest.mock('@/features/legislation/services/ai/bill-summary-cache', () => ({
 }));
 
 const mockGetEnhancedRepresentative = jest.fn();
+const mockGetAllEnhancedRepresentatives = jest.fn();
 jest.mock('@/features/representatives/services/congress.service', () => ({
   getEnhancedRepresentative: (...args: unknown[]) => mockGetEnhancedRepresentative(...args),
+  getAllEnhancedRepresentatives: (...args: unknown[]) => mockGetAllEnhancedRepresentatives(...args),
 }));
 
 const mockGetFECIdFromBioguide = jest.fn();
@@ -111,6 +113,30 @@ const mockContributions = [
   },
 ];
 
+/** Roster of the subject plus `n` other members (A000001…). */
+function rosterWith(n: number) {
+  const others = Array.from({ length: n }, (_, i) => ({
+    bioguideId: `A${String(i + 1).padStart(6, '0')}`,
+    chamber: 'House',
+  }));
+  return [{ bioguideId: 'P000197', chamber: 'House' }, ...others];
+}
+
+/** MGET answers from a key → value map; missing keys are null. */
+function seedRedis(store: Record<string, unknown>) {
+  mockRedisMget.mockImplementation((keys: string[]) =>
+    Promise.resolve(keys.map(k => store[k] ?? null))
+  );
+}
+
+const FIVE_HSEN_PEERS = {
+  'overlap-score:HSEN:A000001': 0.4,
+  'overlap-score:HSEN:A000002': 0.5,
+  'overlap-score:HSEN:A000003': 0.6,
+  'overlap-score:HSEN:A000004': 0.45,
+  'overlap-score:HSEN:A000005': 0.55,
+};
+
 // ── Tests ─────────────────────────────────────────────────────────
 
 describe('analyzeFinanceJurisdiction', () => {
@@ -119,8 +145,9 @@ describe('analyzeFinanceJurisdiction', () => {
     mockRedisGet.mockResolvedValue(null);
     mockRedisSet.mockResolvedValue(undefined);
     mockRedisKeys.mockResolvedValue([]);
-    mockRedisMget.mockResolvedValue([]);
+    seedRedis({});
     mockGetEnhancedRepresentative.mockResolvedValue(mockRep);
+    mockGetAllEnhancedRepresentatives.mockResolvedValue(rosterWith(5));
     mockGetFECIdFromBioguide.mockReturnValue('H0CA12345');
     mockGetSampleContributions.mockResolvedValue(mockContributions);
   });
@@ -177,14 +204,7 @@ describe('analyzeFinanceJurisdiction', () => {
   });
 
   it('uses mget for peer comparison batch fetch', async () => {
-    mockRedisKeys.mockResolvedValue([
-      'overlap-score:HSEN:A000001',
-      'overlap-score:HSEN:A000002',
-      'overlap-score:HSEN:A000003',
-      'overlap-score:HSEN:A000004',
-      'overlap-score:HSEN:A000005',
-    ]);
-    mockRedisMget.mockResolvedValue([0.4, 0.5, 0.6, 0.45, 0.55]);
+    seedRedis(FIVE_HSEN_PEERS);
 
     const result = await analyzeFinanceJurisdiction('P000197');
 
@@ -193,10 +213,34 @@ describe('analyzeFinanceJurisdiction', () => {
     expect(result!.peerComparison!.peerCount).toBe(5);
   });
 
+  it('reads peers by exact roster key, never KEYS', async () => {
+    seedRedis(FIVE_HSEN_PEERS);
+
+    const result = await analyzeFinanceJurisdiction('P000197');
+
+    expect(mockRedisKeys).not.toHaveBeenCalled();
+    expect(result!.peerComparison!.peerCount).toBe(5);
+    const requested = mockRedisMget.mock.calls.flatMap((c: unknown[]) => c[0] as string[]);
+    expect(requested).not.toContain('overlap-score:HSEN:P000197');
+  });
+
+  it('chunks peer reads into MGETs of at most 100 keys', async () => {
+    mockGetAllEnhancedRepresentatives.mockResolvedValue(rosterWith(250));
+    seedRedis(FIVE_HSEN_PEERS);
+
+    const result = await analyzeFinanceJurisdiction('P000197');
+
+    const overlapCalls = mockRedisMget.mock.calls
+      .map((c: unknown[]) => c[0] as string[])
+      .filter(keys => keys[0]?.startsWith('overlap-score:'));
+    expect(overlapCalls).toHaveLength(3);
+    for (const keys of overlapCalls) expect(keys.length).toBeLessThanOrEqual(100);
+    expect(result!.peerComparison!.peerCount).toBe(5);
+  });
+
   it('emits honest unavailable variant when fewer than 5 peers have data', async () => {
     // Only 2 cached peers — below MIN_PEERS (5)
-    mockRedisKeys.mockResolvedValue(['overlap-score:HSEN:A000001', 'overlap-score:HSEN:A000002']);
-    mockRedisMget.mockResolvedValue([0.4, 0.5]);
+    seedRedis({ 'overlap-score:HSEN:A000001': 0.4, 'overlap-score:HSEN:A000002': 0.5 });
 
     const result = await analyzeFinanceJurisdiction('P000197');
 
@@ -209,14 +253,7 @@ describe('analyzeFinanceJurisdiction', () => {
   });
 
   it('recomputes confidence after peer comparison', async () => {
-    mockRedisKeys.mockResolvedValue([
-      'overlap-score:HSEN:A000001',
-      'overlap-score:HSEN:A000002',
-      'overlap-score:HSEN:A000003',
-      'overlap-score:HSEN:A000004',
-      'overlap-score:HSEN:A000005',
-    ]);
-    mockRedisMget.mockResolvedValue([0.4, 0.5, 0.6, 0.45, 0.55]);
+    seedRedis(FIVE_HSEN_PEERS);
 
     const result = await analyzeFinanceJurisdiction('P000197');
 

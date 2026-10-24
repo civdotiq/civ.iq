@@ -2,7 +2,7 @@
  * District Card Component - Displays individual district information
  * Ulm School principles: Plain language political lean, no jargon like "Cook PVI"
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import Link from 'next/link';
@@ -33,6 +33,7 @@ interface District {
       winner: string;
       margin: number;
       turnout: number | null;
+      unopposed?: boolean;
     };
     votingAgePopulation?: number;
     registeredVoters?: number;
@@ -83,6 +84,10 @@ export function DistrictCard({ district }: { district: District }) {
   const partyColor = district.representative.party === 'D' ? 'text-party-dem' : 'text-civiq-red';
   const marginWinner = district.political.lastElection.winner;
   const margin = district.political.lastElection.margin;
+  const unopposed = district.political.lastElection.unopposed === true;
+  let lastElectionText = `${marginWinner} won by ${margin.toFixed(1)}%`;
+  if (marginWinner === 'Data unavailable') lastElectionText = 'Data unavailable';
+  else if (unopposed) lastElectionText = `${marginWinner} ran unopposed`;
 
   return (
     <div className="bg-white border-2 border-black hover:border-civiq-blue transition-colors p-4 sm:p-6">
@@ -144,9 +149,7 @@ export function DistrictCard({ district }: { district: District }) {
           </div>
           <div className="col-span-2">
             <p className="text-xs sm:text-sm text-gray-600">Last Election</p>
-            <p className="font-semibold text-sm sm:text-base">
-              {marginWinner} won by {margin.toFixed(1)}%
-            </p>
+            <p className="font-semibold text-sm sm:text-base">{lastElectionText}</p>
           </div>
         </div>
       </Link>

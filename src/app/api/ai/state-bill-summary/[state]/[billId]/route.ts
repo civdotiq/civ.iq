@@ -1,13 +1,14 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
  * State Bill AI Summary API
  *
  * GET /api/ai/state-bill-summary/[state]/[billId]
- * Returns an AI-generated plain language summary for a state bill.
+ * Returns an AI-generated plain language summary for a state bill, or a 503
+ * "unavailable" answer when the AI call fails.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -48,6 +49,16 @@ export async function GET(
 
     // Generate summary
     const summary = await StateBillSummarizer.summarize(bill, stateCode);
+    if (!summary) {
+      return NextResponse.json(
+        {
+          success: false,
+          unavailable: true,
+          message: 'A plain-language summary is unavailable right now.',
+        },
+        { status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '300' } }
+      );
+    }
 
     logger.info('State bill AI summary request successful', {
       state: stateCode,

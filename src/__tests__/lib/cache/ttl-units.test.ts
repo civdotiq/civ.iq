@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Cache TTL units — regression guard
  *
@@ -85,6 +85,21 @@ describe('cache TTL units', () => {
       expect(clampTtl('probe', 6 * 60 * 60)).toBe(6 * 60 * 60); // 6 hours
       expect(clampTtl('probe', 30 * 24 * 60 * 60)).toBe(30 * 24 * 60 * 60); // 30 days,
       // the longest deliberate TTL in the codebase
+    });
+
+    it('keeps the deliberately long-lived TTLs within the cap', async () => {
+      // A configured TTL above the cap is not an error at startup — it is
+      // clamped silently to 90 days and logged as an error on EVERY write.
+      // The ActivityPub outbox shipped at 1 year and emitted two error lines
+      // per published event in the daily nostr-publisher cron.
+      const { MAX_TTL_SECONDS } = await import('@/lib/cache/redis-client');
+      const { activitypubConfig } = await import('@/config/activitypub.config');
+      const { ROLL_TTL_SECONDS } =
+        await import('@/features/representatives/services/roll-call-corpus');
+
+      expect(activitypubConfig.outboxTTL).toBeLessThanOrEqual(MAX_TTL_SECONDS);
+      expect(activitypubConfig.dedupTTL).toBeLessThanOrEqual(MAX_TTL_SECONDS);
+      expect(ROLL_TTL_SECONDS).toBeLessThanOrEqual(MAX_TTL_SECONDS);
     });
 
     it('falls back to one hour for a nonsensical TTL', async () => {

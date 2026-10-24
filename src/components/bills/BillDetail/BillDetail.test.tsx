@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2026 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Redesigned bill page: every count and entity must drill into its data —
  * no "and N more" the reader can't open, no names that don't link.
@@ -150,9 +150,10 @@ describe('BillDetail drill-down', () => {
       'href',
       `${bill.url}/amendments`
     );
-    expect(screen.getByRole('link', { name: 'S.Con.Res. 12 (118th)' })).toHaveAttribute(
+    // Earlier Congresses have no page here, so they link out to Congress.gov.
+    expect(screen.getByRole('link', { name: 'S.Con.Res. 12 (118th) ↗' })).toHaveAttribute(
       'href',
-      '/bill/118-sconres-12'
+      'https://www.congress.gov/bill/118th-congress/senate-concurrent-resolution/12'
     );
     expect(screen.getByRole('link', { name: 'H.Con.Res. 87' })).toHaveAttribute(
       'href',

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -32,6 +32,7 @@ import {
   getAllHouseResults2024,
   getAllStateLegResults2024,
   ELECTION_2024_METADATA,
+  HOUSE_2024_METADATA,
 } from '@/lib/services/election-results.service';
 
 export const dynamic = 'force-dynamic'; // 24 hours — static data, rarely changes
@@ -78,15 +79,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       }
       const result = getHouseResult2024(district.slice(0, dashIdx), district.slice(dashIdx + 1));
       return NextResponse.json(
-        { result, metadata: ELECTION_2024_METADATA },
+        { result, metadata: HOUSE_2024_METADATA },
         { headers: cacheHeaders }
       );
     }
     const results = getAllHouseResults2024(state || undefined);
-    return NextResponse.json(
-      { results, metadata: ELECTION_2024_METADATA },
-      { headers: cacheHeaders }
-    );
+    return NextResponse.json({ results, metadata: HOUSE_2024_METADATA }, { headers: cacheHeaders });
   }
 
   // Statewide races (president, senate, governor) — single or bulk

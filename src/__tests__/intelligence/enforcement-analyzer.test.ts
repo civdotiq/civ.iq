@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -81,6 +81,7 @@ import {
   analyzeEnforcement,
   type EnforcementScope,
 } from '@/lib/intelligence/analyzers/enforcement-analyzer';
+import { IndustrySector } from '@/lib/fec/industry-taxonomy';
 
 // ── Test Data ─────────────────────────────────────────────────────
 
@@ -362,5 +363,71 @@ describe('analyzeEnforcement', () => {
 
     expect(result).not.toBeNull();
     expect(['increasing', 'decreasing', 'stable']).toContain(result?.stats.trend);
+  });
+});
+
+describe('analyzeEnforcement peer comparison', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockRedisGet.mockResolvedValue(null);
+    mockRedisSet.mockResolvedValue(undefined);
+    mockSearchEnforcementCases.mockResolvedValue(makeEPACases(4));
+    mockSearchInspections.mockResolvedValue([]);
+    mockSearchComplaints.mockResolvedValue({ complaints: [], total: 0 });
+    mockSectorToSicRanges.mockReturnValue([{ start: 29, end: 30 }]);
+  });
+
+  /** MGET answers from a key → value map; missing keys are null. */
+  function seedRedis(store: Record<string, number>) {
+    mockRedisMget.mockImplementation((keys: string[]) =>
+      Promise.resolve(keys.map(k => store[k] ?? null))
+    );
+  }
+
+  it('reads state peers by exact key from the state list, never KEYS', async () => {
+    seedRedis({
+      'enforcement-score:state:TX': 10,
+      'enforcement-score:state:NY': 20,
+      'enforcement-score:state:FL': 30,
+      'enforcement-score:state:OH': 40,
+      'enforcement-score:state:MI': 50,
+      'enforcement-score:state:CA': 999, // the subject's own score
+    });
+
+    const result = await analyzeEnforcement({ type: 'state', state: 'CA' });
+
+    expect(mockRedisKeys).not.toHaveBeenCalled();
+    expect(result?.peerComparison?.peerCount).toBe(5);
+    expect(result?.peerComparison?.peerAverage).toBe(30);
+    const requested = mockRedisMget.mock.calls.flatMap((c: unknown[]) => c[0] as string[]);
+    expect(requested).not.toContain('enforcement-score:state:CA');
+  });
+
+  it('reads sector peers by exact key from the sector enum', async () => {
+    seedRedis({
+      'enforcement-score:sector:Agribusiness': 1,
+      'enforcement-score:sector:Construction': 2,
+      'enforcement-score:sector:Defense': 3,
+      'enforcement-score:sector:Health': 4,
+      'enforcement-score:sector:Labor': 5,
+    });
+
+    const result = await analyzeEnforcement({
+      type: 'sector',
+      sector: IndustrySector.ENERGY_NATURAL_RESOURCES,
+    });
+
+    expect(mockRedisKeys).not.toHaveBeenCalled();
+    expect(result?.peerComparison?.peerCount).toBe(5);
+  });
+
+  it('gives organizations no peer comparison', async () => {
+    seedRedis({});
+
+    const result = await analyzeEnforcement({ type: 'organization', name: 'Polluter Inc' });
+
+    expect(result?.peerComparison).toBeNull();
+    expect(mockRedisKeys).not.toHaveBeenCalled();
+    expect(mockRedisMget).not.toHaveBeenCalled();
   });
 });

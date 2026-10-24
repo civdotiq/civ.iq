@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -26,7 +26,14 @@ export type ProfileFinance = {
   pacContributions?: number;
   partyContributions?: number;
   candidateContributions?: number;
-  metadata?: { matchedCycle?: number; note?: string };
+  metadata?: {
+    matchedCycle?: number;
+    note?: string;
+    /** When the batch service fetched these totals from the FEC. */
+    lastUpdated?: string;
+    /** End of the latest FEC report period (YYYY-MM-DD). */
+    coverageEndDate?: string;
+  };
 };
 
 export interface ProfileBatchResponse {
@@ -47,6 +54,14 @@ export interface ProfileSummary {
   totalSpent?: number;
   cashOnHand?: number;
   votesParticipated?: number;
+  /** Roll calls the member could have voted on (the denominator). */
+  votesAppearances?: number;
+  /** 'Not Voting' appearances. */
+  votesMissed?: number;
+  /** Chamber median missed-vote %, 0–100; null when not computed. */
+  votesMedianMissedPct?: number | null;
+  /** False when the sweep covered only the most recent roll calls. */
+  votesFullCoverage?: boolean;
   financeCycle?: number;
   /** The FEC could not be reached; money fields are absent, not zero. */
   financeUnavailable?: boolean;

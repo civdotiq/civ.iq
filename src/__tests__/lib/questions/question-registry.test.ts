@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -42,7 +42,7 @@ describe('question-registry', () => {
   describe('getTemplatesByEntityType', () => {
     it('returns only representative templates (5)', () => {
       const reps = getTemplatesByEntityType('representative');
-      expect(reps.length).toBe(5);
+      expect(reps).toHaveLength(6);
       expect(reps.every(t => t.entityType === 'representative')).toBe(true);
     });
 

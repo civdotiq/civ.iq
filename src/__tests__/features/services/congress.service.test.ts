@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -22,6 +22,7 @@ jest.mock('@/lib/logging/simple-logger', () => ({
 // Pass-through so every call exercises the real fetch + parse path.
 jest.mock('@/lib/cache', () => ({
   cachedFetch: jest.fn((_key: string, fn: () => unknown) => fn()),
+  cache: { ttl: jest.fn() },
 }));
 
 // The service calls getFileCache() at module load, so the mock object must
@@ -32,7 +33,7 @@ jest.mock('@/lib/cache/file-cache', () => {
 });
 
 import yaml from 'js-yaml';
-import { cachedFetch } from '@/lib/cache';
+import { cache, cachedFetch } from '@/lib/cache';
 import { getFileCache } from '@/lib/cache/file-cache';
 import {
   getEnhancedRepresentative,
@@ -52,6 +53,7 @@ import {
 
 const mockFileCache = getFileCache() as unknown as { get: jest.Mock; set: jest.Mock };
 const mockCachedFetch = cachedFetch as jest.Mock;
+const mockRedisTtl = cache.ttl as jest.Mock;
 
 const CURRENT_CONGRESS = getCurrentCongressNumber();
 const { start: congressStart, end: congressEnd } = getCongressDateRange(CURRENT_CONGRESS);
@@ -393,7 +395,8 @@ describe('cache-poisoning guard (persistentCachedFetch)', () => {
           },
         }),
       ]),
-      expect.any(Number)
+      expect.any(Number),
+      0
     );
   });
 
@@ -493,30 +496,82 @@ describe('blob memo (shared by both representative paths)', () => {
     expect(rosterFetchCount()).toBe(1);
   });
 
-  it('writes the file tier even when the value came from the cache below', async () => {
-    // The file-cache write used to live inside the fetchFn handed to
-    // cachedFetch, which only runs it on a MISS. With a warm cache below — the
-    // normal case in production — the file tier was never written and so could
-    // never be hit, no matter where its directory pointed.
+  // Serve the congress blobs as if Redis already held them (cachedFetch never
+  // calls its fetchFn), with `redisTtl` seconds left on each entry.
+  async function withWarmRedis(redisTtl: number | null, run: () => Promise<void>): Promise<void> {
     const passThrough = mockCachedFetch.getMockImplementation()!;
     mockCachedFetch.mockImplementation(async (key: string) => {
       if (key === 'congress-legislators-current') return CURRENT_LEGISLATORS;
       if (key === 'congress-legislators-social-media') return SOCIAL_MEDIA;
       return [];
     });
-
+    mockRedisTtl.mockResolvedValue(redisTtl);
     try {
+      await run();
+    } finally {
+      mockCachedFetch.mockImplementation(passThrough);
+    }
+  }
+
+  it('writes the file tier even when the value came from the cache below', async () => {
+    // The file-cache write used to live inside the fetchFn handed to
+    // cachedFetch, which only runs it on a MISS. With a warm cache below — the
+    // normal case in production — the file tier was never written and so could
+    // never be hit, no matter where its directory pointed.
+    await withWarmRedis(6 * 60 * 60, async () => {
       await getAllEnhancedRepresentatives();
 
       expect(global.fetch).not.toHaveBeenCalled();
       expect(mockFileCache.set).toHaveBeenCalledWith(
         'congress-legislators-current',
         CURRENT_LEGISLATORS,
+        expect.any(Number),
         expect.any(Number)
       );
-    } finally {
-      mockCachedFetch.mockImplementation(passThrough);
-    }
+    });
+  });
+
+  it('carries the age of a Redis value into the file tier', async () => {
+    // A fresh timestamp on a copy from Redis let the file tier serve data up
+    // to two full TTLs old. The copy must expire when the Redis entry does.
+    // 6h TTL with 1h left: the data is already 5h old.
+    await withWarmRedis(60 * 60, async () => {
+      await getAllEnhancedRepresentatives();
+
+      expect(mockRedisTtl).toHaveBeenCalledWith('congress-legislators-current');
+      expect(mockFileCache.set).toHaveBeenCalledWith(
+        'congress-legislators-current',
+        CURRENT_LEGISLATORS,
+        6 * 60 * 60,
+        5 * 60 * 60
+      );
+    });
+  });
+
+  it('skips the file tier write when the Redis value has no readable TTL', async () => {
+    await withWarmRedis(null, async () => {
+      const reps = await getAllEnhancedRepresentatives();
+
+      expect(reps.length).toBeGreaterThan(0);
+      expect(mockFileCache.set).not.toHaveBeenCalledWith(
+        'congress-legislators-current',
+        expect.anything(),
+        expect.anything(),
+        expect.anything()
+      );
+    });
+  });
+
+  it('writes a fresh file tier entry for data fetched from upstream', async () => {
+    await getAllEnhancedRepresentatives();
+
+    expect(mockRedisTtl).not.toHaveBeenCalled();
+    expect(mockFileCache.set).toHaveBeenCalledWith(
+      'congress-legislators-current',
+      expect.any(Array),
+      6 * 60 * 60,
+      0
+    );
   });
 });
 

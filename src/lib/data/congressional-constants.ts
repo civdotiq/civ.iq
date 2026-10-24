@@ -1,7 +1,7 @@
 /**
  * Congressional Constants - Hardcoded Reference Data
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * This file centralizes all congressional metadata that rarely or never changes:
  * - Party definitions and colors
@@ -221,6 +221,28 @@ export function getCurrentCongressNumber(now: Date = new Date()): number {
     }
   }
   return congressFromYear;
+}
+
+/**
+ * Oldest Congress CIV.IQ serves. Earlier Congresses are out of scope: their
+ * bills and votes get no pages, no internal links and no API/MCP answers.
+ */
+export const FIRST_SERVED_CONGRESS = 119;
+
+/**
+ * Whether a Congress is in scope: the sitting Congress, plus the one before
+ * it once a new Congress convenes (so pages Google already indexed keep
+ * resolving through the next term), never earlier than FIRST_SERVED_CONGRESS.
+ */
+export function isServedCongress(congress: number, now: Date = new Date()): boolean {
+  const { first, last } = getServedCongressRange(now);
+  return Number.isInteger(congress) && congress >= first && congress <= last;
+}
+
+/** Inclusive bounds of the served Congresses (see isServedCongress). */
+export function getServedCongressRange(now: Date = new Date()): { first: number; last: number } {
+  const current = getCurrentCongressNumber(now);
+  return { first: Math.max(FIRST_SERVED_CONGRESS, current - 1), last: current };
 }
 
 /**

@@ -1,9 +1,9 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
-import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
+import { getCurrentCongressNumber, isServedCongress } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import {
@@ -32,8 +32,11 @@ export async function GET(
     const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '25', 10) || 25, 1), 250);
     const page = Math.max(parseInt(searchParams.get('page') || '1', 10) || 1, 1);
     const congress = parseInt(searchParams.get('congress') || '', 10) || getCurrentCongressNumber();
-    if (congress < 93 || congress > 150) {
-      return NextResponse.json({ error: 'congress must be between 93 and 150' }, { status: 400 });
+    if (!isServedCongress(congress)) {
+      return NextResponse.json(
+        { error: `congress ${congress} is not covered; CIV.IQ serves the current Congress` },
+        { status: 400 }
+      );
     }
     const summaryOnly = searchParams.get('summary') === 'true';
     const includeAmendments = searchParams.get('includeAmendments') === 'true';

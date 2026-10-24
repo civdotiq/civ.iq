@@ -2,7 +2,7 @@
 
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import { useMemo } from 'react';
@@ -20,6 +20,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
+import type { ElectionParty, RaceCandidateResult } from '@/types/elections';
 
 interface DistrictChartsProps {
   districtData: {
@@ -44,6 +45,7 @@ interface DistrictChartsProps {
         winner: string;
         margin: number;
         turnout: number;
+        candidates?: RaceCandidateResult[];
       };
     };
   };
@@ -224,74 +226,95 @@ export function RacialCompositionChart({ demographics }: { demographics: Demogra
   );
 }
 
+const PARTY_NAMES: Record<ElectionParty, string> = {
+  D: 'Democrat',
+  R: 'Republican',
+  L: 'Libertarian',
+  OTHER: 'Other',
+};
+
+function candidatePartyColor(party: ElectionParty): string {
+  if (party === 'D') return SEMANTIC_COLORS.democrat;
+  if (party === 'R') return SEMANTIC_COLORS.republican;
+  return SEMANTIC_COLORS.independent;
+}
+
+/** Top three by votes; the rest fold into one line so minor candidates don't crowd the card. */
+const SHOWN_CANDIDATES = 3;
+
 export function ElectionHistoryChart({
-  currentPVI,
   currentMargin,
   winner,
   turnout,
+  candidates,
 }: {
-  currentPVI: string;
   currentMargin: number;
   winner?: string;
   turnout?: number;
+  candidates?: RaceCandidateResult[];
 }) {
   const hasRealData = winner && winner !== 'Data unavailable';
-  const pviMatch = currentPVI?.match(/^([DR])\+/);
-
-  // Determine display values
-  const winnerLabel = hasRealData
-    ? winner
-    : pviMatch?.[1] === 'D'
-      ? 'Democratic'
-      : pviMatch?.[1] === 'R'
-        ? 'Republican'
-        : null;
-
-  const winnerColor =
-    winnerLabel === 'Democrat' || winnerLabel === 'Democratic'
-      ? SEMANTIC_COLORS.democrat
-      : '#e11d07';
-
-  const isDemWinner = winnerLabel === 'Democrat' || winnerLabel === 'Democratic';
-  const demBar = hasRealData ? (isDemWinner ? 50 + currentMargin / 2 : 50 - currentMargin / 2) : 0;
-  const repBar = hasRealData ? (isDemWinner ? 50 - currentMargin / 2 : 50 + currentMargin / 2) : 0;
+  const leader = candidates?.[0];
+  const unopposed = candidates?.length === 1;
+  const shown = candidates?.slice(0, SHOWN_CANDIDATES) ?? [];
+  const restPct = (candidates?.slice(SHOWN_CANDIDATES) ?? []).reduce((sum, c) => sum + c.pct, 0);
 
   return (
     <div className="bg-white border-2 border-black p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">2024 Election Results</h3>
       {hasRealData ? (
         <>
-          <div className="space-y-3">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span style={{ color: SEMANTIC_COLORS.democrat, fontWeight: 600 }}>Democrat</span>
-                <span style={{ color: SEMANTIC_COLORS.democrat }}>{demBar.toFixed(1)}%</span>
-              </div>
-              <div className="w-full bg-gray-100 h-6 border border-black">
-                <div
-                  className="h-full"
-                  style={{ width: `${demBar}%`, backgroundColor: SEMANTIC_COLORS.democrat }}
-                />
-              </div>
+          {!unopposed && shown.length > 0 && (
+            <div className="space-y-3">
+              {shown.map(c => (
+                <div key={c.name}>
+                  <div className="flex justify-between gap-2 text-sm mb-1">
+                    <span>
+                      <span className="font-semibold text-gray-900">{c.name}</span>{' '}
+                      <span style={{ color: candidatePartyColor(c.partyCode) }}>
+                        {PARTY_NAMES[c.partyCode]}
+                      </span>
+                    </span>
+                    <span className="text-gray-700">{c.pct.toFixed(1)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 h-6 border border-black">
+                    <div
+                      className="h-full"
+                      style={{
+                        width: `${c.pct}%`,
+                        backgroundColor: candidatePartyColor(c.partyCode),
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+              {restPct > 0 && (
+                <p className="text-sm text-gray-500">Other candidates: {restPct.toFixed(1)}%</p>
+              )}
             </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span style={{ color: '#e11d07', fontWeight: 600 }}>Republican</span>
-                <span style={{ color: '#e11d07' }}>{repBar.toFixed(1)}%</span>
-              </div>
-              <div className="w-full bg-gray-100 h-6 border border-black">
-                <div
-                  className="h-full"
-                  style={{ width: `${repBar}%`, backgroundColor: '#e11d07' }}
-                />
-              </div>
-            </div>
-          </div>
+          )}
           <div className="mt-4 pt-3 border-t border-gray-200 space-y-1">
             <p className="text-sm text-gray-700">
-              <strong style={{ color: winnerColor }}>{winner}</strong> won by{' '}
-              <strong>{Math.abs(currentMargin).toFixed(1)}%</strong>
+              {leader ? (
+                <strong style={{ color: candidatePartyColor(leader.partyCode) }}>
+                  {leader.name}
+                </strong>
+              ) : (
+                <strong>{winner}</strong>
+              )}{' '}
+              {unopposed ? (
+                'ran unopposed'
+              ) : (
+                <>
+                  won by <strong>{Math.abs(currentMargin).toFixed(1)}%</strong>
+                </>
+              )}
             </p>
+            {unopposed && !turnout ? (
+              <p className="text-sm text-gray-500">
+                Not printed on the ballot, so no votes were tallied
+              </p>
+            ) : null}
             {turnout && turnout > 0 ? (
               <p className="text-sm text-gray-500">
                 {turnout.toLocaleString('en-US')} total votes cast
@@ -311,26 +334,15 @@ export function ElectionHistoryChart({
           </p>
         </>
       ) : (
-        <>
-          <div className="flex items-center justify-center h-48 text-center">
-            <div>
-              <p className="text-gray-600">Data unavailable</p>
-              <p className="text-sm text-gray-500 mt-1">
-                Election results not yet published for this state
-              </p>
-            </div>
+        <div className="flex items-center justify-center h-48 text-center">
+          <div>
+            <p className="text-gray-600">Data unavailable</p>
+            <p className="text-sm text-gray-500 mt-1">
+              No 2024 House result for this seat in the MIT Election Data + Science Lab (MEDSL)
+              dataset
+            </p>
           </div>
-          <p className="text-sm text-gray-600 mt-2">
-            Estimated from Cook PVI:{' '}
-            {winnerLabel ? (
-              <strong>
-                {winnerLabel} +{Math.abs(currentMargin).toFixed(1)}%
-              </strong>
-            ) : (
-              <strong>{Math.abs(currentMargin).toFixed(1)}% margin</strong>
-            )}
-          </p>
-        </>
+        </div>
       )}
     </div>
   );
@@ -415,10 +427,10 @@ export function DistrictCharts({ districtData }: DistrictChartsProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RacialCompositionChart demographics={districtData.demographics} />
         <ElectionHistoryChart
-          currentPVI={districtData.political.cookPVI}
           currentMargin={districtData.political.lastElection.margin}
           winner={districtData.political.lastElection.winner}
           turnout={districtData.political.lastElection.turnout}
+          candidates={districtData.political.lastElection.candidates}
         />
       </div>
 

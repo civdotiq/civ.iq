@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * OpenAPI Specification Validation Tests
  *
@@ -72,8 +72,8 @@ describe('OpenAPI Specification', () => {
       expect(spec.info.version).toMatch(/^\d+\.\d+\.\d+$/);
     });
 
-    it('should include MIT license', () => {
-      expect(spec.info.license.name).toBe('MIT');
+    it('should include Apache-2.0 license', () => {
+      expect(spec.info.license.name).toBe('Apache-2.0');
     });
   });
 
@@ -104,11 +104,10 @@ describe('OpenAPI Specification', () => {
 
     // Intelligence endpoints
     const INTELLIGENCE_PATHS = [
-      '/intelligence/representative/{bioguideId}/vote-prediction',
       '/intelligence/representative/{bioguideId}/influence-chain',
       '/intelligence/representative/{bioguideId}/temporal',
-      '/intelligence/representative/{bioguideId}/finance-jurisdiction',
       '/intelligence/sector/{sector}/leaderboard',
+      '/intelligence/representative/{bioguideId}/finance-jurisdiction',
       '/intelligence/address/money-report',
       '/intelligence/address/representatives',
       '/intelligence/influence-clusters',
@@ -166,8 +165,8 @@ describe('OpenAPI Specification', () => {
       });
     }
 
-    it('should have 40 paths total', () => {
-      expect(Object.keys(spec.paths).length).toBe(40);
+    it('should have 39 paths total', () => {
+      expect(Object.keys(spec.paths).length).toBe(39);
     });
 
     const ALLOWED_METHODS = ['get', 'post', 'delete'];
@@ -273,7 +272,7 @@ describe('OpenAPI Specification', () => {
       const schemas = spec.components.schemas;
       expect(schemas).toHaveProperty('IntelligenceMetadata');
       expect(schemas).toHaveProperty('IntelligenceInsightResponse');
-      expect(schemas).toHaveProperty('SectorLeaderboardResponse');
+      expect(schemas).toHaveProperty('TemporalVoteInsightResponse');
       expect(schemas).toHaveProperty('MoneyReportResponse');
     });
 

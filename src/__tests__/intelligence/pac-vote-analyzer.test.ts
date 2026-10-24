@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -11,15 +11,15 @@
 
 const mockRedisGet = jest.fn();
 const mockRedisSet = jest.fn();
-const mockRedisKeys = jest.fn();
-const mockRedisMget = jest.fn();
+const mockRedisHashSet = jest.fn();
+const mockRedisHashGetAll = jest.fn();
 
 jest.mock('@/lib/cache/redis-client', () => ({
   getRedisCache: () => ({
     get: mockRedisGet,
     set: mockRedisSet,
-    keys: mockRedisKeys,
-    mget: mockRedisMget,
+    hashSet: mockRedisHashSet,
+    hashGetAll: mockRedisHashGetAll,
   }),
 }));
 
@@ -118,8 +118,8 @@ describe('analyzePACVotes', () => {
     jest.clearAllMocks();
     mockRedisGet.mockResolvedValue(null);
     mockRedisSet.mockResolvedValue(undefined);
-    mockRedisKeys.mockResolvedValue([]);
-    mockRedisMget.mockResolvedValue([]);
+    mockRedisHashSet.mockResolvedValue(true);
+    mockRedisHashGetAll.mockResolvedValue({});
 
     mockGetCommitteeInfo.mockResolvedValue({ name: 'Health PAC', id: 'C00123456' });
     mockResolveCommitteeRecipients.mockResolvedValue(mockRecipients);
@@ -144,12 +144,12 @@ describe('analyzePACVotes', () => {
     expect(mockGetCommitteeInfo).not.toHaveBeenCalled();
   });
 
-  it('fetches both sessions of 119th Congress for each recipient', async () => {
+  it('fetches each recipient once across the whole 119th Congress', async () => {
     await analyzePACVotes('C00123456');
 
-    // Each recipient should get votes from both sessions
-    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith(expect.any(String), 119, 1, 200);
-    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith(expect.any(String), 119, 2, 200);
+    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith(expect.any(String), 119, undefined, 200);
+    expect(mockGetHouseMemberVotes).not.toHaveBeenCalledWith(expect.any(String), 119, 1, 200);
+    expect(mockGetHouseMemberVotes).not.toHaveBeenCalledWith(expect.any(String), 119, 2, 200);
   });
 
   it('returns null when PAC cannot be classified', async () => {
@@ -193,5 +193,75 @@ describe('analyzePACVotes', () => {
 
     expect(result.aggregateYeaRate).toBeGreaterThanOrEqual(0);
     expect(result.aggregateYeaRate).toBeLessThanOrEqual(1);
+  });
+
+  describe('peer comparison', () => {
+    const fresh = (yeaRate: number) => JSON.stringify({ yeaRate, asOf: new Date().toISOString() });
+    const fivePeers = {
+      C00000001: fresh(0.5),
+      C00000002: fresh(0.6),
+      C00000003: fresh(0.7),
+      C00000004: fresh(0.8),
+      C00000005: fresh(0.9),
+    };
+
+    it('reads peers from the sector index with one HGETALL, no KEYS', async () => {
+      mockRedisHashGetAll.mockResolvedValue(fivePeers);
+
+      const result = await analyzePACVotes('C00123456');
+
+      expect(mockRedisHashGetAll).toHaveBeenCalledWith('pac-alignment-index:v1:HEALTH');
+      expect(result?.peerComparison?.peerCount).toBe(5);
+      expect(result?.peerComparison?.peerAverage).toBeCloseTo(0.7);
+      expect(result?.peerComparisonUnavailableReason).toBeUndefined();
+    });
+
+    it('excludes the PAC itself and rows older than 7 days', async () => {
+      const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString();
+      mockRedisHashGetAll.mockResolvedValue({
+        ...fivePeers,
+        C00000005: JSON.stringify({ yeaRate: 0.9, asOf: eightDaysAgo }),
+        C00123456: fresh(0.1),
+      });
+
+      const result = await analyzePACVotes('C00123456');
+
+      expect(result?.peerComparison).toBeNull();
+      expect(result?.peerComparisonUnavailableReason).toBeTruthy();
+    });
+
+    it('ignores malformed rows', async () => {
+      mockRedisHashGetAll.mockResolvedValue({
+        ...fivePeers,
+        C00000005: 'not json',
+        C00000006: JSON.stringify({ yeaRate: 'high', asOf: new Date().toISOString() }),
+      });
+
+      const result = await analyzePACVotes('C00123456');
+      expect(result?.peerComparison).toBeNull();
+    });
+
+    it('reports no peers when Redis cannot be read', async () => {
+      mockRedisHashGetAll.mockResolvedValue(null);
+
+      const result = await analyzePACVotes('C00123456');
+      expect(result?.peerComparison).toBeNull();
+    });
+
+    it('writes its own yea rate to the sector index', async () => {
+      const result = await analyzePACVotes('C00123456');
+
+      expect(mockRedisHashSet).toHaveBeenCalledWith(
+        'pac-alignment-index:v1:HEALTH',
+        'C00123456',
+        expect.any(String)
+      );
+      const row = JSON.parse(mockRedisHashSet.mock.calls[0][2] as string) as {
+        yeaRate: number;
+        asOf: string;
+      };
+      expect(row.yeaRate).toBe(result?.aggregateYeaRate);
+      expect(Number.isNaN(Date.parse(row.asOf))).toBe(false);
+    });
   });
 });

@@ -5,6 +5,7 @@ import { sanitizeBillHtml } from '@/utils/sanitize';
 import { formatDateOnly } from '@/lib/utils/date-only';
 import Link from 'next/link';
 import { PolicyAreaLink, RepLink } from '@/components/shared/links/EntityLinks';
+import { billLinkTarget } from '@/lib/data/route-slugs';
 import { ShareButton } from '@/components/shared/social/ShareButton';
 import {
   ExternalLink,
@@ -25,7 +26,12 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import type { Bill, BillVote } from '@/types/bill';
-import { getBillDisplayStatus, getBillStatusColor, getBillVoteHref } from '@/types/bill';
+import {
+  getBillCommonTitle,
+  getBillDisplayStatus,
+  getBillStatusColor,
+  getBillVoteHref,
+} from '@/types/bill';
 import { getPartyColors } from '@/lib/party-colors';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { BillJourneyTimeline } from '@/features/legislation/components/BillJourneyTimeline';
@@ -45,6 +51,9 @@ import { useSearchParams } from 'next/navigation';
 import { BillSpendingSection } from '@/features/legislation/components/BillSpendingSection';
 import { BillIntelligenceSection } from '@/components/intelligence/BillIntelligenceSection';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
+import { DataProvenance } from '@/shared/components/ui/DataProvenance';
+import { billPageSources } from '@/lib/provenance/page-sources';
+import { METHOD_AI } from '@/lib/provenance/source-registry';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { SkeletonLoader } from '@/shared/components/ui/SkeletonLoader';
 
@@ -211,20 +220,26 @@ export function ClientBillContent({ billId, initialBill }: ClientBillContentProp
     );
   }
 
+  const commonTitle = getBillCommonTitle(bill);
+
   return (
     <div className="space-y-8">
       {/* Bill Header */}
       <div className="bg-white border-2 border-black p-4 sm:p-8" data-speakable="bill-summary">
         <div className="mb-6">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
-            <h1 className="text-3xl accent-title-underline-blue text-gray-900">{bill.number}</h1>
+            <h1 className="text-3xl accent-title-underline-blue text-gray-900">
+              {commonTitle ? `${commonTitle} (${bill.number})` : bill.number}
+            </h1>
             <span
               className={`px-3 py-1 text-sm font-medium ${getBillStatusColor(bill.status.current)}`}
             >
               {getBillDisplayStatus(bill.status.current)}
             </span>
           </div>
-          <h2 className="text-xl text-gray-700 mb-4 leading-relaxed">{bill.title}</h2>
+          {bill.title !== commonTitle && (
+            <h2 className="text-xl text-gray-700 mb-4 leading-relaxed">{bill.title}</h2>
+          )}
           <div className="flex flex-wrap items-center gap-y-1 text-gray-600 mb-4">
             <Calendar className="w-5 h-5 mr-2" />
             <span>Introduced {formatDateOnly(bill.introducedDate)}</span>
@@ -852,43 +867,68 @@ export function ClientBillContent({ billId, initialBill }: ClientBillContentProp
                   const billType =
                     billMatch?.[1]?.toLowerCase().replace(/\./g, '').replace(/\s+/g, '') ?? '';
                   const billNum = billMatch?.[2] ?? '';
-                  const billRoute = relatedBill.id
-                    ? `/bill/${relatedBill.id}`
+                  const billSlug = relatedBill.id
+                    ? relatedBill.id
                     : billMatch && billType && billNum
-                      ? `/bill/${bill.congress}-${billType}-${billNum}`
+                      ? `${bill.congress}-${billType}-${billNum}`
                       : null;
+                  // Earlier Congresses have no page here; those link to Congress.gov.
+                  const target = billSlug ? billLinkTarget(billSlug) : null;
 
-                  return (
-                    <Link
-                      key={index}
-                      href={billRoute || '#'}
-                      className={`block p-3 border border-gray-200 transition-colors ${billRoute ? 'hover:bg-civiq-blue/10 hover:border-civiq-blue' : ''}`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-civiq-blue hover:text-civiq-blue">
-                            {relatedBill.number}
-                          </p>
-                          <p className="text-xs text-gray-700 mt-1 line-clamp-2">
-                            {relatedBill.title}
-                          </p>
-                          <div className="mt-2 flex items-center justify-between">
-                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 border border-gray-300">
-                              {relatedBill.relationship === 'identical'
-                                ? 'Identical'
-                                : relatedBill.relationship === 'supersedes'
-                                  ? 'Supersedes'
-                                  : relatedBill.relationship === 'superseded'
-                                    ? 'Superseded by'
-                                    : 'Related'}
+                  const body = (
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-civiq-blue hover:text-civiq-blue">
+                          {relatedBill.number}
+                        </p>
+                        <p className="text-xs text-gray-700 mt-1 line-clamp-2">
+                          {relatedBill.title}
+                        </p>
+                        <div className="mt-2 flex items-center justify-between">
+                          <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 border border-gray-300">
+                            {relatedBill.relationship === 'identical'
+                              ? 'Identical'
+                              : relatedBill.relationship === 'supersedes'
+                                ? 'Supersedes'
+                                : relatedBill.relationship === 'superseded'
+                                  ? 'Superseded by'
+                                  : 'Related'}
+                          </span>
+                          {target && (
+                            <span className="text-xs text-civiq-blue">
+                              {target.external ? 'View on Congress.gov ↗' : 'View bill →'}
                             </span>
-                            {billRoute && (
-                              <span className="text-xs text-civiq-blue">View bill →</span>
-                            )}
-                          </div>
+                          )}
                         </div>
                       </div>
-                    </Link>
+                    </div>
+                  );
+                  const className = `block p-3 border border-gray-200 transition-colors ${target ? 'hover:bg-civiq-blue/10 hover:border-civiq-blue' : ''}`;
+
+                  if (target?.external) {
+                    return (
+                      <a
+                        key={index}
+                        href={target.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={className}
+                      >
+                        {body}
+                      </a>
+                    );
+                  }
+                  if (target) {
+                    return (
+                      <Link key={index} href={target.href} className={className}>
+                        {body}
+                      </Link>
+                    );
+                  }
+                  return (
+                    <div key={index} className={className}>
+                      {body}
+                    </div>
                   );
                 })}
               </div>
@@ -960,6 +1000,21 @@ export function ClientBillContent({ billId, initialBill }: ClientBillContentProp
           </div>
         </div>
       </div>
+
+      <DataProvenance
+        variant="block"
+        className="mt-8"
+        sources={billPageSources(bill)}
+        note={
+          <>
+            AI-written text on this page is labeled where it appears. It is written from the sources
+            above and is not a source itself.{' '}
+            <Link href={METHOD_AI} className="text-civiq-blue hover:underline">
+              How we analyze data →
+            </Link>
+          </>
+        }
+      />
 
       {/* Open Data Strip */}
       <OpenDataStrip

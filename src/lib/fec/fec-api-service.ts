@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -14,6 +14,7 @@ import logger from '@/lib/logging/simple-logger';
 import { govCache } from '@/services/cache';
 import { PAC_ACRONYMS } from '@/lib/data/pac-acronyms';
 import { getFecPriority, reserveFecCall } from './fec-rate-limiter';
+import { isTransientFecStatus, recordTransientFecFailure } from './fec-failure-scope';
 
 const FEC_API_BASE = 'https://api.open.fec.gov/v1';
 
@@ -234,6 +235,11 @@ class FECApiError extends Error {
     super(message);
     this.name = 'FECApiError';
   }
+}
+
+/** Rate limit, server error, or no response — a retry may succeed; "no data" it isn't. */
+function isTransientFecError(error: unknown): boolean {
+  return isTransientFecStatus(error instanceof FECApiError ? error.status : 0);
 }
 
 /**
@@ -460,6 +466,7 @@ export class FECApiService {
     // empty / null / "Data unavailable" fallbacks — never a crash.
     const gate = fecCircuitBreaker.beforeRequest();
     if (!gate.allowed) {
+      recordTransientFecFailure();
       throw new FECApiError(
         'FEC circuit breaker OPEN — upstream unavailable, failing fast',
         503,
@@ -475,6 +482,7 @@ export class FECApiService {
       // A cron budget throttle says nothing about FEC's health — hand any
       // half-open probe back so another request can still test recovery.
       if (gate.probe) fecCircuitBreaker.releaseProbe();
+      recordTransientFecFailure();
       throw new FECApiError(
         `FEC budget reserved for live traffic — cron call throttled (${reservation.count}/${reservation.ceiling} this minute)`,
         429,
@@ -493,6 +501,9 @@ export class FECApiService {
       const status = error instanceof FECApiError ? error.status : 0;
       const qualifying = status === 0 || status >= 500;
       fecCircuitBreaker.onFailure(qualifying);
+      // Callers that swallow this into `[]` still leave a trace for anyone
+      // tracking the scope (see fec-failure-scope).
+      if (isTransientFecStatus(status)) recordTransientFecFailure();
       throw error;
     }
   }
@@ -1204,6 +1215,11 @@ export class FECApiService {
         `[FEC API] STEP 1 FAILED - committees endpoint error:`,
         error instanceof Error ? error.message : String(error)
       );
+      // A rate limit or outage will fail every fallback below too — each one
+      // only spends more of the shared key. Here and in the later steps,
+      // return without caching so the next request retries instead of
+      // reading "no committees" for 5 minutes.
+      if (isTransientFecError(error)) return [];
     }
 
     // STEP 2: /candidate/{id}/committees/?cycle={cycle} (Secondary alternative)
@@ -1235,6 +1251,7 @@ export class FECApiService {
           `[FEC API] STEP 2 FAILED - candidate committees endpoint error:`,
           error instanceof Error ? error.message : String(error)
         );
+        if (isTransientFecError(error)) return [];
       }
     } else {
       logger.info(`[FEC API] STEP 2 - Skipped (Step 1 found ${foundCommittees.length} committees)`);
@@ -1278,6 +1295,7 @@ export class FECApiService {
           `[FEC API] STEP 3 FAILED - trying alternative with contributor filter:`,
           error instanceof Error ? error.message : String(error)
         );
+        if (isTransientFecError(error)) return [];
 
         try {
           // Alternative: Search with candidate's last name as contributor filter
@@ -1315,6 +1333,7 @@ export class FECApiService {
             `[FEC API] STEP 3 ALT FAILED - all fallback attempts exhausted:`,
             altError instanceof Error ? altError.message : String(altError)
           );
+          if (isTransientFecError(altError)) return [];
         }
       }
     }
@@ -1388,8 +1407,7 @@ export class FECApiService {
       // Check if there's already a pending request for this committee
       const pendingKey = `committee:${committeeId}`;
       const existingRequest = pendingRequests.get(pendingKey) as
-        | Promise<FECCommitteeResponse | null>
-        | undefined;
+        Promise<FECCommitteeResponse | null> | undefined;
 
       if (existingRequest) {
         logger.debug(`[FEC API] Deduplicating concurrent request for committee ${committeeId}`);

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 'use client';
@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { SourceCitation } from './SourceCitation';
 import { InsightDisclaimer } from './InsightDisclaimer';
 import { displaySector } from '@/lib/mesh/sector-display';
-import type { CivicBriefInsight, BriefPattern } from '@/lib/intelligence/types';
+import type { CivicBriefInsight, BriefPattern, BriefPeerBaseline } from '@/lib/intelligence/types';
 
 interface CivicBriefCardProps {
   insight: CivicBriefInsight;
@@ -23,11 +23,39 @@ function formatCompact(amount: number): string {
   return `$${amount.toFixed(0)}`;
 }
 
+/**
+ * Peer comparison after a member's own number. Briefs cached before
+ * peerBaselines existed pass undefined and show nothing.
+ */
+function PeerNote({
+  baseline,
+  peerLabel,
+}: {
+  baseline: BriefPeerBaseline | null | undefined;
+  peerLabel: string;
+}) {
+  if (baseline === undefined) return null;
+  return (
+    <span className="text-gray-400">
+      {baseline
+        ? ` (${peerLabel} average ${baseline.meanPct.toFixed(0)}%, ${baseline.peerCount} members)`
+        : ' (peer baseline unavailable)'}
+    </span>
+  );
+}
+
+function partyPlural(party: string): string {
+  if (party === 'D' || party === 'Democrat') return 'Democrats';
+  if (party === 'R' || party === 'Republican') return 'Republicans';
+  if (party === 'I' || party === 'ID' || party === 'Independent') return 'Independents';
+  return party;
+}
+
 // ── Main Component ───────────────────────────────────────────────────
 
 export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps) {
   const [expandedFinding, setExpandedFinding] = useState<number | null>(null);
-  const { identity, funding, voting, oversight, patterns, summary } = insight;
+  const { identity, funding, voting, oversight, patterns, summary, peerBaselines } = insight;
 
   // Show top 2 findings above the fold
   const topFindings = patterns.slice(0, 2);
@@ -135,7 +163,10 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
             {funding.totalRaised !== null && <>Raised {formatCompact(funding.totalRaised)}</>}
             {funding.totalRaised !== null && funding.inStatePct !== null && ' · '}
             {funding.inStatePct !== null && (
-              <>{funding.inStatePct.toFixed(0)}% from in-state donors</>
+              <>
+                {funding.inStatePct.toFixed(0)}% from in-state donors
+                <PeerNote baseline={peerBaselines?.inStatePct} peerLabel={identity.chamber} />
+              </>
             )}
             {(funding.totalRaised !== null || funding.inStatePct !== null) && (
               <span className="text-gray-400"> ({funding.cycle} cycle)</span>
@@ -216,8 +247,15 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
               <h4 className="aicher-heading type-xs text-gray-500 mb-2">Voting record</h4>
               <p className="type-sm text-gray-700">
                 {voting.totalVotes} recent votes analyzed
-                {voting.partyAlignmentPct !== null &&
-                  ` · ${voting.partyAlignmentPct.toFixed(0)}% with party`}
+                {voting.partyAlignmentPct !== null && (
+                  <>
+                    {` · ${voting.partyAlignmentPct.toFixed(0)}% with party`}
+                    <PeerNote
+                      baseline={peerBaselines?.partyAlignment}
+                      peerLabel={`${identity.chamber} ${partyPlural(identity.party)}`}
+                    />
+                  </>
+                )}
                 {voting.billsSponsored > 0 && ` · ${voting.billsSponsored} bills sponsored`}
                 {voting.billsCosponsored > 0 && ` · ${voting.billsCosponsored} cosponsored`}
               </p>

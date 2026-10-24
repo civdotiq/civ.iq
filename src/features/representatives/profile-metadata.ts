@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -15,6 +15,7 @@ import { cache } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getEnhancedRepresentative } from './services/congress.service';
+import { commonName } from './utils/common-name';
 
 export interface RepresentativeDetails {
   bioguideId: string;
@@ -114,13 +115,15 @@ export async function buildProfileMetadata(
     // Fetch representative data for rich metadata
     const representative = await getProfileRepresentative(bioguideId);
 
-    const title = `${representative.name} (${representative.party}-${representative.state})`;
+    // The name the member goes by ("Bernie Sanders"), which is what people search for
+    const name = commonName(representative);
+    const title = `${name} (${representative.party}-${representative.state})`;
     const chamberLabel = representative.chamber === 'Senate' ? 'Senator' : 'Representative';
     const districtLabel = representative.district ? `, District ${representative.district}` : '';
     const committeeNote = representative.committees?.length
       ? `. Serves on ${representative.committees.length} committee${representative.committees.length === 1 ? '' : 's'}`
       : '';
-    const description = `${representative.party} ${chamberLabel} ${representative.name} (${representative.state}${districtLabel}) — voting record, campaign finance, and legislative activity in the 119th Congress${committeeNote}.`;
+    const description = `${representative.party} ${chamberLabel} ${name} (${representative.state}${districtLabel}) — voting record, campaign finance, and legislative activity in the 119th Congress${committeeNote}.`;
     const url = `https://civdotiq.org/representative/${bioguideId.toUpperCase()}`;
 
     // Build OG image URL - default to profile card, override with specific card type
@@ -146,7 +149,7 @@ export async function buildProfileMetadata(
         },
       },
       openGraph: {
-        title: `${representative.name} - Federal ${representative.role}`,
+        title: `${name} - Federal ${representative.role}`,
         description,
         url,
         siteName: 'CIV.IQ',
@@ -156,7 +159,7 @@ export async function buildProfileMetadata(
             url: ogImageUrl,
             width: 1200,
             height: 630,
-            alt: `${representative.name}, ${representative.party} ${chamberLabel}`,
+            alt: `${name}, ${representative.party} ${chamberLabel}`,
           },
         ],
       },

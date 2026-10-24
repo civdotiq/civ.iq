@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 'use client';
@@ -148,6 +148,7 @@ export function InsightCard({
 
       {/* Disclaimer + methodology */}
       <InsightDisclaimer
+        pattern
         disclaimer={insight.disclaimer}
         methodology={insight.methodology}
         source={insight.source}
@@ -416,13 +417,11 @@ export function billIntelligenceKeyStats(insight: BillIntelligenceInsight): KeyS
     });
   }
 
-  // Sponsor sector funding
+  // Sponsor sector funding: a share of itemized individual donations, not of
+  // total raised, so the label doesn't pair it with the receipts total.
   if (insight.sponsorAnalysis) {
-    const totalCtx = insight.sponsorFundingContext
-      ? ` of ${formatCompact(insight.sponsorFundingContext.totalRaised)}`
-      : '';
     candidates.push({
-      label: `Sponsor industry funding${totalCtx}`,
+      label: 'Sponsor itemized donations from related industries',
       value: `${insight.sponsorAnalysis.sectorDonationPercentage.toFixed(1)}%`,
       priority: 8,
     });

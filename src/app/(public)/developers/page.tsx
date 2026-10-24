@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Developer Portal
  * Comprehensive hub for all developer-facing resources.
@@ -16,12 +16,12 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/developers' },
   title: 'CIV.IQ Developer Portal — Free Civic Data API, MCP Server, SDK, CLI & Bulk Data',
   description:
-    'The CIV.IQ (civdotiq.org) developer portal: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. MIT licensed.',
+    'The CIV.IQ (civdotiq.org) developer portal: free REST API (39 documented endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. Open source (Apache-2.0).',
   openGraph: {
     images: SITE_OG_IMAGES,
     title: 'CIV.IQ Developer Portal — Free Civic Data API, MCP Server, SDK, CLI & Bulk Data',
     description:
-      'The CIV.IQ (civdotiq.org) developer portal: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. MIT licensed.',
+      'The CIV.IQ (civdotiq.org) developer portal: free REST API (39 documented endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. Open source (Apache-2.0).',
     type: 'website',
   },
   keywords: [
@@ -48,20 +48,20 @@ export const metadata: Metadata = {
 const INTEGRATION_CARDS = [
   {
     title: 'REST API',
-    detail: '181 endpoints, no auth',
+    detail: '39 endpoints, no auth',
     description: 'Public JSON endpoints for representatives, bills, votes, and districts.',
     href: '/docs/api',
   },
   {
     title: 'MCP Server',
-    detail: '47 tools, 9 domains',
+    detail: '46 tools, 9 domains',
     description: 'Connect AI agents to live civic data via the Model Context Protocol.',
     href: '#mcp',
   },
   {
     title: 'TypeScript SDK',
     detail: '9 resource classes',
-    description: 'Typed client for all CIV.IQ endpoints. Node.js, Deno, and browser.',
+    description: 'Typed client for the CIV.IQ API. Node.js, Deno, and browser.',
     href: '#sdk',
   },
   {
@@ -88,7 +88,7 @@ const MCP_DOMAINS = [
   { domain: 'Representatives', examples: 'get_representative_profile, search_representatives' },
   { domain: 'Legislation', examples: 'get_bill_details, search_bills, get_voting_history' },
   { domain: 'Finance', examples: 'get_campaign_finance, search_lobbying' },
-  { domain: 'Intelligence', examples: 'analyze_vote_prediction, get_influence_chain' },
+  { domain: 'Intelligence', examples: 'get_influence_chain, analyze_district_comprehensive' },
   { domain: 'Civic', examples: 'get_district_info, lookup_address_district' },
   { domain: 'Environment', examples: 'search_epa_facilities, get_district_environmental_profile' },
   { domain: 'Health', examples: 'search_healthcare_providers, get_district_healthcare_profile' },
@@ -196,18 +196,19 @@ export default function DevelopersPage() {
           Free civic data for developers, journalists, researchers, and AI agents.
         </p>
         <p className="text-sm text-gray-600 max-w-3xl mb-grid-6">
-          No API key. No account. No tracking. Every endpoint, dataset, and protocol on this page is
-          free and open under the MIT license.
+          No API key. No account. Every endpoint, dataset, and protocol on this page is free to use.
+          The government data is in the public domain; the code is open source under the Apache-2.0
+          license.
         </p>
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-grid-3 mb-grid-8">
           <div className="border-2 border-black p-grid-3">
-            <div className="text-3xl font-bold">181</div>
+            <div className="text-3xl font-bold">39</div>
             <div className="text-sm text-gray-600 uppercase tracking-wider">API Endpoints</div>
           </div>
           <div className="border-2 border-black p-grid-3">
-            <div className="text-3xl font-bold">47</div>
+            <div className="text-3xl font-bold">46</div>
             <div className="text-sm text-gray-600 uppercase tracking-wider">MCP Tools</div>
           </div>
           <div className="border-2 border-black p-grid-3">
@@ -215,7 +216,7 @@ export default function DevelopersPage() {
             <div className="text-sm text-gray-600 uppercase tracking-wider">Bulk Datasets</div>
           </div>
           <div className="border-2 border-black p-grid-3">
-            <div className="text-3xl font-bold">MIT</div>
+            <div className="text-3xl font-bold">Apache 2.0</div>
             <div className="text-sm text-gray-600 uppercase tracking-wider">License</div>
           </div>
         </div>
@@ -266,7 +267,7 @@ const reps = await civiq.representatives.list({ state: 'MI', chamber: 'house' })
     "apiVersion": "v1",
     "timestamp": "2026-03-25T14:32:15.894Z",
     "source": "congress-legislators",
-    "license": "MIT",
+    "license": "Public Domain",
     "documentation": "https://civdotiq.org/docs/api"
   }
 }`}
@@ -381,7 +382,7 @@ const reps = await civiq.representatives.list({ state: 'MI', chamber: 'house' })
             >
               Model Context Protocol
             </a>
-            . 47 tools across 9 domains, plus resources and prompt templates. For step-by-step
+            . 46 tools across 9 domains, plus resources and prompt templates. For step-by-step
             instructions in Claude, ChatGPT, and Cursor, see the{' '}
             <Link href="/mcp" className="text-[#3ea2d4] underline hover:no-underline">
               setup guide
@@ -469,7 +470,7 @@ const reps = await civiq.representatives.list({ state: 'MI', chamber: 'house' })
         <section id="sdk" className="mb-grid-8">
           <h2 className="text-2xl font-bold mb-grid-2">TypeScript SDK</h2>
           <p className="text-gray-600 mb-grid-3">
-            Typed client for all CIV.IQ endpoints. Works in Node.js, Deno, and the browser.
+            Typed client for the CIV.IQ API. Works in Node.js, Deno, and the browser.
           </p>
 
           <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mb-grid-3">
@@ -478,7 +479,7 @@ const civiq = new CivIQ();
 
 const reps = await civiq.representatives.list({ state: 'MI' });
 const bill = await civiq.legislation.getBill('hr1-119');
-const prediction = await civiq.intelligence.votePrediction('B001230', 'hr1-119');`}
+const chains = await civiq.intelligence.influenceChain('B001230');`}
           </pre>
 
           <div className="flex flex-wrap gap-grid-1 mb-grid-3">
@@ -573,8 +574,8 @@ npx @civiq/sdk --help`}
         <section id="bulk-data" className="mb-grid-8">
           <h2 className="text-2xl font-bold mb-grid-2">Bulk Data Downloads</h2>
           <p className="text-gray-600 mb-grid-3">
-            Download complete datasets as CSV or JSON. Updated hourly from official government
-            sources. No account required.
+            Download complete datasets as CSV or JSON, built from official government sources. Each
+            one lists how often it refreshes. No account required.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-grid-3 mb-grid-3">
@@ -707,7 +708,7 @@ npx @civiq/sdk --help`}
             </div>
             <div className="border-2 border-gray-200 p-grid-3">
               <h3 className="font-bold mb-1">GitHub</h3>
-              <p className="text-sm text-gray-600 mb-grid-2">Open source, MIT license.</p>
+              <p className="text-sm text-gray-600 mb-grid-2">Open source, Apache-2.0 license.</p>
               <a
                 href="https://github.com/civdotiq/civ.iq"
                 target="_blank"
@@ -733,9 +734,9 @@ npx @civiq/sdk --help`}
                 <div>
                   <h3 className="font-mono font-bold text-base">@civiq/sdk</h3>
                   <p className="text-sm text-gray-600 mt-1">
-                    Typed TypeScript client for all 181 CIV.IQ API endpoints. Covers
-                    representatives, bills, votes, committees, districts, intelligence, search,
-                    states, and the civic graph. Works in Node.js, Deno, and browsers.
+                    Typed TypeScript client for the CIV.IQ API: 33 methods. Covers representatives,
+                    bills, votes, committees, districts, intelligence, search, states, and the civic
+                    graph. Works in Node.js, Deno, and browsers.
                   </p>
                 </div>
                 <a
@@ -888,47 +889,17 @@ npx @civiq/sdk --help`}
         {/* Data Freshness */}
         <section id="freshness" className="mb-grid-8">
           <h2 className="text-2xl font-bold mb-grid-2">Data Freshness</h2>
-          <p className="text-gray-600 mb-grid-3">
-            API responses are cached using Incremental Static Regeneration (ISR). The cache
-            automatically refreshes at these intervals from the upstream government sources:
+          <p className="text-gray-600">
+            Each endpoint caches its upstream data for its own window, so a response can be older
+            than the government source. Most windows run from 5 minutes (search, news) to 24 hours
+            (bills, representatives, committees). Slow-changing data is kept longer: address lookups
+            for 7 days, campaign-finance totals for 30 days, and state legislators&apos; vote
+            records for 6 months. Each bulk dataset lists its own refresh schedule under{' '}
+            <Link href="#bulk-data" className="text-[#3ea2d4] underline hover:no-underline">
+              Bulk data
+            </Link>
+            .
           </p>
-
-          <div className="border-2 border-gray-200 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b-2 border-gray-200">
-                <tr>
-                  <th className="text-left p-grid-2 font-semibold">Update Frequency</th>
-                  <th className="text-left p-grid-2 font-semibold">Data Types</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-gray-100">
-                  <td className="p-grid-2 font-medium">5 minutes</td>
-                  <td className="p-grid-2 text-gray-600">News, trending bills, search results</td>
-                </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="p-grid-2 font-medium">1 hour</td>
-                  <td className="p-grid-2 text-gray-600">
-                    Votes, bills, campaign finance, lobbying
-                  </td>
-                </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="p-grid-2 font-medium">24 hours</td>
-                  <td className="p-grid-2 text-gray-600">
-                    Representatives, committees, districts, demographics
-                  </td>
-                </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="p-grid-2 font-medium">30 days</td>
-                  <td className="p-grid-2 text-gray-600">Geocoding results, address lookups</td>
-                </tr>
-                <tr>
-                  <td className="p-grid-2 font-medium">6 months</td>
-                  <td className="p-grid-2 text-gray-600">Historical voting records</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
         </section>
 
         {/* Coverage & Limitations */}
@@ -943,8 +914,8 @@ npx @civiq/sdk --help`}
               <h3 className="font-bold mb-grid-2">What&apos;s covered</h3>
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>
-                  <span className="font-medium">Congress:</span> 119th (current), plus historical
-                  116th–118th sessions
+                  <span className="font-medium">Congress:</span> 119th (current) only. Bills and
+                  votes from earlier Congresses are not served
                 </li>
                 <li>
                   <span className="font-medium">State legislatures:</span> All 50 states via
@@ -1060,7 +1031,7 @@ npx @civiq/sdk --help`}
             <div className="border-2 border-gray-200 p-grid-3">
               <h3 className="font-bold mb-1">Contribute</h3>
               <p className="text-sm text-gray-600 mb-grid-2">
-                PRs welcome. The entire platform is MIT licensed and open source.
+                PRs welcome. The platform is open source under the Apache-2.0 license.
               </p>
               <a
                 href="https://github.com/civdotiq/civ.iq"
@@ -1120,7 +1091,8 @@ npx @civiq/sdk --help`}
             {`<a href="https://civdotiq.org" rel="dofollow">Powered by CIV.IQ</a>`}
           </pre>
           <p className="text-xs text-gray-500">
-            All data is sourced from official government APIs. CIV.IQ is MIT licensed.
+            All data is sourced from official government APIs. CIV.IQ is open source under the
+            Apache-2.0 license.
           </p>
         </section>
       </div>

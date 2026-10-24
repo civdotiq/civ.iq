@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import { notFound } from 'next/navigation';
@@ -10,6 +10,7 @@ import { ChunkLoadErrorBoundary } from '@/components/shared/common/ChunkLoadErro
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { VotingRecordPage } from '@/components/officials/VotingRecordPage';
 import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
+import { commonName } from '@/features/representatives/utils/common-name';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600;
@@ -63,8 +64,11 @@ export async function generateMetadata({
     }
     const chamberLabel = representative.chamber === 'Senate' ? 'Senator' : 'Representative';
     const districtLabel = representative.district ? `, District ${representative.district}` : '';
-    const title = `${representative.name} — Voting record (${representative.party}-${representative.state})`;
-    const description = `Roll-call voting record for ${chamberLabel} ${representative.name} (${representative.state}${districtLabel}) in the 119th Congress. Filter by topic, year, and outcome.`;
+    // This page owns "[name] voting record" searches (Search Console, 2026-10):
+    // the title leads with that phrase, under the name the member goes by.
+    const name = commonName(representative);
+    const title = `${name} voting record (119th Congress)`;
+    const description = `${name}'s voting record: roll-call votes by ${chamberLabel} ${name} (${representative.party}, ${representative.state}${districtLabel}) in the 119th Congress, from ${representative.chamber === 'Senate' ? 'Senate.gov' : 'House Clerk'} records. Filter by topic, year, and outcome.`;
     const url = `https://civdotiq.org/representative/${bioguideId}/votes`;
     return {
       title,

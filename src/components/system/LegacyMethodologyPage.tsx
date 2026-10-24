@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2026 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Legacy methodology page — lifted from the original
  * src/app/(civic)/methodology/page.tsx so the redesign can ship behind ?v=new
@@ -504,7 +504,9 @@ export function LegacyMethodologyPage() {
 
           {/* Analysis pipeline */}
           <div className="mt-8 space-y-4 type-base text-gray-700 leading-relaxed">
-            <h3 className="text-lg font-bold">How we analyze data</h3>
+            <h3 id="how-we-analyze" className="text-lg font-bold">
+              How we analyze data
+            </h3>
 
             <p>Every analysis starts with math, not AI. The numbers come first.</p>
 

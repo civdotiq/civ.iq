@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -40,7 +40,7 @@ jest.mock('@/lib/data/bioguide-fec-mapping', () => ({
 
 jest.mock('@/lib/fec/fec-api-service', () => ({
   fecApiService: {
-    getSampleContributions: jest.fn().mockResolvedValue([]),
+    getContributionsByEmployer: jest.fn().mockResolvedValue([]),
   },
 }));
 
@@ -106,9 +106,8 @@ describe('Integration: GET /api/intelligence/representative/[bioguideId]/influen
   let GET: typeof import('@/app/api/intelligence/representative/[bioguideId]/influence-chain/route').GET;
 
   beforeAll(async () => {
-    const mod = await import(
-      '@/app/api/intelligence/representative/[bioguideId]/influence-chain/route'
-    );
+    const mod =
+      await import('@/app/api/intelligence/representative/[bioguideId]/influence-chain/route');
     GET = mod.GET;
   });
 
@@ -189,7 +188,7 @@ describe('Integration: GET /api/intelligence/representative/[bioguideId]/influen
       lastAnalyzedAt: new Date().toISOString(),
       source: 'statistical-fallback',
     };
-    mockRedisStore.set('insight:influence_chain:v2:T000001', cached);
+    mockRedisStore.set('insight:influence_chain:v4:T000001', cached);
 
     const res = await GET(
       mockRequest('http://localhost/') as never,

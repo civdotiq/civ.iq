@@ -576,18 +576,6 @@ export function parseCookPVI(pvi: string): { party: 'R' | 'D' | null; margin: nu
 }
 
 /**
- * Estimate election margin from Cook PVI
- * Cook PVI roughly correlates to expected margin:
- * R+5 suggests ~5% Republican margin in a neutral election year
- * This is an ESTIMATE, not actual election results
- */
-export function estimateMarginFromPVI(pvi: string): number {
-  const parsed = parseCookPVI(pvi);
-  // Return the margin as a positive number (the party info is in cookPVI)
-  return parsed.margin;
-}
-
-/**
  * Determine if a district is competitive based on Cook PVI
  * Competitive is typically defined as ±5 points or EVEN
  */

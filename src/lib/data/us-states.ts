@@ -1,7 +1,7 @@
 /**
  * U.S. States and Territories - Consolidated Reference Data
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * This file is the SINGLE SOURCE OF TRUTH for all state/territory mappings.
  * Includes all 50 states plus DC and 5 territories.

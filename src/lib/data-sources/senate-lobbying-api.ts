@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 import { cachedFetch } from '@/lib/cache';
@@ -776,7 +776,7 @@ export class SenateLobbyingAPI {
    * (the committee name) plus ~79 cheap dot products.
    *
    * Calibrated 2026-04-16 against the all-MiniLM-L6-v2 model. Empirical
-   * findings (see docs/CALIBRATION-lobbying-2026-04-16.json):
+   * findings (see docs/archive/CALIBRATION-lobbying-2026-04-16.json):
    *   - Real-signal band: 0.40–0.60 (e.g., TAX→Taxation 0.439, DIS→Disaster
    *     Planning 0.601). Below 0.40 is mostly noise.
    *   - Floor: ~0.30–0.36 noise from generic-sounding labels (Government

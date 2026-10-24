@@ -19,8 +19,7 @@
  *        npx tsx scripts/collect-training-data.ts --with-bill-text
  */
 
-import * as dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
+import './load-env';
 
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
@@ -542,24 +541,21 @@ async function fetchLegislatorVotes(
   }>
 > {
   try {
-    const fetchSession = async (session: 1 | 2) => {
-      return chamber === 'House'
-        ? batchVotingService.getHouseMemberVotes(
-            bioguideId,
-            CONGRESS,
-            session,
-            MAX_VOTES_PER_LEGISLATOR
-          )
-        : batchVotingService.getSenateMemberVotes(
-            bioguideId,
-            CONGRESS,
-            session,
-            MAX_VOTES_PER_LEGISLATOR
-          );
-    };
-
-    const [session1, session2] = await Promise.all([fetchSession(1), fetchSession(2)]);
-    return [...session1, ...session2];
+    // One call across both sessions; per-session calls used to return the
+    // same votes twice.
+    return await (chamber === 'House'
+      ? batchVotingService.getHouseMemberVotes(
+          bioguideId,
+          CONGRESS,
+          undefined,
+          MAX_VOTES_PER_LEGISLATOR
+        )
+      : batchVotingService.getSenateMemberVotes(
+          bioguideId,
+          CONGRESS,
+          undefined,
+          MAX_VOTES_PER_LEGISLATOR
+        ));
   } catch {
     return [];
   }

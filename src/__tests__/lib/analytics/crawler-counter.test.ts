@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  *
  * Crawler counter tests
  *
@@ -25,6 +25,17 @@ describe('identifyCrawler', () => {
     expect(identifyCrawler('Mozilla/5.0 (compatible; ClaudeBot/1.0)')).toBe('claudebot');
     expect(identifyCrawler('Mozilla/5.0 (compatible; PerplexityBot/1.0)')).toBe('perplexitybot');
     expect(identifyCrawler('Mozilla/5.0 (compatible; CCBot/2.0)')).toBe('ccbot');
+  });
+
+  it('keeps Meta AI search indexing distinct from Meta training', () => {
+    // Meta-WebIndexer feeds Meta AI search citations; meta-externalagent is
+    // training/product indexing. Separate labels show which one reads us.
+    expect(
+      identifyCrawler(
+        'meta-webindexer/1.1 (+https://developers.facebook.com/docs/sharing/webmasters/crawler)'
+      )
+    ).toBe('meta-webindexer');
+    expect(identifyCrawler('meta-externalagent/1.1')).toBe('meta-externalagent');
   });
 
   it('is case-insensitive', () => {

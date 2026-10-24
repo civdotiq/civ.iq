@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
+ * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
 /**
@@ -11,11 +11,11 @@
  * with external events: new committee assignments, large contributions,
  * election proximity.
  *
- * Party alignment is computed from actual roll call XML — each member's vote
- * is compared to their party's majority position on that roll call.
+ * Party alignment is computed from the roll-call corpus: each member's vote
+ * is compared to their party's majority position on that same roll call.
  *
- * Flow: check cache → fetch votes → compute party alignment → partition into
- * quarters → detect shifts → correlate context → peer comparison → AI narrative → cache
+ * Flow: check cache → read chamber corpus → compute party alignment → partition
+ * into quarters → detect shifts → correlate context → peer comparison → AI narrative → cache
  *
  * Pattern: finance-jurisdiction-analyzer.ts
  */
@@ -38,7 +38,13 @@ import {
   SourceCollector,
   peerComparisonUnavailable,
 } from './shared';
-import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
+import {
+  computeChamberAlignment,
+  derivePartyMajority,
+  normalizePartyLabel,
+  MIN_VOTES_FOR_ALIGNMENT,
+} from './party-line-analyzer';
+import { MIN_CORPUS_COVERAGE, readChamberCorpus } from './roll-corpus-reader';
 import {
   confidenceScore,
   peerComparison,
@@ -50,9 +56,6 @@ import type { TemporalVoteInsight, QuarterData, VoteShift, PeerComparison } from
 /** Redis cache TTL: 14 days (temporal data changes slowly per roadmap). */
 const CACHE_TTL = 14 * 24 * 60 * 60;
 
-/** Redis TTL for parsed roll call party breakdowns: 30 days. */
-const ROLLCALL_CACHE_TTL = 30 * 24 * 60 * 60;
-
 /** Shift detection threshold: 10 percentage points from trailing average. */
 const SHIFT_THRESHOLD = 0.1;
 
@@ -63,207 +66,10 @@ const DISCLAIMER =
   'party strategy, and constituent preferences. ' +
   'Correlation with external events does not indicate causation.';
 
-// ── Party Alignment from Roll Call XML ──────────────────────────────
-
-/**
- * Result of parsing party breakdown from a roll call vote.
- * Describes the majority position of a given party on that vote.
- */
-interface PartyBreakdown {
-  /** The majority position of the specified party. */
-  majorityPosition: 'Yea' | 'Nay' | null;
-  /** Number of party members who voted Yea. */
-  yeaCount: number;
-  /** Number of party members who voted Nay. */
-  nayCount: number;
-  /** Total party members who voted (Yea + Nay only, excludes Present/Not Voting). */
-  totalVoting: number;
-}
-
-/**
- * Determine a party's majority position from a House roll call XML.
- *
- * Parses `<recorded-vote>` elements, counts Yea/Nay by party attribute,
- * returns the majority position for the requested party.
- *
- * Results are cached in Redis (30-day TTL) to avoid re-parsing XML.
- */
-async function getHousePartyBreakdown(
-  rollCallNumber: number,
-  year: number,
-  memberParty: string
-): Promise<PartyBreakdown | null> {
-  const voteId = `house-${year}-${rollCallNumber}`;
-  const cacheKey = `rollcall-party:${voteId}:${normalizeParty(memberParty)}`;
-
-  // Check cache
-  try {
-    const cached = await getRedisCache().get<PartyBreakdown>(cacheKey);
-    if (cached) return cached;
-  } catch {
-    // Cache miss — continue
-  }
-
-  try {
-    const url = `https://clerk.house.gov/evs/${year}/roll${rollCallNumber}.xml`;
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      },
-      signal: AbortSignal.timeout(10000),
-    });
-
-    if (!response.ok) return null;
-
-    const xml = await response.text();
-    const breakdown = parsePartyBreakdownFromXml(xml, memberParty);
-
-    // Cache result
-    try {
-      await getRedisCache().set(cacheKey, breakdown, ROLLCALL_CACHE_TTL);
-    } catch {
-      // Non-fatal
-    }
-
-    return breakdown;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Determine a party's majority position from a Senate roll call XML.
- */
-async function getSenatePartyBreakdown(
-  voteNumber: number,
-  congress: number,
-  session: number,
-  memberParty: string
-): Promise<PartyBreakdown | null> {
-  const paddedNum = voteNumber.toString().padStart(5, '0');
-  const voteId = `senate-${congress}-${session}-${voteNumber}`;
-  const cacheKey = `rollcall-party:${voteId}:${normalizeParty(memberParty)}`;
-
-  // Check cache
-  try {
-    const cached = await getRedisCache().get<PartyBreakdown>(cacheKey);
-    if (cached) return cached;
-  } catch {
-    // Cache miss — continue
-  }
-
-  try {
-    const url = `https://www.senate.gov/legislative/LIS/roll_call_votes/vote${congress}${session}/vote_${congress}_${session}_${paddedNum}.xml`;
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      },
-      signal: AbortSignal.timeout(10000),
-    });
-
-    if (!response.ok) return null;
-
-    const xml = await response.text();
-    const breakdown = parseSenatePartyBreakdown(xml, memberParty);
-
-    // Cache result
-    try {
-      await getRedisCache().set(cacheKey, breakdown, ROLLCALL_CACHE_TTL);
-    } catch {
-      // Non-fatal
-    }
-
-    return breakdown;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Parse party breakdown from House XML.
- * House XML uses `<recorded-vote>` with `<legislator party="D">` and `<vote>Yea</vote>`.
- */
-function parsePartyBreakdownFromXml(xml: string, memberParty: string): PartyBreakdown {
-  const normalizedParty = normalizeParty(memberParty);
-  let yeaCount = 0;
-  let nayCount = 0;
-
-  const recordedVotes = xml.matchAll(/<recorded-vote>[\s\S]*?<\/recorded-vote>/g);
-  for (const [block] of recordedVotes) {
-    const partyMatch = block.match(/party="([^"]+)"/);
-    const voteMatch = block.match(/<vote>([^<]*)<\/vote>/);
-
-    if (!partyMatch?.[1] || !voteMatch?.[1]) continue;
-
-    if (normalizeParty(partyMatch[1]) !== normalizedParty) continue;
-
-    const position = voteMatch[1].trim().toLowerCase();
-    if (position === 'yea' || position === 'aye' || position === 'yes') {
-      yeaCount++;
-    } else if (position === 'nay' || position === 'no') {
-      nayCount++;
-    }
-  }
-
-  const totalVoting = yeaCount + nayCount;
-  const majorityPosition: 'Yea' | 'Nay' | null =
-    totalVoting === 0 ? null : yeaCount >= nayCount ? 'Yea' : 'Nay';
-
-  return { majorityPosition, yeaCount, nayCount, totalVoting };
-}
-
-/**
- * Parse party breakdown from Senate XML.
- * Senate XML uses `<member>` with `<party>D</party>` and `<vote_cast>Yea</vote_cast>`.
- */
-function parseSenatePartyBreakdown(xml: string, memberParty: string): PartyBreakdown {
-  const normalizedParty = normalizeParty(memberParty);
-  let yeaCount = 0;
-  let nayCount = 0;
-
-  const members = xml.matchAll(/<member>[\s\S]*?<\/member>/g);
-  for (const [block] of members) {
-    const partyMatch = block.match(/<party>([^<]*)<\/party>/);
-    const voteMatch = block.match(/<vote_cast>([^<]*)<\/vote_cast>/);
-
-    if (!partyMatch?.[1] || !voteMatch?.[1]) continue;
-
-    if (normalizeParty(partyMatch[1]) !== normalizedParty) continue;
-
-    const position = voteMatch[1].trim().toLowerCase();
-    if (position === 'yea' || position === 'aye' || position === 'yes') {
-      yeaCount++;
-    } else if (position === 'nay' || position === 'no') {
-      nayCount++;
-    }
-  }
-
-  const totalVoting = yeaCount + nayCount;
-  const majorityPosition: 'Yea' | 'Nay' | null =
-    totalVoting === 0 ? null : yeaCount >= nayCount ? 'Yea' : 'Nay';
-
-  return { majorityPosition, yeaCount, nayCount, totalVoting };
-}
-
-/** Normalize party label to single letter. */
-function normalizeParty(party: string): string {
-  const p = party.trim().toUpperCase();
-  if (p === 'D' || p === 'DEMOCRAT' || p === 'DEMOCRATIC') return 'D';
-  if (p === 'R' || p === 'REPUBLICAN') return 'R';
-  if (p === 'I' || p === 'INDEPENDENT' || p === 'ID') return 'I';
-  return p.charAt(0) || 'U';
-}
-
-/** Normalize a member vote position to Yea/Nay. */
-function normalizePosition(position: string): 'Yea' | 'Nay' | null {
-  const p = position.toLowerCase().trim();
-  if (p === 'yea' || p === 'aye' || p === 'yes') return 'Yea';
-  if (p === 'nay' || p === 'no') return 'Nay';
-  return null; // Present / Not Voting are excluded from alignment calculation
+/** v2: built from the roll-call corpus. v1 entries came from a 250-vote
+ *  sample fetched twice (once per session argument the fetchers ignored). */
+export function temporalInsightCacheKey(bioguideId: string): string {
+  return `insight:temporal_votes:v2:${bioguideId}`;
 }
 
 // ── Quarter Utilities ───────────────────────────────────────────────
@@ -288,12 +94,14 @@ function sortQuarters(a: string, b: string): number {
  * Analyze temporal vote pattern shifts for a legislator.
  *
  * Returns cached insight if fresh, otherwise computes from scratch.
- * On any failure, returns a statistical fallback without AI narrative.
+ * Returns null when the member can't be analyzed: not found, no D/R party
+ * majority to compare against, a corpus below MIN_CORPUS_COVERAGE, or fewer
+ * than MIN_QUARTERS_TEMPORAL quarters of votes.
  */
 export async function analyzeTemporalVotes(
   bioguideId: string
 ): Promise<TemporalVoteInsight | null> {
-  const cacheKey = `insight:temporal_votes:${bioguideId}`;
+  const cacheKey = temporalInsightCacheKey(bioguideId);
 
   // 1. Check cache
   try {
@@ -315,12 +123,12 @@ async function computeAndCache(
   bioguideId: string,
   cacheKey: string
 ): Promise<TemporalVoteInsight | null> {
-  // 2. Fetch data
+  // 2. Read the member's votes and party majorities from the corpus
   const data = await fetchData(bioguideId);
   if (!data) return null;
 
   // 3. Compute quarterly alignment
-  const quarters = await computeQuarterlyAlignment(data);
+  const quarters = computeQuarterlyAlignment(data.votes);
   if (quarters.length < MIN_QUARTERS_TEMPORAL) {
     logger.info('[TemporalVotes] Insufficient quarters', {
       bioguideId,
@@ -336,15 +144,14 @@ async function computeAndCache(
   // 5. Classify overall trend
   const overallTrend = classifyTrend(quarters, shifts);
 
-  // 6. Peer comparison
-  const avgAlignment = quarters.reduce((sum, q) => sum + q.alignmentScore, 0) / quarters.length;
-  const peer = await computePeerComparison(bioguideId, avgAlignment, data.chamber, data.state);
+  // 6. Peer comparison: same-party members of the chamber, same corpus
+  const peer = peerComparison(data.overallAlignment, data.peerScores, data.peerGroupLabel);
 
   // 7. Confidence
   const conf = confidenceScore({
-    sampleSize: quarters.reduce((sum, q) => sum + q.voteCount, 0),
+    sampleSize: data.votes.length,
     minimumSampleSize: 40, // ~10 votes per quarter * 4 quarters
-    dataCompleteness: quarters.length / 5, // 5 quarters is full 119th Congress data
+    dataCompleteness: data.corpusCoverage,
     peerCount: peer?.peerCount ?? 0,
   });
 
@@ -352,8 +159,13 @@ async function computeAndCache(
   const { narrative, source } = await generateNarrative(data, quarters, shifts, overallTrend, peer);
 
   const sc = new SourceCollector();
-  sc.add('Congress.gov roll calls', '119th Congress', data.votes.length);
-  sc.add('House Clerk / Senate XML', '119th Congress');
+  sc.add(
+    data.chamber === 'House'
+      ? 'Congress.gov House roll calls'
+      : 'Senate.gov roll-call XML (mirrored)',
+    `${getCurrentCongressNumber()}th Congress`,
+    data.rollCount
+  );
 
   const insight: TemporalVoteInsight = {
     bioguideId,
@@ -364,18 +176,20 @@ async function computeAndCache(
     ...(peer
       ? {}
       : {
-          peerComparisonUnavailableReason: peerComparisonUnavailable(
-            `other members of the ${data.state} ${data.chamber} delegation`
-          ),
+          peerComparisonUnavailableReason: peerComparisonUnavailable(data.peerGroupLabel),
         }),
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(conf, 0.5) : conf,
     confidenceMethod: 'computed',
-    dataAsOf: freshestDate(...data.votes.map(v => v.date))!,
+    dataAsOf: freshestDate(...data.votes.map(v => v.date)) ?? new Date().toISOString(),
     methodology:
-      'Party alignment computed by comparing each vote to the party majority position ' +
-      'on that roll call (from House Clerk / Senate XML). Votes partitioned into calendar quarters. ' +
-      'Shifts detected when quarterly alignment deviates >10 percentage points from trailing 4-quarter average.',
+      `Party alignment computed from ${data.rollCount} ${data.chamber} roll calls of the ` +
+      `${getCurrentCongressNumber()}th Congress: a vote aligns when it matches the party majority ` +
+      'among same-party Yea/Nay votes on that roll call (at least 5 voting, ties skipped). ' +
+      'Present and Not Voting are excluded. Votes partitioned into calendar quarters. ' +
+      'Shifts detected when quarterly alignment deviates >10 percentage points from the trailing ' +
+      `4-quarter average. Peer baseline: ${data.peerGroupLabel} with at least ` +
+      `${MIN_VOTES_FOR_ALIGNMENT} qualifying votes.`,
     disclaimer: DISCLAIMER,
     signal: classifySignal({
       confidence: source === 'statistical-fallback' ? Math.min(conf, 0.5) : conf,
@@ -388,26 +202,35 @@ async function computeAndCache(
   };
 
   await cacheInsight(cacheKey, insight);
-  await cachePeerScore(bioguideId, avgAlignment, data.chamber, data.state, data.party);
+  await cachePeerScore(bioguideId, data.overallAlignment, data.chamber, data.state, data.party);
 
   return insight;
 }
 
 // ── Data Fetching ───────────────────────────────────────────────────
 
+interface AlignedVote {
+  date: string;
+  quarter: string;
+  withParty: boolean;
+}
+
 interface FetchedData {
   name: string;
   party: string;
   state: string;
   chamber: 'House' | 'Senate';
-  committees: string[];
   nextElection?: string;
-  votes: Array<{
-    voteId: string;
-    date: string;
-    position: string;
-    rollCallNumber?: number;
-  }>;
+  /** The member's Yea/Nay votes on rolls where their party had a clear majority. */
+  votes: AlignedVote[];
+  /** Share of all qualifying votes cast with the party majority. */
+  overallAlignment: number;
+  /** Same-party chamber members' overall alignment, excluding this member. */
+  peerScores: number[];
+  peerGroupLabel: string;
+  /** Roll calls read from the corpus. */
+  rollCount: number;
+  corpusCoverage: number;
 }
 
 async function fetchData(bioguideId: string): Promise<FetchedData | null> {
@@ -417,123 +240,78 @@ async function fetchData(bioguideId: string): Promise<FetchedData | null> {
     return null;
   }
 
-  // Fetch votes from both sessions of 119th Congress
-  let allVotes: Array<{
-    voteId: string;
-    date: string;
-    position: string;
-    rollCallNumber?: number;
-  }> = [];
-
-  const isHouse = rep.chamber === 'House';
-
-  for (const session of [1, 2]) {
-    try {
-      const sessionVotes = isHouse
-        ? await batchVotingService.getHouseMemberVotes(
-            bioguideId,
-            getCurrentCongressNumber(),
-            session,
-            250
-          )
-        : await batchVotingService.getSenateMemberVotes(
-            bioguideId,
-            getCurrentCongressNumber(),
-            session,
-            250
-          );
-
-      allVotes = allVotes.concat(
-        sessionVotes.map(v => ({
-          voteId: v.voteId,
-          date: v.date,
-          position: v.position,
-          rollCallNumber: v.rollCallNumber,
-        }))
-      );
-    } catch {
-      logger.warn('[TemporalVotes] Failed to fetch session votes', {
-        bioguideId,
-        session,
-        chamber: rep.chamber,
-      });
-    }
-  }
-
-  if (allVotes.length === 0) {
-    logger.info('[TemporalVotes] No votes found', { bioguideId });
+  // Party alignment needs a party majority to compare against; independents
+  // caucus with a party but have no majority of their own.
+  const party = normalizePartyLabel(rep.party);
+  if (!party) {
+    logger.info('[TemporalVotes] No D/R party to align against', {
+      bioguideId,
+      party: rep.party,
+    });
     return null;
   }
+
+  const corpus = await readChamberCorpus(rep.chamber, getCurrentCongressNumber());
+  if (corpus.rolls.length === 0 || corpus.coverage < MIN_CORPUS_COVERAGE) {
+    logger.warn('[TemporalVotes] Roll-call corpus incomplete — temporal analysis unavailable', {
+      bioguideId,
+      chamber: rep.chamber,
+      rolls: corpus.rolls.length,
+      expected: corpus.expected,
+      minimumCoverage: MIN_CORPUS_COVERAGE,
+    });
+    return null;
+  }
+
+  const votes: AlignedVote[] = [];
+  for (const roll of corpus.rolls) {
+    const own = roll.memberVotes.find(mv => mv.bioguideId === bioguideId);
+    if (!own || (own.position !== 'Yea' && own.position !== 'Nay')) continue;
+
+    const quarter = getQuarterLabel(roll.date);
+    if (!quarter) continue;
+
+    const majority = derivePartyMajority(roll.memberVotes, party);
+    if (!majority) continue;
+
+    votes.push({ date: roll.date, quarter, withParty: own.position === majority.position });
+  }
+
+  if (votes.length === 0) {
+    logger.info('[TemporalVotes] No qualifying votes in corpus', { bioguideId });
+    return null;
+  }
+
+  const chamberAlignment = computeChamberAlignment(corpus.rolls, party);
+  const peerScores: number[] = [];
+  for (const [id, entry] of chamberAlignment) {
+    if (id === bioguideId || entry.votesAnalyzed < MIN_VOTES_FOR_ALIGNMENT) continue;
+    peerScores.push(entry.alignmentRate);
+  }
+
+  const withParty = votes.filter(v => v.withParty).length;
 
   return {
     name: rep.name,
     party: rep.party,
     state: rep.state,
     chamber: rep.chamber,
-    committees: rep.committees?.map(c => c.name) ?? [],
     nextElection: rep.nextElection,
-    votes: allVotes,
+    votes,
+    overallAlignment: withParty / votes.length,
+    peerScores,
+    peerGroupLabel: `other ${rep.chamber} ${party === 'Democratic' ? 'Democrats' : 'Republicans'}`,
+    rollCount: corpus.rolls.length,
+    corpusCoverage: corpus.coverage,
   };
 }
 
 // ── Quarterly Alignment Computation ─────────────────────────────────
 
-interface VoteWithAlignment {
-  quarter: string;
-  withParty: boolean;
-}
-
-async function computeQuarterlyAlignment(data: FetchedData): Promise<QuarterData[]> {
-  // Determine party alignment for each vote
-  const alignedVotes: VoteWithAlignment[] = [];
-
-  // Process votes in batches to limit concurrency
-  const BATCH_SIZE = 10;
-  for (let i = 0; i < data.votes.length; i += BATCH_SIZE) {
-    const batch = data.votes.slice(i, i + BATCH_SIZE);
-    const results = await Promise.allSettled(
-      batch.map(async vote => {
-        const quarter = getQuarterLabel(vote.date);
-        if (!quarter) return null;
-
-        const memberPosition = normalizePosition(vote.position);
-        if (!memberPosition) return null; // Skip Present / Not Voting
-
-        // Get party majority position from roll call XML
-        let breakdown: PartyBreakdown | null = null;
-
-        if (data.chamber === 'House' && vote.rollCallNumber) {
-          const year = new Date(vote.date).getFullYear();
-          breakdown = await getHousePartyBreakdown(vote.rollCallNumber, year, data.party);
-        } else if (data.chamber === 'Senate' && vote.rollCallNumber) {
-          const session = getSessionFromDate(vote.date);
-          breakdown = await getSenatePartyBreakdown(
-            vote.rollCallNumber,
-            getCurrentCongressNumber(),
-            session,
-            data.party
-          );
-        }
-
-        if (!breakdown?.majorityPosition) return null;
-
-        return {
-          quarter,
-          withParty: memberPosition === breakdown.majorityPosition,
-        };
-      })
-    );
-
-    for (const result of results) {
-      if (result.status === 'fulfilled' && result.value) {
-        alignedVotes.push(result.value);
-      }
-    }
-  }
-
+function computeQuarterlyAlignment(votes: AlignedVote[]): QuarterData[] {
   // Partition into quarters
   const quarterMap = new Map<string, { withParty: number; total: number }>();
-  for (const vote of alignedVotes) {
+  for (const vote of votes) {
     const existing = quarterMap.get(vote.quarter) ?? { withParty: 0, total: 0 };
     if (vote.withParty) existing.withParty++;
     existing.total++;
@@ -566,12 +344,6 @@ async function computeQuarterlyAlignment(data: FetchedData): Promise<QuarterData
   }
 
   return quarterData;
-}
-
-/** Get Congress session number from a date (odd year = session 1, even year = session 2). */
-function getSessionFromDate(dateStr: string): number {
-  const year = new Date(dateStr).getFullYear();
-  return year % 2 === 1 ? 1 : 2;
 }
 
 // ── Shift Detection ─────────────────────────────────────────────────
@@ -733,30 +505,6 @@ async function cachePeerScore(
   }
 }
 
-async function computePeerComparison(
-  bioguideId: string,
-  avgAlignment: number,
-  chamber: string,
-  state: string
-): Promise<PeerComparison | null> {
-  try {
-    const pattern = `temporal-alignment:${chamber}:${state}:*`;
-    const keys = await getRedisCache().keys(pattern);
-
-    const peerKeys = keys.filter(k => !k.endsWith(`:${bioguideId}`));
-    if (peerKeys.length < MIN_PEERS) return null;
-
-    const values = await getRedisCache().mget<number>(peerKeys);
-    const peerScores = values.filter((v): v is number => v !== null && typeof v === 'number');
-
-    if (peerScores.length < MIN_PEERS) return null;
-
-    return peerComparison(avgAlignment, peerScores, `${state} ${chamber} delegation members`);
-  } catch {
-    return null;
-  }
-}
-
 // ── AI Narrative Generation ─────────────────────────────────────────
 
 async function generateNarrative(
@@ -793,10 +541,10 @@ async function generateNarrative(
       : 'No significant shifts detected.';
 
   const peerLine = peer
-    ? `Peer comparison: Average alignment is ${(avgFromQuarters(quarters) * 100).toFixed(1)}%. ` +
+    ? `Peer comparison: Overall alignment is ${(data.overallAlignment * 100).toFixed(1)}%. ` +
       `The average for ${peer.peerGroupLabel} is ${(peer.peerAverage * 100).toFixed(1)}% ` +
       `(${peer.peerCount} peers, percentile rank: ${peer.percentileRank}).`
-    : 'No peer comparison available yet (insufficient data from state delegation).';
+    : `No peer comparison available (too few ${data.peerGroupLabel} with comparable data).`;
 
   const userPrompt = `LEGISLATOR: ${data.name} (${data.party}-${data.state}), ${data.chamber}
 
@@ -819,10 +567,6 @@ ${PLAIN_LANGUAGE_RULES}`;
   return generateInsightNarrative(systemContext, userPrompt, fallback, '[TemporalVotes]');
 }
 
-function avgFromQuarters(quarters: QuarterData[]): number {
-  return quarters.reduce((sum, q) => sum + q.alignmentScore, 0) / quarters.length;
-}
-
 // ── Fallback ────────────────────────────────────────────────────────
 
 function buildStatisticalSummary(
@@ -832,7 +576,7 @@ function buildStatisticalSummary(
   overallTrend: string,
   peer: PeerComparison | null
 ): string {
-  const avg = (avgFromQuarters(quarters) * 100).toFixed(1);
+  const avg = (data.overallAlignment * 100).toFixed(1);
 
   let summary =
     `${data.name} voted with their party ${avg}% of the time across ${quarters.length} quarters ` +
