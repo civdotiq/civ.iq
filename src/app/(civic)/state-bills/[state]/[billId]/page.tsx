@@ -124,6 +124,8 @@ export default function StateBillDetailPage() {
 
   // Error state
   if (error || !data?.success || !data?.bill) {
+    // 503: OpenStates timed out or is out of daily quota. The bill may exist.
+    const unavailable = error instanceof Error && error.message.startsWith('HTTP 503');
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -136,9 +138,13 @@ export default function StateBillDetailPage() {
           </button>
           <div className="text-center py-12">
             <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Bill Not Found</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {unavailable ? 'Bill data temporarily unavailable' : 'Bill Not Found'}
+            </h2>
             <p className="text-gray-600 mb-6">
-              The bill you&apos;re looking for could not be found or has been removed.
+              {unavailable
+                ? 'OpenStates, the source for state bills, did not respond in time. Try again in a few minutes.'
+                : "The bill you're looking for could not be found or has been removed."}
             </p>
             <Link
               href={`/state-legislature/${state}`}

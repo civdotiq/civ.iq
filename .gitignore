@@ -74,6 +74,9 @@ Thumbs.db
 
 # Large data files
 scripts/data/
+# Per-state roll-call artifacts are hosted outside the repo (see
+# scripts/sync-openstates-votes.ts); only data/openstates-votes.meta.json is committed.
+data/openstates-votes/
 
 # ML training data (regenerated per-cycle, too large for repo)
 training-data/
