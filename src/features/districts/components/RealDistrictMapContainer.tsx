@@ -14,17 +14,27 @@ import {
 import type { Map } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { loadMaplibre } from './maplibre-loader';
+import {
+  TIGERWEB_BASE,
+  TIGERWEB_SITTING_LAYERS,
+  resolveTigerwebLayer,
+} from '@/lib/tigerweb-layers';
 
 // Default center of US - defined outside component to avoid re-creation
 const DEFAULT_CENTER: [number, number] = [-95.7129, 37.0902];
 const DEFAULT_ZOOM = 4;
 
-// Census TIGERweb dynamic map export for 119th Congressional Districts (Layer 0)
-// Uses {bbox-epsg-3857} template supported by MapLibre for WMS-style tile loading.
-// Tiles load on demand per viewport - no need to download all 435 districts at once.
-const CENSUS_DISTRICTS_TILE_URL =
-  'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer/export?' +
-  'bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=256,256&format=png32&transparent=true&layers=show:0&f=image';
+// Census TIGERweb dynamic map export for the sitting (119th) Congressional
+// Districts. Census renumbers layers each vintage (since Sept 2026 layer 0 is
+// the 120th Congress), so the layer is resolved by name. Uses the
+// {bbox-epsg-3857} template MapLibre supports for WMS-style tile loading;
+// tiles load on demand per viewport.
+function censusDistrictsTileUrl(layerId: number): string {
+  return (
+    `${TIGERWEB_BASE}/export?` +
+    `bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=256,256&format=png32&transparent=true&layers=show:${layerId}&f=image`
+  );
+}
 
 interface RealDistrictMapProps {
   selectedState?: string;
@@ -109,7 +119,13 @@ export function RealDistrictMapContainer({
 
     const initializeMap = async () => {
       try {
-        const maplibregl = await loadMaplibre();
+        const [maplibregl, cdLayerId] = await Promise.all([
+          loadMaplibre(),
+          resolveTigerwebLayer(
+            TIGERWEB_SITTING_LAYERS.cd.name,
+            TIGERWEB_SITTING_LAYERS.cd.fallback
+          ),
+        ]);
         if (cancelled || !mapContainer.current) return;
 
         // Create map with OSM base tiles + Census district boundary overlay
@@ -127,7 +143,7 @@ export function RealDistrictMapContainer({
               },
               'census-districts': {
                 type: 'raster',
-                tiles: [CENSUS_DISTRICTS_TILE_URL],
+                tiles: [censusDistrictsTileUrl(cdLayerId)],
                 tileSize: 256,
                 attribution: 'US Census Bureau TIGERweb',
               },

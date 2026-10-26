@@ -64,7 +64,8 @@ interface LobbyingResponse {
       committeeCode: string;
       committeeName: string;
       windowTotal: number;
-      quarterly: Array<{ quarter: string; total: number }>;
+      windowFilingCount: number;
+      quarterly: Array<{ quarter: string; total: number; filings: number }>;
       peer: { medianTotal: number; ratioToMedian: number };
       topIssues: Array<{ code: string; label: string; count: number }>;
       topOrgs: Array<{
@@ -122,10 +123,11 @@ function shortQuarter(q: string): string {
 type CorpusLobbying = NonNullable<LobbyingResponse['corpusLobbying']>;
 
 /**
- * Corpus-backed per-committee totals from the complete Senate LDA corpus (not
- * the ~0.1% live sample). Totals only — top-orgs stay in the sample section
- * below until entity resolution lands. Totals are per committee, never summed
- * across committees (a filing naming several committees counts toward each).
+ * Corpus-backed per-committee activity from the complete Senate LDA corpus
+ * (not the ~0.1% live sample), as report counts. No dollar totals: reports
+ * don't name committees; each is matched by issue codes and agencies
+ * contacted and counts in full toward every committee it matches, so summed
+ * dollars overstate spending. Counts are per committee, never added across.
  */
 function CorpusLobbyingSection({ corpus }: { corpus: CorpusLobbying }) {
   const firstQuarter = corpus.quarters[0];
@@ -133,39 +135,40 @@ function CorpusLobbyingSection({ corpus }: { corpus: CorpusLobbying }) {
 
   return (
     <div>
-      <h3 className="aicher-heading type-lg text-gray-900 mb-1">Lobbying spending by committee</h3>
+      <h3 className="aicher-heading type-lg text-gray-900 mb-1">Lobbying reports by committee</h3>
       <p className="type-xs text-gray-500 mb-4">
-        Total reported spending on Senate LDA filings that disclose each committee, across the
-        complete corpus{firstQuarter && lastQuarter ? ` (${firstQuarter} to ${lastQuarter})` : ''}.
-        A filing naming several committees counts toward each, so totals are not summed across
+        Senate LDA reports matched to each committee across the complete corpus
+        {firstQuarter && lastQuarter ? ` (${firstQuarter} to ${lastQuarter})` : ''}. Reports
+        don&apos;t name committees; CIV.IQ matches each by its issue codes and the agencies it
+        contacted, so one report can count toward several committees and counts are not added across
         committees.
       </p>
       <div className="space-y-3">
         {corpus.committees.map(c => {
-          const maxQuarter = Math.max(...c.quarterly.map(q => q.total), 1);
-          const pctOfMedian = c.peer.ratioToMedian;
+          const maxQuarter = Math.max(...c.quarterly.map(q => q.filings), 1);
           return (
             <div key={c.committeeCode} className="border-2 border-gray-200 p-3">
               <div className="flex items-start justify-between gap-3">
                 <span className="type-sm font-medium text-gray-900">{c.committeeName}</span>
                 <span className="type-lg font-semibold text-gray-900 aicher-heading-wide flex-shrink-0">
-                  {formatCompact(c.windowTotal)}
+                  {c.windowFilingCount.toLocaleString('en-US')} reports
                 </span>
               </div>
-              <p className="type-xs text-gray-500 mt-0.5">
-                {pctOfMedian >= 1
-                  ? `${pctOfMedian.toFixed(1)}× the median committee (${formatCompact(c.peer.medianTotal)})`
-                  : `${Math.round(pctOfMedian * 100)}% of the median committee (${formatCompact(c.peer.medianTotal)})`}
-              </p>
               {c.quarterly.length > 0 && (
-                <div className="flex items-end gap-1 mt-3" style={{ height: 64 }}>
+                <div
+                  className="flex items-end gap-1 mt-3"
+                  style={{ height: 64 }}
+                  role="img"
+                  aria-label={`${c.committeeName}: matched reports per quarter`}
+                >
                   {c.quarterly.map(q => (
                     <div key={q.quarter} className="flex-1 flex flex-col items-center min-w-0">
                       <div className="w-full flex items-end justify-center" style={{ height: 40 }}>
                         <div
                           className="w-full bg-[#3ea2d4]"
+                          title={`${shortQuarter(q.quarter)}: ${q.filings.toLocaleString('en-US')} reports`}
                           style={{
-                            height: `${Math.max((q.total / maxQuarter) * 100, q.total > 0 ? 4 : 0)}%`,
+                            height: `${Math.max((q.filings / maxQuarter) * 100, q.filings > 0 ? 4 : 0)}%`,
                           }}
                         />
                       </div>
@@ -205,7 +208,8 @@ function CorpusLobbyingSection({ corpus }: { corpus: CorpusLobbying }) {
                           className="text-gray-700 break-words min-w-0"
                         />
                         <span className="text-gray-500 aicher-heading-wide flex-shrink-0">
-                          {formatCompact(org.amount)}
+                          {org.filings.toLocaleString('en-US')}{' '}
+                          {org.filings === 1 ? 'report' : 'reports'}
                         </span>
                       </div>
                     ))}

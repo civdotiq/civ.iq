@@ -1,4 +1,5 @@
 import logger from '@/lib/logging/simple-logger';
+import { ACS_5YR_VINTAGE } from '@/lib/census-vintage';
 
 // District demographics interface for type safety
 export interface DistrictDemographics {
@@ -136,7 +137,7 @@ export async function fetchStateDistrictDemographics(
   const variables = Object.values(CENSUS_VARIABLES).join(',');
   // Census only accepts the key as a query parameter, never as a header.
   const keyParam = censusApiKey && !censusApiKey.startsWith('your_') ? `&key=${censusApiKey}` : '';
-  const url = `https://api.census.gov/data/2021/acs/acs5?get=${variables}&for=congressional%20district:*&in=state:${stateFips}${keyParam}`;
+  const url = `https://api.census.gov/data/${ACS_5YR_VINTAGE}/acs/acs5?get=${variables}&for=congressional%20district:*&in=state:${stateFips}${keyParam}`;
 
   const response = await fetch(url);
   if (!response.ok) {
@@ -260,7 +261,7 @@ export async function fetchAllDistrictDemographics(
     // exists and is not a placeholder.
     const keyParam =
       censusApiKey && !censusApiKey.startsWith('your_') ? `&key=${censusApiKey}` : '';
-    const url = `https://api.census.gov/data/2021/acs/acs5?get=${variables}&for=congressional%20district:*${keyParam}`;
+    const url = `https://api.census.gov/data/${ACS_5YR_VINTAGE}/acs/acs5?get=${variables}&for=congressional%20district:*${keyParam}`;
 
     logger.debug('Making Census API request', { urlPreview: url.substring(0, 100) + '...' });
 

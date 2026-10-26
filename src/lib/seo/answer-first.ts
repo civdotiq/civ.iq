@@ -170,7 +170,7 @@ export interface DistrictDemographics {
   medianAge?: number;
   collegePct?: number;
   povertyPct?: number;
-  /** ACS 5-year vintage the figures come from (2022 = the 2018–2022 survey). */
+  /** ACS 5-year vintage the figures come from (2024 = the 2020–2024 survey). */
   surveyYear?: number;
 }
 
@@ -606,15 +606,14 @@ export function questionLede(q: QuestionLedeInput): string | null {
       ]);
     }
     case 'committee-activity': {
-      // The hearing list is not reliably the committee's newest hearings, so
-      // the sentence states how many the page shows and claims no recency.
+      // The page lists the committee's most recent held meetings by date.
       const asOf = q.asOf ? longDate(q.asOf) : null;
       const newestBill = q.newestBillDate ? longDate(q.newestBillDate) : null;
       if (q.meetings.length === 0 && q.billsShown === 0) return null;
       const lead = asOf ? `As of ${asOf}, this` : 'This';
       return join([
         q.meetings.length > 0
-          ? `${lead} page lists ${plural(q.meetings.length, 'hearing or meeting', 'hearings and meetings')} of the ${q.committee} from Congress.gov.`
+          ? `${lead} page lists the ${q.meetings.length === 1 ? 'most recent hearing or meeting' : `${q.meetings.length} most recent hearings and meetings`} of the ${q.committee} from Congress.gov.`
           : null,
         q.billsShown > 0
           ? `${q.meetings.length > 0 ? 'It also lists' : `${lead} page lists`} ${plural(q.billsShown, 'bill', 'bills')} referred to the committee${newestBill ? `, the newest introduced on ${newestBill}` : ''}.`

@@ -370,22 +370,24 @@ describe('questionLede', () => {
     );
   });
 
-  it('counts the hearings the page lists without claiming they are the latest', () => {
+  it('describes the hearings as the most recent the page lists', () => {
     const text = questionLede({
       slug: 'committee-activity',
       committee: 'House Committee on Agriculture',
       meetings: [
-        { date: '2025-02-11', title: 'Older' },
-        { date: '2026-06-10', title: 'Agricultural Perspectives on the Future of the USMCA' },
+        { date: '2026-09-16', title: 'A' },
+        { date: '2026-07-22', title: 'B' },
+        { date: '2026-07-21', title: 'C' },
+        { date: '2026-06-25', title: 'D' },
+        { date: '2026-06-10', title: 'E' },
       ],
       billsShown: 8,
       newestBillDate: '2026-10-22',
       asOf: '2026-10-26T00:00:00Z',
     });
     expect(text).toBe(
-      'As of October 26, 2026, this page lists 2 hearings and meetings of the House Committee on Agriculture from Congress.gov. It also lists 8 bills referred to the committee, the newest introduced on October 22, 2026.'
+      'As of October 26, 2026, this page lists the 5 most recent hearings and meetings of the House Committee on Agriculture from Congress.gov. It also lists 8 bills referred to the committee, the newest introduced on October 22, 2026.'
     );
-    expect(text).not.toMatch(/latest|recent/i);
   });
 
   it('counts lobbying reports, not dollars, and says how reports are matched', () => {

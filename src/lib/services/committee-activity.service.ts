@@ -20,6 +20,7 @@
 
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
+import { mapWithConcurrency } from '@/lib/utils/concurrency';
 
 const CONGRESS_API_KEY = process.env.CONGRESS_API_KEY;
 const CURRENT_CONGRESS = 119;
@@ -32,10 +33,14 @@ const DEFAULT_BILL_DETAIL_LIMIT = 8;
 const BILLS_LOOKBACK_DAYS = 180;
 
 // Meetings list fetch size (chamber-wide, then filtered by committee).
-// Congress.gov does not expose a committee-filtered meetings endpoint,
-// so we fetch a large window and filter in memory. 200 gives good
-// coverage of recent committee activity without exceeding API limits.
-const MEETINGS_LIST_LIMIT = 200;
+// Congress.gov does not expose a committee-filtered meetings endpoint and
+// lists meetings by update date, so we read the largest page it serves (250)
+// and filter and sort in memory.
+const MEETINGS_LIST_LIMIT = 250;
+
+// Meeting details are fetched this many at a time: an unbounded burst of 250
+// gets throttled, and each dropped detail silently hid a hearing.
+const MEETING_DETAIL_CONCURRENCY = 10;
 
 // ── Public Types ──────────────────────────────────────────────────
 
@@ -117,7 +122,7 @@ interface CongressMeetingListItem {
   url: string;
 }
 
-interface CongressMeetingDetail {
+export interface CongressMeetingDetail {
   chamber: string;
   congress: number;
   eventId: string;
@@ -237,11 +242,12 @@ export async function fetchCommitteeMeetings(
   }
 
   const apiChamber = chamberToApiSegment(chamber);
-  // v3 suffix busts stale cache from pre-format-json fix and smaller fetch size
-  const cacheKey = `committee-meetings-v3:${committeeId}:${apiChamber}:${limit}:${offset}`;
+  // v5: meetings sorted by date from a 250-item window, details fetched in
+  // batches (v3 kept the first matches in update order; v4 was a test run)
+  const cacheKey = `committee-meetings-v5:${committeeId}:${apiChamber}:${limit}:${offset}`;
   // Fetch many list items because most won't match the target committee —
   // Congress.gov does not expose a committee-filtered meeting endpoint.
-  const fetchLimit = Math.min(Math.max(limit * 20, MEETINGS_LIST_LIMIT), 250);
+  const fetchLimit = MEETINGS_LIST_LIMIT;
 
   return cachedFetch(
     cacheKey,
@@ -266,8 +272,10 @@ export async function fetchCommitteeMeetings(
         const total: number = listData.pagination?.count ?? 0;
 
         // Parallelize all detail fetches (was serial N+1 before)
-        const detailResults = await Promise.all(
-          meetingsList.map(item => fetchMeetingDetail(item.eventId, apiChamber))
+        const detailResults = await mapWithConcurrency(
+          meetingsList,
+          MEETING_DETAIL_CONCURRENCY,
+          item => fetchMeetingDetail(item.eventId, apiChamber)
         );
 
         const upperCommitteeId = committeeId.toUpperCase();
@@ -280,19 +288,7 @@ export async function fetchCommitteeMeetings(
         const matchPrefix = upperCommitteeId.endsWith('00')
           ? upperCommitteeId.slice(0, 4)
           : upperCommitteeId;
-        const matched: CommitteeMeetingDetailed[] = [];
-
-        for (const detail of detailResults) {
-          if (!detail) continue;
-          if (matched.length >= limit) break;
-
-          const matchesCommittee = detail.committees?.some(c =>
-            c.systemCode.toUpperCase().startsWith(matchPrefix)
-          );
-          if (!matchesCommittee) continue;
-
-          matched.push(transformMeetingDetail(detail, apiChamber));
-        }
+        const matched = selectRecentMeetings(detailResults, matchPrefix, apiChamber, limit);
 
         logger.info('[CommitteeActivity] Fetched meetings', {
           committeeId,
@@ -313,21 +309,51 @@ export async function fetchCommitteeMeetings(
   );
 }
 
+/** One meeting's detail; retried once, since a dropped detail hides a hearing. */
 async function fetchMeetingDetail(
   eventId: string,
-  apiChamber: 'house' | 'senate'
+  apiChamber: 'house' | 'senate',
+  attempt = 1
 ): Promise<CongressMeetingDetail | null> {
   try {
     const detailUrl = `https://api.congress.gov/v3/committee-meeting/${CURRENT_CONGRESS}/${apiChamber}/${eventId}?format=json`;
     const detailRes = await fetch(detailUrl, {
       headers: { Accept: 'application/json', 'X-API-Key': CONGRESS_API_KEY! },
+      signal: AbortSignal.timeout(10_000),
     });
-    if (!detailRes.ok) return null;
+    if (!detailRes.ok) throw new Error(`HTTP ${detailRes.status}`);
     const json = await detailRes.json();
     return (json.committeeMeeting as CongressMeetingDetail) ?? null;
   } catch {
-    return null;
+    return attempt < 2 ? fetchMeetingDetail(eventId, apiChamber, attempt + 1) : null;
   }
+}
+
+/**
+ * The committee's most recent held meetings, newest first. Congress.gov lists
+ * meetings in update order, not meeting date, so every match is collected and
+ * sorted. Canceled and postponed meetings and future dates are dropped; past
+ * meetings often stay "Scheduled" in Congress.gov, so status alone can't mark
+ * them held.
+ */
+export function selectRecentMeetings(
+  details: ReadonlyArray<CongressMeetingDetail | null>,
+  matchPrefix: string,
+  apiChamber: 'house' | 'senate',
+  limit: number,
+  now: number = Date.now()
+): CommitteeMeetingDetailed[] {
+  return details
+    .filter(
+      (detail): detail is CongressMeetingDetail =>
+        !!detail &&
+        (detail.committees?.some(c => c.systemCode.toUpperCase().startsWith(matchPrefix)) ?? false)
+    )
+    .map(detail => transformMeetingDetail(detail, apiChamber))
+    .filter(m => m.status !== 'Cancelled' && m.status !== 'Postponed')
+    .filter(m => Date.parse(m.date) <= now)
+    .sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
+    .slice(0, limit);
 }
 
 function transformMeetingDetail(

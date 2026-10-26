@@ -12,6 +12,8 @@
 import {
   normalizeCommitteeSystemCode,
   getStatusFromAction,
+  selectRecentMeetings,
+  type CongressMeetingDetail,
 } from '@/lib/services/committee-activity.service';
 
 describe('normalizeCommitteeSystemCode', () => {
@@ -78,5 +80,58 @@ describe('getStatusFromAction', () => {
     expect(
       getStatusFromAction('Motion to reconsider laid on the table Agreed to without objection.')
     ).toBe('Under review');
+  });
+});
+
+describe('selectRecentMeetings', () => {
+  const meeting = (
+    eventId: string,
+    date: string,
+    opts: { status?: string; code?: string } = {}
+  ): CongressMeetingDetail => ({
+    chamber: 'House',
+    congress: 119,
+    eventId,
+    date,
+    title: `Hearing ${eventId}`,
+    type: 'Hearing',
+    meetingStatus: opts.status ?? 'Scheduled',
+    updateDate: '2026-10-01T00:00:00Z',
+    committees: [{ name: 'Agriculture', systemCode: opts.code ?? 'hsag00' }],
+  });
+  const now = Date.parse('2026-10-26T12:00:00Z');
+
+  it('returns the newest held meetings by date, whatever the list order', () => {
+    // Congress.gov lists meetings by update date; House Agriculture's June
+    // hearing came back ahead of newer ones.
+    const list = [
+      meeting('a', '2026-06-10T14:00:00Z'),
+      meeting('b', '2025-02-11T14:00:00Z'),
+      meeting('c', '2026-09-16T14:00:00Z'),
+      meeting('d', '2026-07-22T14:00:00Z'),
+      meeting('e', '2026-07-21T14:00:00Z'),
+      meeting('f', '2026-06-25T14:00:00Z'),
+      null,
+    ];
+    expect(selectRecentMeetings(list, 'HSAG', 'house', 5, now).map(m => m.eventId)).toEqual([
+      'c',
+      'd',
+      'e',
+      'f',
+      'a',
+    ]);
+  });
+
+  it('skips canceled, postponed and future meetings, and other committees', () => {
+    const list = [
+      meeting('canceled', '2026-10-01T14:00:00Z', { status: 'Canceled' }),
+      meeting('postponed', '2026-10-02T14:00:00Z', { status: 'Postponed' }),
+      meeting('future', '2026-11-05T14:00:00Z'),
+      meeting('other', '2026-10-03T14:00:00Z', { code: 'hsif00' }),
+      meeting('subcommittee', '2026-09-30T14:00:00Z', { code: 'hsag15' }),
+    ];
+    expect(selectRecentMeetings(list, 'HSAG', 'house', 5, now).map(m => m.eventId)).toEqual([
+      'subcommittee',
+    ]);
   });
 });
