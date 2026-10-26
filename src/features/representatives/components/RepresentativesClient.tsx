@@ -19,6 +19,7 @@ import { RedistrictingNote } from '@/components/RedistrictingNote';
 import { DistrictInfo } from '@/lib/multi-district/detection';
 import { FilterState } from '@/types/filters';
 import logger from '@/lib/logging/simple-logger';
+import { foldForSearch } from '@/lib/utils/fold-for-search';
 import { classifySearchInput, extractZip5 } from '@/features/representatives/utils/search-input';
 
 // Dynamic imports for heavy components
@@ -388,7 +389,7 @@ export function RepresentativesClient({
       if (searchTerm) {
         filtered = filtered.filter(
           rep =>
-            rep.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            foldForSearch(rep.name).includes(foldForSearch(searchTerm)) ||
             rep.state.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (rep.district && rep.district.includes(searchTerm))
         );

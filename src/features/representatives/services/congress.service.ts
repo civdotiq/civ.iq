@@ -933,7 +933,7 @@ export async function getEnhancedRepresentative(
     // Build enhanced representative object
     const enhanced: EnhancedRepresentative = {
       bioguideId: legislator.id.bioguide,
-      name: goesByName(legislator.name),
+      name: goesByName(legislator.name, legislator.id.bioguide),
       firstName: legislator.name.first,
       lastName: legislator.name.last,
       party: currentTerm.party,
@@ -984,7 +984,7 @@ export async function getEnhancedRepresentative(
       ...(() => {
         const info = getMemberStatus({
           bioguideId: legislator.id.bioguide,
-          name: goesByName(legislator.name),
+          name: goesByName(legislator.name, legislator.id.bioguide),
           state: currentTerm.state,
           chamber: currentTerm.type === 'sen' ? 'Senate' : 'House',
           district: currentTerm.district?.toString(),
@@ -1260,7 +1260,7 @@ async function buildEnhancedRepresentatives(): Promise<EnhancedRepresentative[]>
 
         return {
           bioguideId: legislator.id.bioguide,
-          name: goesByName(legislator.name),
+          name: goesByName(legislator.name, legislator.id.bioguide),
           firstName: legislator.name.first,
           lastName: legislator.name.last,
           party: currentTerm.party,

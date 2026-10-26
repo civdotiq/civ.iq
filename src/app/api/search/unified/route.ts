@@ -23,6 +23,7 @@ import { COMMITTEE_INFO } from '@/lib/data/committee-names';
 import { cachedFetch } from '@/lib/cache';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import logger from '@/lib/logging/simple-logger';
+import { foldForSearch } from '@/lib/utils/fold-for-search';
 import { ApiErrors } from '@/lib/api/error-responses';
 
 // ISR: Revalidate every 5 minutes
@@ -216,7 +217,7 @@ function parseStatePrefix(query: string): { stateCode: string | null; searchQuer
 async function searchRepresentatives(query: string, limit: number): Promise<Representative[]> {
   try {
     const allReps = await getAllEnhancedRepresentatives();
-    const q = query.toLowerCase();
+    const q = foldForSearch(query);
 
     // Common nickname mappings for flexible name matching
     const nicknameMap: Record<string, string[]> = {
@@ -244,8 +245,8 @@ async function searchRepresentatives(query: string, limit: number): Promise<Repr
     };
 
     const nameMatches = (searchWord: string, repName: string): boolean => {
-      const searchLower = searchWord.toLowerCase();
-      const nameLower = repName.toLowerCase();
+      const searchLower = foldForSearch(searchWord);
+      const nameLower = foldForSearch(repName);
       if (nameLower.includes(searchLower)) return true;
 
       for (const [formal, nicknames] of Object.entries(nicknameMap)) {
@@ -264,8 +265,15 @@ async function searchRepresentatives(query: string, limit: number): Promise<Repr
       const searchWords = q.split(' ').filter(word => word.length > 0);
 
       return searchWords.every(word => {
-        if (rep.name && nameMatches(word, rep.name)) return true;
-        return searchText.includes(word.toLowerCase());
+        // The displayed name ("Chris Coons") plus the official and legal
+        // names ("Christopher A. Coons"), so either finds them.
+        const names = [
+          rep.name,
+          rep.fullName?.official,
+          rep.fullName ? `${rep.fullName.first} ${rep.fullName.last}` : undefined,
+        ].filter((n): n is string => Boolean(n));
+        if (names.some(n => nameMatches(word, n))) return true;
+        return searchText.includes(word);
       });
     });
 
@@ -306,15 +314,14 @@ async function searchStateLegislators(
       return [];
     }
 
-    const q = query.toLowerCase();
+    const q = foldForSearch(query);
 
     const filtered = legislators.filter(leg => {
-      const searchText = [leg.name, leg.party, leg.district, leg.chamber]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
+      const searchText = foldForSearch(
+        [leg.name, leg.party, leg.district, leg.chamber].filter(Boolean).join(' ')
+      );
 
-      return searchText.includes(q) || leg.name.toLowerCase().includes(q);
+      return searchText.includes(q);
     });
 
     return filtered.slice(0, limit).map(leg => ({

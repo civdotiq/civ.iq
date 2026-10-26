@@ -182,14 +182,17 @@ async function loadLegislatorInfoMap(): Promise<Map<string, LegislatorInfo>> {
           firstName: legislator.name.first,
           lastName: legislator.name.last,
           // The name the member goes by ("Bernie Sanders", "Eleanor Holmes Norton").
-          fullName: goesByName({
-            first: legislator.name.first,
-            middle: legislator.name.middle,
-            last: legislator.name.last,
-            suffix: legislator.name.suffix,
-            nickname: legislator.name.nickname,
-            official_full: legislator.name.official_full,
-          }),
+          fullName: goesByName(
+            {
+              first: legislator.name.first,
+              middle: legislator.name.middle,
+              last: legislator.name.last,
+              suffix: legislator.name.suffix,
+              nickname: legislator.name.nickname,
+              official_full: legislator.name.official_full,
+            },
+            legislator.id.bioguide
+          ),
           party,
           state: latestTerm.state,
           district: latestTerm.district,
