@@ -37,6 +37,8 @@ type UnifiedRepresentativeData = FederalRepresentative | StateLegislator;
 interface UnifiedRepresentativeCardProps {
   representative: UnifiedRepresentativeData;
   districtName: string;
+  /** Federal seat title: "Delegate" or "Resident Commissioner" for non-voting seats. */
+  federalTitle?: string;
 }
 
 /**
@@ -60,6 +62,7 @@ function isFederalRepresentative(rep: UnifiedRepresentativeData): rep is Federal
 export default function UnifiedRepresentativeCard({
   representative,
   districtName,
+  federalTitle,
 }: UnifiedRepresentativeCardProps) {
   const isFederal = isFederalRepresentative(representative);
 
@@ -76,7 +79,7 @@ export default function UnifiedRepresentativeCard({
   const displayParty = partyAdjective(party);
   // State senators are "Senator", assembly members "Assemblymember", etc.
   const roleTitle = isFederal
-    ? 'Representative'
+    ? (federalTitle ?? 'Representative')
     : getLegislatorTitle(representative.state, representative.chamber);
   const partyColorClass =
     party === 'Democrat' || party === 'Democratic'

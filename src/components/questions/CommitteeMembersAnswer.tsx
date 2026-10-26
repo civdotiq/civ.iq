@@ -13,6 +13,7 @@
 import Link from 'next/link';
 import type { Committee, CommitteeMember } from '@/types/committee';
 import type { EnhancedRepresentative } from '@/types/representative';
+import { commonName } from '@/features/representatives/utils/common-name';
 
 interface CommitteeMembersAnswerProps {
   committee: Committee;
@@ -31,7 +32,7 @@ export function partyStateLabel(rep: EnhancedRepresentative): string {
 }
 
 export function displayName(rep: EnhancedRepresentative): string {
-  return rep.fullName?.official ?? rep.name;
+  return commonName(rep);
 }
 
 function LeadershipPod({ leadership }: { leadership: Committee['leadership'] }) {

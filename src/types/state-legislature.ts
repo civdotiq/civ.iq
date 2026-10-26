@@ -25,7 +25,14 @@ export type StateChamber = 'upper' | 'lower';
  * Party affiliation for state legislators
  */
 export type StateParty =
-  'Democratic' | 'Republican' | 'Independent' | 'Green' | 'Libertarian' | 'Other';
+  | 'Democratic'
+  | 'Republican'
+  | 'Independent'
+  | 'Green'
+  | 'Libertarian'
+  // Nebraska's officially nonpartisan Legislature.
+  | 'Nonpartisan'
+  | 'Other';
 
 /**
  * Base state legislator interface

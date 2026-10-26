@@ -13,6 +13,7 @@ import { EnhancedRepresentative } from '@/types/representative';
 import { RepresentativeShareButton } from '@/components/shared/social/ShareButton';
 import { AlertSubscribeButton } from '@/components/alerts/AlertSubscribeButton';
 import { partyAdjective } from '@/lib/party-label';
+import { commonName } from '@/features/representatives/utils/common-name';
 
 interface HeroStatsHeaderProps {
   representative: EnhancedRepresentative;
@@ -35,18 +36,9 @@ export function HeroStatsHeader({
   // Get photo URL - use API-provided imageUrl or fallback to proxy
   const photoUrl = representative.imageUrl || `/api/photo/${representative.bioguideId}`;
 
-  // Get display name with preference for official name
-  const getDisplayName = () => {
-    if (representative.fullName?.official) {
-      return representative.fullName.official;
-    }
-    if (representative.fullName?.first && representative.fullName?.last) {
-      const middle = representative.fullName.middle ? ` ${representative.fullName.middle}` : '';
-      const suffix = representative.fullName.suffix ? `, ${representative.fullName.suffix}` : '';
-      return `${representative.fullName.first}${middle} ${representative.fullName.last}${suffix}`;
-    }
-    return representative.name;
-  };
+  // The name the member goes by ("Bernie Sanders"); the official full name is
+  // in the biography.
+  const getDisplayName = () => commonName(representative);
 
   // Get title with proper formatting and links
   const getTitleElement = () => {

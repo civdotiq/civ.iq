@@ -898,6 +898,8 @@ export function DefinedTermSchema({ name, description, url, termSet }: DefinedTe
 interface ProfilePageSchemaProps {
   person: {
     name: string;
+    /** Official full name, when `name` is the name the person goes by. */
+    alternateName?: string;
     jobTitle: string;
     description?: string;
     image?: string;
@@ -930,6 +932,8 @@ export function ProfilePageSchema({ person, url }: ProfilePageSchemaProps) {
     jobTitle: person.jobTitle,
   };
 
+  // The official full name, when the page uses the name the person goes by.
+  if (person.alternateName) personData.alternateName = person.alternateName;
   if (person.description) personData.description = person.description;
   // Emit an absolute image URL — validators (Rich Results, schema.org) flag
   // relative paths, and crawlers resolve them inconsistently. Resolve against

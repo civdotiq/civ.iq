@@ -86,6 +86,13 @@ interface APIResponse {
   };
 }
 
+/** Non-voting House seats: DC and the territories elect a Delegate, Puerto Rico a Resident Commissioner. */
+function nonVotingTitle(state: string): string | undefined {
+  const code = state.toUpperCase();
+  if (code === 'PR') return 'Resident Commissioner';
+  return ['DC', 'GU', 'VI', 'AS', 'MP'].includes(code) ? 'Delegate' : undefined;
+}
+
 /** "Michigan District 12", "Alaska At-Large" — the API's name reads "AK District 0". */
 function seatDisplayName(district: DistrictDetails): string {
   if (district.number === 'STATE') return district.name;
@@ -219,8 +226,11 @@ export default function DistrictPageClient({
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{seatName}</h1>
             <p className="text-gray-600">
-              Congressional District in {district.state} • {district.geography.counties.length}{' '}
-              {district.geography.counties.length === 1 ? 'County' : 'Counties'}
+              Congressional District in {district.state}
+              {district.geography.counties.length > 0 &&
+                ` • ${district.geography.counties.length} ${
+                  district.geography.counties.length === 1 ? 'County' : 'Counties'
+                }`}
             </p>
             {lede && (
               <p className="mt-3 max-w-3xl text-base text-gray-700 leading-relaxed">{lede}</p>
@@ -261,6 +271,7 @@ export default function DistrictPageClient({
             <UnifiedRepresentativeCard
               representative={district.representative}
               districtName={seatName}
+              federalTitle={nonVotingTitle(district.state)}
             />
 
             {/* 2026 election — FEC filings for this seat */}
@@ -294,6 +305,7 @@ export default function DistrictPageClient({
                 districtData={{
                   demographics: district.demographics,
                   political: district.political,
+                  representative: district.representative,
                 }}
               />
             )}

@@ -31,6 +31,7 @@ import { getFileCache } from '@/lib/cache/file-cache';
 import { getCommitteeName } from '@/lib/data/committee-names';
 import fs from 'fs';
 import path from 'path';
+import { goesByName } from '../utils/common-name';
 
 // Caucus membership data type
 interface CaucusMembershipData {
@@ -932,7 +933,7 @@ export async function getEnhancedRepresentative(
     // Build enhanced representative object
     const enhanced: EnhancedRepresentative = {
       bioguideId: legislator.id.bioguide,
-      name: `${legislator.name.first} ${legislator.name.last}`,
+      name: goesByName(legislator.name),
       firstName: legislator.name.first,
       lastName: legislator.name.last,
       party: currentTerm.party,
@@ -983,7 +984,7 @@ export async function getEnhancedRepresentative(
       ...(() => {
         const info = getMemberStatus({
           bioguideId: legislator.id.bioguide,
-          name: `${legislator.name.first} ${legislator.name.last}`,
+          name: goesByName(legislator.name),
           state: currentTerm.state,
           chamber: currentTerm.type === 'sen' ? 'Senate' : 'House',
           district: currentTerm.district?.toString(),
@@ -1259,7 +1260,7 @@ async function buildEnhancedRepresentatives(): Promise<EnhancedRepresentative[]>
 
         return {
           bioguideId: legislator.id.bioguide,
-          name: `${legislator.name.first} ${legislator.name.last}`,
+          name: goesByName(legislator.name),
           firstName: legislator.name.first,
           lastName: legislator.name.last,
           party: currentTerm.party,
