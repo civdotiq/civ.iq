@@ -66,9 +66,16 @@ export function openStatesId(personId: string): string {
 }
 
 /**
+ * Legislatures whose own site is on neither .gov nor .us. Minnesota's Senate
+ * lives at senate.mn; its member list (senate.mn/api/members) gives the same
+ * member_bio.html?mem_id= pages Open States records.
+ */
+const LEGISLATURE_HOSTS = new Set(['www.senate.mn', 'senate.mn']);
+
+/**
  * The legislator's page on the legislature's own site: the first link on a
- * government domain (.gov, or a state.xx.us address) that belongs to this
- * legislator alone. Links several legislators share (a chamber's email
+ * government domain (.gov, a state.xx.us address, or a host in
+ * LEGISLATURE_HOSTS) that belongs to this legislator alone. Links several legislators share (a chamber's email
  * directory) and party caucus sites are skipped; null when none qualifies.
  */
 export function officialLegislatureUrl(
@@ -82,7 +89,7 @@ export function officialLegislatureUrl(
     } catch {
       continue;
     }
-    if (!/\.gov$|\.us$/i.test(host)) continue;
+    if (!/\.gov$|\.us$/i.test(host) && !LEGISLATURE_HOSTS.has(host.toLowerCase())) continue;
     if (sharedLinks.has(link)) continue;
     return link;
   }
