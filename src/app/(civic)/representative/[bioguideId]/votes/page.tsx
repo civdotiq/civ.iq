@@ -12,6 +12,7 @@ import { VotingRecordPage } from '@/components/officials/VotingRecordPage';
 import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 import { commonName } from '@/features/representatives/utils/common-name';
 import { partyAdjective } from '@/lib/party-label';
+import { houseSeatLabel } from '@/lib/data/us-states';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600;
@@ -64,7 +65,9 @@ export async function generateMetadata({
       };
     }
     const chamberLabel = representative.chamber === 'Senate' ? 'Senator' : 'Representative';
-    const districtLabel = representative.district ? `, District ${representative.district}` : '';
+    const districtLabel = representative.district
+      ? `, ${houseSeatLabel(representative.district)}`
+      : '';
     // This page owns "[name] voting record" searches (Search Console, 2026-10):
     // the title leads with that phrase, under the name the member goes by.
     const name = commonName(representative);

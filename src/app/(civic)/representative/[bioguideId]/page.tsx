@@ -14,7 +14,7 @@ import { ProfilePageSchema, SpeakableSchema, BreadcrumbSchema } from '@/componen
 import { ContextualFooter, type CommitteeLink } from '@/components/seo/ContextualFooter';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 import { QuestionSuggestions } from '@/components/questions/QuestionSuggestions';
-import { getStateName } from '@/lib/data/us-states';
+import { getStateName, houseSeatLabel } from '@/lib/data/us-states';
 import {
   getVacancyInfo,
   getSenateVacancy,
@@ -90,7 +90,7 @@ function CitableFacts({
       ? 'United States Senate'
       : 'United States House of Representatives';
   const districtLabel = representative.district
-    ? `${stateName}, District ${representative.district}`
+    ? `${stateName}, ${houseSeatLabel(representative.district)}`
     : stateName;
 
   // Terms are sorted most-recent-first by getEnhancedRepresentative.
@@ -338,7 +338,7 @@ export default async function RepresentativeProfilePage({
         person={{
           name: commonName(representative),
           alternateName: officialNameIfDifferent(representative),
-          jobTitle: `${representative.role} - ${representative.state}${representative.district ? ` District ${representative.district}` : ''}`,
+          jobTitle: `${representative.role} - ${representative.state}${representative.district ? ` ${houseSeatLabel(representative.district)}` : ''}`,
           description: `${partyAdjective(representative.party)} ${representative.role} representing ${representative.state} in the U.S. Congress`,
           image: representative.imageUrl,
           worksFor: {

@@ -328,6 +328,15 @@ export function censusCongressionalDistrictCode(state: string, district: string)
 }
 
 /**
+ * "At-Large" for a House seat that covers a whole state or territory (the
+ * roster stores it as '0'; also '00' and 'AL'), otherwise "District 7".
+ */
+export function houseSeatLabel(district: string): string {
+  const seat = district.trim().replace(/^0+/, '');
+  return seat === '' || /^(AL|at-large)$/i.test(seat) ? 'At-Large' : `District ${seat}`;
+}
+
+/**
  * Normalize state identifier to code (handles both codes and full names)
  * @param identifier - State code or full name (case-insensitive)
  * @returns Normalized state code or undefined

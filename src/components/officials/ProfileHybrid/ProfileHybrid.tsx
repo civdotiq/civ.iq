@@ -19,6 +19,7 @@ import { CommitteesPanel } from './CommitteesPanel';
 import { MeetingsPanel } from './MeetingsPanel';
 import { partyKey, partyLong } from './types';
 import type { ProfileHybridProps } from './types';
+import { houseSeatLabel } from '@/lib/data/us-states';
 
 interface SummaryBatchResponse {
   data?: {
@@ -172,7 +173,7 @@ export function ProfileHybrid({ representative: r }: ProfileHybridProps) {
       >
         <CqLabel>
           ← {isHistorical ? 'Historical' : 'Federal'} · {r.chamber} · {r.state}
-          {r.district ? ` · District ${r.district}` : ''}
+          {r.district ? ` · ${houseSeatLabel(r.district)}` : ''}
         </CqLabel>
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
           {SOURCES.map(s => (
