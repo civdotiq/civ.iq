@@ -35,7 +35,8 @@ export async function GET(): Promise<NextResponse> {
             chamber: 'Filter by chamber: "house" or "senate"',
             state: 'Filter by two-letter state code (e.g., "MI")',
             party: 'Filter by party: "D", "R", or "I"',
-            limit: 'Results per page (default: 100, max: 535)',
+            limit:
+              'Results per page (default: 100, max: 600, enough for every member in one request)',
             offset: 'Pagination offset (default: 0)',
           },
         },

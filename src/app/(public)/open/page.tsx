@@ -612,7 +612,7 @@ export default function OpenDataPage() {
                   <td className="p-grid-2 font-mono text-xs">limit</td>
                   <td className="p-grid-2 text-gray-600">integer</td>
                   <td className="p-grid-2 text-gray-600">
-                    Results per page. Default varies by endpoint (50&ndash;100). Max 250&ndash;535.
+                    Results per page. Default varies by endpoint (50&ndash;100). Max 250&ndash;600.
                   </td>
                 </tr>
                 <tr className="border-b border-gray-100">

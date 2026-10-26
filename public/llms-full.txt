@@ -79,7 +79,7 @@ List all current members of Congress with optional filtering.
 - `chamber` (string, optional): "house" or "senate"
 - `state` (string, optional): two-letter state code, e.g. "MI"
 - `party` (string, optional): "D", "R", or "I"
-- `limit` (integer, optional): results per page, default 100, max 535
+- `limit` (integer, optional): results per page, default 100, max 600 (every current member fits in one request)
 - `offset` (integer, optional): pagination offset, default 0
 
 **Example:** `GET /api/v1/representatives?state=CA&chamber=house&limit=10`
