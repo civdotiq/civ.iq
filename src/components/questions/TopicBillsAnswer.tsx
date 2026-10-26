@@ -12,6 +12,7 @@
 
 import Link from 'next/link';
 import type { PolicyAreaResults } from '@/types/joins';
+import { longDate } from '@/lib/seo/answer-first';
 
 function ordinal(n: number): string {
   const tens = n % 100;
@@ -27,10 +28,13 @@ function RecentBillsPod({
   bills,
   total,
   congress,
+  asOf,
 }: {
   bills: PolicyAreaResults['bills'];
   total: number | null;
   congress: number | null;
+  /** When the counts were assembled. */
+  asOf: string | null;
 }) {
   if (!bills.length) {
     return (
@@ -75,7 +79,8 @@ function RecentBillsPod({
       {total !== null && congress !== null && (
         <p className="type-xs text-gray-500 mt-3">
           Showing the {Math.min(bills.length, 10)} most recently active of{' '}
-          {total.toLocaleString('en-US')} bills in the {ordinal(congress)} Congress.
+          {total.toLocaleString('en-US')} bills in the {ordinal(congress)} Congress
+          {asOf ? `, as of ${asOf}` : ''}.
         </p>
       )}
     </div>
@@ -240,6 +245,7 @@ export function TopicBillsAnswer({ results }: TopicBillsAnswerProps) {
         bills={results.bills}
         total={results.billsTotal ?? null}
         congress={results.billsCongress ?? null}
+        asOf={longDate(results.metadata.generatedAt)}
       />
       <RegulationsPod regulations={results.regulations} />
       <CommitteesPod committees={results.committees} />

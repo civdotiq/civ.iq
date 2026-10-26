@@ -12,6 +12,7 @@
 
 import Link from 'next/link';
 import { parseBillSlug } from '@/lib/data/route-slugs';
+import { longDate } from '@/lib/seo/answer-first';
 
 interface BillItem {
   id: string;
@@ -29,6 +30,8 @@ interface BillsSponsoredAnswerProps {
   bills: BillItem[];
   sponsoredCount: number;
   cosponsoredCount: number;
+  /** When Congress.gov was read for the counts. */
+  fetchedAt?: string;
 }
 
 // Congress.gov bill type code -> citizen-friendly prefix.
@@ -58,7 +61,7 @@ function billHref(bill: Pick<BillItem, 'congress' | 'type' | 'number'>): string 
   return parsed.kind === 'invalid' ? null : `/bill/${parsed.canonical}`;
 }
 
-function formatBillLabel(bill: Pick<BillItem, 'type' | 'number'>): string {
+export function formatBillLabel(bill: Pick<BillItem, 'type' | 'number'>): string {
   const typeKey = (bill.type ?? '').toLowerCase();
   const prefix = BILL_TYPE_LABEL[typeKey] ?? typeKey.toUpperCase();
   // Prefix and number together — if type is unknown, fall back to the number
@@ -77,7 +80,7 @@ function formatBillLabel(bill: Pick<BillItem, 'type' | 'number'>): string {
  * action vocabulary. Order matters — terminal actions (became law, vetoed)
  * check before their preceding stages (passed chamber, sent to President).
  */
-function simplifyBillStatus(raw: string | undefined): string {
+export function simplifyBillStatus(raw: string | undefined): string {
   if (!raw) return 'Status unknown';
   const text = raw.toLowerCase();
 
@@ -167,10 +170,13 @@ function SponsoredBillsPod({ bills }: { bills: BillItem[] }) {
 function LegislationStatsPod({
   sponsoredCount,
   cosponsoredCount,
+  fetchedAt,
 }: {
   sponsoredCount: number;
   cosponsoredCount: number;
+  fetchedAt?: string;
 }) {
+  const asOf = fetchedAt ? longDate(fetchedAt) : null;
   if (sponsoredCount === 0 && cosponsoredCount === 0) {
     return (
       <div className="border-2 border-black bg-white p-4 sm:p-6">
@@ -193,6 +199,7 @@ function LegislationStatsPod({
           <dd className="type-lg font-semibold text-black">{cosponsoredCount}</dd>
         </div>
       </dl>
+      {asOf && <p className="type-xs text-gray-500 mt-3">From Congress.gov as of {asOf}.</p>}
     </div>
   );
 }
@@ -269,11 +276,16 @@ export function BillsSponsoredAnswer({
   bills,
   sponsoredCount,
   cosponsoredCount,
+  fetchedAt,
 }: BillsSponsoredAnswerProps) {
   return (
     <>
       <SponsoredBillsPod bills={bills} />
-      <LegislationStatsPod sponsoredCount={sponsoredCount} cosponsoredCount={cosponsoredCount} />
+      <LegislationStatsPod
+        sponsoredCount={sponsoredCount}
+        cosponsoredCount={cosponsoredCount}
+        fetchedAt={fetchedAt}
+      />
       <PolicyAreasPod bills={bills} />
       <SourcesPod />
     </>

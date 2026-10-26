@@ -8,8 +8,55 @@ import { DistrictPage as RedesignedDistrictPage } from '@/components/districts/D
 import { canonicalizeDistrictId } from '@/lib/helpers/url-builders';
 import { checkDistrictId } from '@/lib/districts/known-districts';
 import { loadDistrictPage } from '@/lib/districts/load-district-page';
+import type { DistrictDetails } from '@/lib/districts/district-details';
+import { getStateName } from '@/lib/data/us-states';
+import { partyAdjective } from '@/lib/party-label';
+import { congressionalDistrictLede } from '@/lib/seo/answer-first';
+import { ACS_5YR_VINTAGE } from '@/lib/census-vintage';
 import DistrictPageClient from './DistrictPageClient';
 import { SeatWithoutMember } from './SeatWithoutMember';
+
+const NON_VOTING: Record<string, string> = {
+  DC: 'Delegate',
+  GU: 'Delegate',
+  VI: 'Delegate',
+  AS: 'Delegate',
+  MP: 'Delegate',
+  PR: 'Resident Commissioner',
+};
+
+/** Answer-first opening from the facts the district page shows. */
+function districtLede(district: DistrictDetails): string | null {
+  const rep = district.representative;
+  const surname = rep.name.trim().split(/\s+/).pop() ?? rep.name;
+  // The 2024 result is only about this member if they won it.
+  const winner = district.political.lastElection.candidates?.[0];
+  const wonIt = winner && winner.name.toUpperCase().includes(surname.toUpperCase());
+  const d = district.demographics;
+  return congressionalDistrictLede({
+    stateName: getStateName(district.state) || district.state,
+    district: district.number,
+    member: rep.name
+      ? {
+          name: rep.name,
+          surname,
+          party: partyAdjective(rep.party),
+          role: NON_VOTING[district.state.toUpperCase()],
+        }
+      : null,
+    lastElection: wonIt ? { winnerName: winner.name, pct: winner.pct } : null,
+    demographics: d
+      ? {
+          population: d.population,
+          medianIncome: d.medianIncome,
+          medianAge: d.medianAge,
+          collegePct: d.bachelor_degree_percent,
+          povertyPct: d.poverty_rate,
+          surveyYear: ACS_5YR_VINTAGE,
+        }
+      : null,
+  });
+}
 
 interface DistrictPageProps {
   params: Promise<{ districtId: string }>;
@@ -46,6 +93,7 @@ export default async function DistrictPage({ params, searchParams }: DistrictPag
     <DistrictPageClient
       districtId={parsed.canonical}
       initialDistrict={data.status === 'found' ? data.district : null}
+      lede={data.status === 'found' ? districtLede(data.district) : null}
     />
   );
 }

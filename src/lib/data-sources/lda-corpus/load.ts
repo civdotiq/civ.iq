@@ -127,8 +127,10 @@ async function loadIndex(): Promise<CorpusIndex | null> {
 export interface CommitteeCorpusTotals {
   committeeCode: string;
   committeeName: string;
-  /** Total reported LD-2 spend on filings disclosing this committee, across the window. */
+  /** Total reported LD-2 spend on filings matched to this committee (issue codes, agencies), across the window. */
   windowTotal: number;
+  /** LD-2 reports matched to this committee across the window (amendments deduped). */
+  windowFilingCount: number;
   quarterly: Array<{ quarter: string; total: number }>;
   topIssues: CommitteeQuarterAgg['topIssues'];
   /** Top organizations across the window, merged by canonical company name. */
@@ -153,6 +155,7 @@ export async function getCommitteeCorpusTotals(
     committeeCode,
     committeeName: rows[0]!.committeeName,
     windowTotal,
+    windowFilingCount: rows.reduce((sum, r) => sum + r.filingCount, 0),
     quarterly: rows.map(r => ({ quarter: r.quarter, total: r.total })),
     topIssues,
     topOrgs: mergeTopOrgs(rows.map(r => r.topOrgs)),

@@ -8,6 +8,8 @@ import { FiledCandidates2026 } from '@/components/elections/FiledCandidates2026'
 import { raceId2026 } from '@/lib/elections/race-id';
 import { getVacancyInfo, formatVacancyMessage } from '@/lib/data/congressional-vacancies';
 import { getStateName } from '@/lib/data/us-states';
+import { partyAdjective } from '@/lib/party-label';
+import { congressionalDistrictLede } from '@/lib/seo/answer-first';
 
 interface SeatWithoutMemberProps {
   state: string;
@@ -29,6 +31,17 @@ export function SeatWithoutMember({ state, district }: SeatWithoutMemberProps) {
 
   const vacancy = isStatewide ? undefined : getVacancyInfo(state, seatNumber);
   const seatRaceId = isStatewide ? null : raceId2026('House', state, seatNumber);
+  const lede = vacancy
+    ? congressionalDistrictLede({
+        stateName,
+        district: seatNumber,
+        vacancy: {
+          previousName: vacancy.previousMember.name,
+          previousParty: partyAdjective(vacancy.previousMember.party),
+          specialElectionDate: vacancy.specialElection?.date,
+        },
+      })
+    : null;
 
   return (
     <div className="min-h-screen bg-white density-default">
@@ -47,6 +60,7 @@ export function SeatWithoutMember({ state, district }: SeatWithoutMemberProps) {
 
         <h1 className="text-3xl font-bold text-gray-900 mb-2">{title}</h1>
         <p className="text-gray-600 mb-6">Congressional district in {stateName}</p>
+        {lede && <p className="mb-6 max-w-3xl text-base text-gray-700 leading-relaxed">{lede}</p>}
 
         <div
           role="status"

@@ -25,6 +25,7 @@ import {
   type EnhancedStateLegislator,
 } from '@/types/state-legislature';
 import { getLegislator } from './get-legislator';
+import { stateLegislatorLede } from '@/lib/seo/answer-first';
 import { stateLegislatorMetaDescription } from '@/lib/seo/meta-descriptions';
 
 const BASE_URL = 'https://civdotiq.org';
@@ -181,7 +182,23 @@ export default async function StateLegislatorPage({ params, searchParams }: Page
         </nav>
       </div>
 
-      <SimpleStateLegislatorProfile legislator={legislator} fromAddress={search.address} />
+      <SimpleStateLegislatorProfile
+        legislator={legislator}
+        fromAddress={search.address}
+        lede={stateLegislatorLede({
+          name: legislator.name,
+          surname: legislator.lastName?.trim() || legislator.name.split(' ').pop() || '',
+          stateName: getStateName(legislator.state) || legislator.state,
+          role: getLegislatorRoleTitle(legislator.state, legislator.chamber),
+          district: formatStateDistrict(legislator.district),
+          // Nebraska's Legislature is officially nonpartisan; the roster records "Other".
+          party: legislator.state.toUpperCase() === 'NE' ? 'Nonpartisan' : legislator.party,
+          inSeatSince: legislator.terms?.[0]?.startYear,
+          committees: (legislator.committees ?? []).map(c => ({ name: c.name, role: c.role })),
+          phone: legislator.phone || legislator.contact?.capitolOffice?.phone,
+          email: legislator.email,
+        })}
+      />
     </div>
   );
 }

@@ -15,6 +15,7 @@ import { InsightCard } from '@/components/intelligence/InsightCard';
 import Link from 'next/link';
 import { displaySector } from '@/lib/mesh/sector-display';
 import type { VoteFinanceInsight, InsightResponse } from '@/lib/intelligence/types';
+import { longDate } from '@/lib/seo/answer-first';
 
 interface IndustryItem {
   industry: string;
@@ -33,6 +34,8 @@ interface FinanceData {
   candidateSelfFunding: number;
   cycle: number;
   isCurrentCycle: boolean;
+  /** Last day covered by the FEC reports behind these totals. */
+  coverageEndDate?: string;
 }
 
 interface IndustryData {
@@ -259,9 +262,11 @@ function VoteFinanceCorrelationPod({
 
 function cycleSentence(finance: FinanceData | null): string {
   if (!finance) return '';
+  const through = finance.coverageEndDate ? longDate(finance.coverageEndDate) : null;
+  const asOf = through ? ` Reports cover activity through ${through}.` : '';
   return finance.isCurrentCycle
-    ? ` Totals cover the current ${cycleLabel(finance.cycle)} election cycle.`
-    : ` Totals cover the ${cycleLabel(finance.cycle)} election cycle, the most recent with filings.`;
+    ? ` Totals cover the current ${cycleLabel(finance.cycle)} election cycle.${asOf}`
+    : ` Totals cover the ${cycleLabel(finance.cycle)} election cycle, the most recent with filings.${asOf}`;
 }
 
 function SourcesPod({ finance }: { finance: FinanceData | null }) {

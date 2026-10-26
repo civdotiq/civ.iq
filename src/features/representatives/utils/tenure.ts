@@ -9,14 +9,14 @@ export interface TenureTerm {
   chamber?: string;
 }
 
-interface ServiceRun {
+export interface ServiceRun {
   chamber: 'House' | 'Senate';
   start: string;
   end: string;
   terms: number;
 }
 
-interface Tenure {
+export interface Tenure {
   /** "Senator", "Representative", "Delegate" or "Resident Commissioner". */
   title: string;
   /** The current, unbroken stretch in the current chamber. */
@@ -34,7 +34,7 @@ interface Tenure {
  * term's start year is when the member took office. Consecutive terms in one
  * chamber form a run; a change of chamber or a gap in service starts a new one.
  */
-function analyzeTenure(
+export function analyzeTenure(
   terms: readonly TenureTerm[],
   current: { chamber: 'House' | 'Senate'; role?: string }
 ): Tenure | null {

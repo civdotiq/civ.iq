@@ -46,8 +46,13 @@ import { commonName } from '@/features/representatives/utils/common-name';
 import { QuestionLayout } from '@/components/questions/QuestionLayout';
 import { RelatedQuestions } from '@/components/questions/RelatedQuestions';
 import { CampaignContributionsAnswer } from '@/components/questions/CampaignContributionsAnswer';
-import { VotingRecordAnswer } from '@/components/questions/VotingRecordAnswer';
-import { BillsSponsoredAnswer } from '@/components/questions/BillsSponsoredAnswer';
+import { RECENT_VOTES_SHOWN, VotingRecordAnswer } from '@/components/questions/VotingRecordAnswer';
+import {
+  BillsSponsoredAnswer,
+  formatBillLabel,
+  simplifyBillStatus,
+} from '@/components/questions/BillsSponsoredAnswer';
+import { questionLede } from '@/lib/seo/answer-first';
 import { ContactInfoAnswer } from '@/components/questions/ContactInfoAnswer';
 import {
   DonorVotingAlignmentAnswer,
@@ -55,7 +60,11 @@ import {
 } from '@/components/questions/DonorVotingAlignmentAnswer';
 import { StockTradesAnswer } from '@/components/questions/StockTradesAnswer';
 import { TopicBillsAnswer } from '@/components/questions/TopicBillsAnswer';
-import { CommitteeMembersAnswer } from '@/components/questions/CommitteeMembersAnswer';
+import {
+  CommitteeMembersAnswer,
+  displayName,
+  partyStateLabel,
+} from '@/components/questions/CommitteeMembersAnswer';
 import { CommitteeActivityAnswer } from '@/components/questions/CommitteeActivityAnswer';
 import { CommitteeLobbyingAnswer } from '@/components/questions/CommitteeLobbyingAnswer';
 import { getCommitteeCorpusTotals } from '@/lib/data-sources/lda-corpus/load';
@@ -187,7 +196,7 @@ function buildFaqAnswer(
       if (orgCount) {
         // Dollar totals omitted: the committee analyzer aggregates a ~0.1% LDA
         // filing sample, so summed amounts are misleading (PLAN-lobbying-corpus-2026-07.md).
-        return `${orgCount} organizations filed lobbying disclosures that mention the ${repName}.`;
+        return `${orgCount} organizations filed lobbying disclosures matched to the ${repName} by issue or agency.`;
       }
       return `Lobbying data for the ${repName} is sourced from Senate LDA disclosures.`;
     }
@@ -385,7 +394,20 @@ export default async function QuestionPage({ params }: PageProps) {
     const relatedQuestions = computeRelatedQuestions(slug, entityId, policyArea);
     const topicBills = await fetchTopicBillsData(policyArea);
 
-    const faqAnswer = buildFaqAnswer(slug, policyArea, { topicBills });
+    const results = topicBills.results;
+    const lede = results
+      ? questionLede({
+          slug: 'topic-bills',
+          topic: policyArea,
+          billsShown: Math.min(results.bills.length, 10),
+          billsTotal: results.billsTotal ?? null,
+          congress: results.billsCongress ?? null,
+          asOf: results.metadata.generatedAt,
+          committees: results.committees.map(c => ({ name: c.name, chamber: c.chamber })),
+          regulationCount: results.regulations.length,
+        })
+      : null;
+    const faqAnswer = lede ?? buildFaqAnswer(slug, policyArea, { topicBills });
     const podBody: ReactNode = topicBills.results ? (
       <TopicBillsAnswer results={topicBills.results} />
     ) : (
@@ -423,6 +445,7 @@ export default async function QuestionPage({ params }: PageProps) {
         <QuestionLayout
           question={question}
           category={template.category}
+          lede={lede}
           relatedQuestions={<RelatedQuestions questions={relatedQuestions} />}
         >
           {topicBills.results ? (
@@ -470,11 +493,53 @@ export default async function QuestionPage({ params }: PageProps) {
         notFound();
     }
 
-    const faqAnswer = buildFaqAnswer(slug, committee.name, {
-      committeeMembers,
-      committeeActivity,
-      committeLobbying,
-    });
+    const leader = (m: (typeof committee.leadership)['chair']) =>
+      m ? `${displayName(m.representative)} ${partyStateLabel(m.representative)}` : null;
+    const shownBills = committeeActivity?.bills.slice(0, 10) ?? [];
+    const lede =
+      slug === 'committee-members'
+        ? questionLede({
+            slug,
+            committee: committee.name,
+            memberCount: committee.members.length,
+            subcommitteeCount: committee.subcommittees.length,
+            chair: leader(committee.leadership.chair),
+            rankingMember: leader(committee.leadership.rankingMember),
+          })
+        : slug === 'committee-activity' && committeeActivity
+          ? questionLede({
+              slug,
+              committee: committee.name,
+              meetings: committeeActivity.meetings,
+              billsShown: shownBills.length,
+              newestBillDate:
+                shownBills
+                  .map(b => b.introducedDate)
+                  .sort()
+                  .reverse()[0] ?? null,
+              asOf: committeeActivity.fetchedAt,
+            })
+          : slug === 'committee-lobbying'
+            ? questionLede({
+                slug,
+                committee: committee.name,
+                corpus: committeeCorpus
+                  ? {
+                      reportCount: committeeCorpus.windowFilingCount,
+                      firstQuarter: committeeCorpus.quarterly[0]?.quarter,
+                      lastQuarter: committeeCorpus.quarterly.at(-1)?.quarter,
+                    }
+                  : null,
+              })
+            : null;
+
+    const faqAnswer =
+      lede ??
+      buildFaqAnswer(slug, committee.name, {
+        committeeMembers,
+        committeeActivity,
+        committeLobbying,
+      });
 
     const podBody: ReactNode = (
       <>
@@ -539,6 +604,7 @@ export default async function QuestionPage({ params }: PageProps) {
         <QuestionLayout
           question={question}
           category={template.category}
+          lede={lede}
           relatedQuestions={<RelatedQuestions questions={relatedQuestions} />}
         >
           {podBody}
@@ -590,12 +656,64 @@ export default async function QuestionPage({ params }: PageProps) {
       notFound();
   }
 
-  const faqAnswer = buildFaqAnswer(slug, name, {
-    campaign,
-    voting,
-    billsSponsored,
-    stockTrades,
-  });
+  const surname = rep.fullName?.last?.trim() || name.split(' ').pop() || name;
+  const latestSponsored = billsSponsored?.bills.find(b => b.relationship === 'sponsored');
+  const lede =
+    slug === 'voting-record'
+      ? questionLede({
+          slug,
+          name,
+          surname,
+          votes: (voting?.votes?.votes ?? []).slice(0, RECENT_VOTES_SHOWN),
+          hasLegislationSummary: Boolean(voting?.bills),
+        })
+      : slug === 'bills-sponsored'
+        ? questionLede({
+            slug,
+            name,
+            surname,
+            sponsoredCount: billsSponsored?.sponsoredCount ?? 0,
+            asOf: billsSponsored?.fetchedAt,
+            latest: latestSponsored
+              ? {
+                  number: formatBillLabel(latestSponsored),
+                  title: latestSponsored.title,
+                  introducedDate: latestSponsored.introducedDate,
+                  status: simplifyBillStatus(latestSponsored.status),
+                }
+              : null,
+          })
+        : slug === 'campaign-contributions'
+          ? questionLede({ slug, name, surname, finance: campaign?.finance ?? null })
+          : slug === 'contact-info'
+            ? questionLede({
+                slug,
+                name,
+                surname,
+                phone: rep.currentTerm?.phone ?? rep.phone,
+                office: rep.currentTerm?.address ?? rep.contact?.dcOffice?.address,
+                website: rep.currentTerm?.website ?? rep.website,
+                hasContactForm: Boolean(rep.currentTerm?.contactForm ?? rep.contact?.contactForm),
+                districtOfficeCount: rep.contact?.districtOffices?.length ?? 0,
+              })
+            : slug === 'stock-trades'
+              ? questionLede({
+                  slug,
+                  name,
+                  surname,
+                  trades: stockTrades && !stockTrades.unavailable ? stockTrades.trades : null,
+                })
+              : null;
+
+  // The opening is the answer; the template sentence is the fallback.
+  const faqAnswer =
+    lede ??
+    buildFaqAnswer(slug, name, {
+      campaign,
+      voting,
+      billsSponsored,
+      stockTrades,
+    });
 
   const podBody: ReactNode = (
     <>
@@ -620,6 +738,7 @@ export default async function QuestionPage({ params }: PageProps) {
           bills={billsSponsored.bills}
           sponsoredCount={billsSponsored.sponsoredCount}
           cosponsoredCount={billsSponsored.cosponsoredCount}
+          fetchedAt={billsSponsored.fetchedAt}
         />
       )}
       {slug === 'stock-trades' && stockTrades && (
@@ -696,6 +815,7 @@ export default async function QuestionPage({ params }: PageProps) {
       <QuestionLayout
         question={question}
         category={template.category}
+        lede={lede}
         relatedQuestions={<RelatedQuestions questions={relatedQuestions} />}
       >
         {podBody}

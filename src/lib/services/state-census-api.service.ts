@@ -6,6 +6,7 @@
  */
 
 import logger from '@/lib/logging/simple-logger';
+import { ACS_5YR_VINTAGE } from '@/lib/census-vintage';
 
 export interface StateDistrictDemographics {
   population: number;
@@ -137,7 +138,7 @@ export async function getStateDistrictDemographics(
     }
 
     // Census ACS 5-Year API variables (same as federal districts)
-    const acsUrl = 'https://api.census.gov/data/2022/acs/acs5';
+    const acsUrl = `https://api.census.gov/data/${ACS_5YR_VINTAGE}/acs/acs5`;
     const variables = [
       'B01003_001E', // Total population
       'B02001_002E', // White alone

@@ -70,6 +70,8 @@ export interface OptimizedBillsResponse {
     sponsoredCount?: number;
     cosponsoredCount?: number;
     totalCount?: number;
+    /** When Congress.gov was read for these counts. */
+    fetchedAt?: string;
     fetchedSponsored?: number;
     fetchedCosponsored?: number;
     fetchedTotal?: number;
@@ -424,7 +426,11 @@ export async function getComprehensiveBillsByMember(
   } = request;
 
   try {
-    const { data: walk, state } = await cachedStaleWhileRevalidate(
+    const {
+      data: walk,
+      state,
+      fetchedAt,
+    } = await cachedStaleWhileRevalidate(
       billsWalkCacheKey(bioguideId, congress, includeAmendments),
       () => walkMemberBills(bioguideId, congress, includeAmendments),
       {
@@ -459,6 +465,7 @@ export async function getComprehensiveBillsByMember(
         cached: state !== 'miss',
         executionTime: Date.now() - startTime,
         sponsoredCount: walk.sponsoredCount, // Total available from API
+        fetchedAt: new Date(fetchedAt).toISOString(),
         cosponsoredCount: walk.cosponsoredCount, // Total available from API
         totalCount: totalAvailableCount, // Total available from both APIs
         fetchedSponsored, // Actually fetched

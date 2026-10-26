@@ -101,11 +101,14 @@ interface DistrictPageClientProps {
   districtId: string;
   /** Server-rendered details; null when the server ran out of time, so the browser fetches. */
   initialDistrict: DistrictDetails | null;
+  /** Answer-first opening, built on the server from the same details. */
+  lede?: string | null;
 }
 
 export default function DistrictPageClient({
   districtId,
   initialDistrict,
+  lede,
 }: DistrictPageClientProps) {
   const [district, setDistrict] = useState<DistrictDetails | null>(initialDistrict);
   const [loading, setLoading] = useState(initialDistrict === null);
@@ -219,6 +222,9 @@ export default function DistrictPageClient({
               Congressional District in {district.state} • {district.geography.counties.length}{' '}
               {district.geography.counties.length === 1 ? 'County' : 'Counties'}
             </p>
+            {lede && (
+              <p className="mt-3 max-w-3xl text-base text-gray-700 leading-relaxed">{lede}</p>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Link

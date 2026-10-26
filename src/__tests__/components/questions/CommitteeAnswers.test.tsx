@@ -474,6 +474,7 @@ describe('CommitteeLobbyingAnswer', () => {
           committeeCode: 'SSFI',
           committeeName: 'Finance',
           windowTotal: 6_420_000_000,
+          windowFilingCount: 52_310,
           quarterly: [
             { quarter: '2025-Q1', total: 800_000_000 },
             { quarter: '2025-Q2', total: 820_000_000 },
@@ -487,7 +488,11 @@ describe('CommitteeLobbyingAnswer', () => {
         chamber="Senate"
       />
     );
-    expect(screen.getByText('Lobbying spending disclosing this committee')).toBeInTheDocument();
+    expect(
+      screen.getByText("Lobbying on issues in this committee's jurisdiction")
+    ).toBeInTheDocument();
+    expect(screen.getByText('52,310 reports')).toBeInTheDocument();
+    expect(screen.getByText(/reports don't name committees/)).toBeInTheDocument();
     expect(screen.getByText('$6.4B')).toBeInTheDocument();
     expect(screen.getByText(/2.8× the median committee/)).toBeInTheDocument();
     // The sample "unavailable" pod still shows below the corpus total

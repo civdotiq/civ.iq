@@ -49,13 +49,17 @@ function CorpusTotalPod({ corpus }: { corpus: CommitteeCorpusTotals }) {
   return (
     <div className="border-2 border-black bg-white p-4 sm:p-6 lg:col-span-2">
       <h2 className="type-sm font-semibold text-black mb-1">
-        Lobbying spending disclosing this committee
+        Lobbying on issues in this committee&apos;s jurisdiction
       </h2>
       <p className="type-xs text-gray-400 mb-3">
-        Complete Senate LDA corpus{first && last ? ` · ${first}–${last}` : ''} · a filing naming
-        several committees counts toward each
+        Complete Senate LDA corpus{first && last ? ` · ${first}–${last}` : ''} · reports don&apos;t
+        name committees; CIV.IQ matches each by its issue codes and the agencies it contacted, so
+        one report can count toward several committees
       </p>
       <p className="type-2xl font-semibold text-black">{formatAmount(corpus.windowTotal)}</p>
+      <p className="type-sm text-gray-700 mt-1">
+        {corpus.windowFilingCount.toLocaleString('en-US')} reports
+      </p>
       <p className="type-xs text-gray-500 mt-1">
         {ratio >= 1
           ? `${ratio.toFixed(1)}× the median committee (${formatAmount(corpus.peer.medianTotal)})`
@@ -109,7 +113,8 @@ function TopOrgsPod({
       <div className="mb-3">
         <p className="type-xl font-semibold text-black">{organizations.length}</p>
         <p className="type-xs text-gray-500">
-          organizations in recent filings mentioning this committee (a sample, not a complete tally)
+          organizations in a sample of recent filings matched to this committee (not a complete
+          tally)
         </p>
       </div>
       <ul className="divide-y divide-gray-200">

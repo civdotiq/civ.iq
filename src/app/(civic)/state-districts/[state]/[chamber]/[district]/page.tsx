@@ -13,6 +13,9 @@ import {
   type StateDistrictDemographics,
 } from '@/lib/services/state-census-api.service';
 import { getChamberName, getLegislatorTitle } from '@/types/state-legislature';
+import { partyAdjective } from '@/lib/party-label';
+import { stateDistrictLede } from '@/lib/seo/answer-first';
+import { ACS_5YR_VINTAGE } from '@/lib/census-vintage';
 import { MapPin, Users } from 'lucide-react';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
 import { normalizeStateIdentifier, getStateName, STATE_CODE_TO_FIPS } from '@/lib/data/us-states';
@@ -132,6 +135,25 @@ export default async function StateDistrictPage({ params }: PageProps) {
   const districtLegislators: EnhancedStateLegislator[] = (roster ?? []).filter(
     leg => leg.district === district && leg.chamber === chamber
   );
+  // Answer-first opening; an unreachable roster says nothing rather than "vacant".
+  const lede = roster
+    ? stateDistrictLede({
+        districtName: `${stateName} ${chamberName} District ${district}`,
+        title: legislatorTitle,
+        members: districtLegislators.map(l => ({ name: l.name, party: partyAdjective(l.party) })),
+        demographics:
+          demographics && demographics.population > 0
+            ? {
+                population: demographics.population,
+                medianIncome: demographics.medianIncome,
+                medianAge: demographics.medianAge,
+                collegePct: demographics.bachelor_degree_percent,
+                povertyPct: demographics.poverty_rate,
+                surveyYear: ACS_5YR_VINTAGE,
+              }
+            : null,
+      })
+    : null;
   // Any string used to render a page here ("/mi/lower/9999"): a soft 404.
   // A district is real when someone holds it or the Census places addresses
   // in it (a vacant seat). An empty or failed roster never 404s a keyed seat.
@@ -194,6 +216,7 @@ export default async function StateDistrictPage({ params }: PageProps) {
             {chamberName} • {districtLegislators.length}{' '}
             {districtLegislators.length === 1 ? legislatorTitle : `${legislatorTitle}s`}
           </p>
+          {lede && <p className="mt-3 max-w-3xl text-base text-gray-700 leading-relaxed">{lede}</p>}
         </div>
 
         {/* Content Grid */}
