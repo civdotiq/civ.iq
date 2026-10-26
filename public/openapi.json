@@ -152,9 +152,9 @@
             "schema": {
               "type": "integer",
               "default": 100,
-              "maximum": 535
+              "maximum": 600
             },
-            "description": "Results per page"
+            "description": "Results per page. 600 returns every current member in one request."
           },
           {
             "name": "offset",

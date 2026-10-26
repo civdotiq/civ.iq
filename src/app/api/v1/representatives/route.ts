@@ -17,6 +17,12 @@ import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * One page can hold every current member: 541 seats (535 voting, 6 non-voting
+ * delegates), with room to spare for a full roster in a single request.
+ */
+const MAX_LIMIT = 600;
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const { searchParams } = request.nextUrl;
@@ -25,7 +31,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const party = searchParams.get('party');
     const limit = Math.min(
       Math.max(parseInt(searchParams.get('limit') || '100', 10) || 100, 1),
-      535
+      MAX_LIMIT
     );
     const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10) || 0, 0);
 

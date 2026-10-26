@@ -37,7 +37,7 @@ export class RepresentativesResource {
     return this.http.get('/compare', { bioguideId });
   }
 
-  /** List all 535 current members. */
+  /** List every current member of Congress, including the 6 non-voting delegates. */
   all(params?: { chamber?: 'house' | 'senate'; state?: string; party?: 'D' | 'R' | 'I' }): Promise<{
     representatives: RepresentativeListResponse['data'];
     metadata: Record<string, unknown>;

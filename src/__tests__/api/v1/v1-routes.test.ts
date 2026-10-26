@@ -214,6 +214,31 @@ describe('V1 API Route Integration Tests', () => {
       expect(rep).toHaveProperty('chamber');
     });
 
+    it('returns every current member in one request (539 > the old 535 cap)', async () => {
+      const { getAllEnhancedRepresentatives } = jest.requireMock(
+        '@/features/representatives/services/congress.service'
+      ) as { getAllEnhancedRepresentatives: jest.Mock };
+      const roster = Array.from({ length: 539 }, (_, i) => ({
+        ...mockRepresentative,
+        bioguideId: `X${String(i).padStart(6, '0')}`,
+      }));
+      getAllEnhancedRepresentatives.mockResolvedValueOnce(roster);
+
+      const response = await GET(createRequest('/api/v1/representatives?limit=600'));
+      const body = (await response.json()) as {
+        data: unknown[];
+        pagination: { total: number; limit: number; hasMore: boolean };
+      };
+      expect(body.data).toHaveLength(539);
+      expect(body.pagination).toMatchObject({ total: 539, limit: 600, hasMore: false });
+    });
+
+    it('caps a larger limit at 600', async () => {
+      const response = await GET(createRequest('/api/v1/representatives?limit=5000'));
+      const body = (await response.json()) as { pagination: { limit: number } };
+      expect(body.pagination.limit).toBe(600);
+    });
+
     it('should snapshot representative data keys', async () => {
       const response = await GET(createRequest('/api/v1/representatives'));
       const body = (await response.json()) as { data: Record<string, unknown>[] };

@@ -44,7 +44,8 @@ const REST_ENDPOINTS: { group: string; endpoints: Endpoint[] }[] = [
           {
             name: 'limit',
             type: 'integer',
-            description: 'Results per page (default: 100, max: 535)',
+            description:
+              'Results per page (default: 100, max: 600, enough for every member in one request)',
           },
           { name: 'offset', type: 'integer', description: 'Pagination offset (default: 0)' },
         ],
