@@ -35,6 +35,8 @@ export interface RepresentativeDetails {
   email?: string;
   website?: string;
   imageUrl?: string;
+  /** congress-legislators cross-references, keyed by Bioguide ID. */
+  ids?: { wikipedia?: string; wikidata?: string };
   terms: Array<{
     congress: string;
     startYear: string;

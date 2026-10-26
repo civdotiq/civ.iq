@@ -27,6 +27,8 @@ import {
 import { getLegislator } from './get-legislator';
 import { stateLegislatorLede } from '@/lib/seo/answer-first';
 import { stateLegislatorMetaDescription } from '@/lib/seo/meta-descriptions';
+import { getSharedPersonLinks } from '@/lib/data-sources/openstates-people/load-people';
+import { officialLegislatureUrl, openStatesId, openStatesUrl } from '@/lib/outside-ids';
 
 const BASE_URL = 'https://civdotiq.org';
 
@@ -111,6 +113,15 @@ export default async function StateLegislatorPage({ params, searchParams }: Page
 
   const hubUrl = `${BASE_URL}${buildStateLegislatureUrl(legislator.state)}`;
 
+  // Outside records, from the legislator's own Open States entry.
+  const sharedLinks = await getSharedPersonLinks();
+  const ownLinks = (legislator.links ?? []).map(l => l.url).filter(u => !sharedLinks.has(u));
+  const officialPage = officialLegislatureUrl(ownLinks, sharedLinks);
+  const openStates = {
+    id: openStatesId(legislator.id),
+    url: openStatesUrl(legislator.id, legislator.name),
+  };
+
   const isPreviewEnv =
     process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
   if (search.v === 'new' || isPreviewEnv) {
@@ -143,8 +154,11 @@ export default async function StateLegislatorPage({ params, searchParams }: Page
             legislator.contact?.socialMedia?.facebook
               ? `https://facebook.com/${legislator.contact.socialMedia.facebook}`
               : '',
-            legislator.links?.[0]?.url ?? '',
+            // Pages about this legislator alone (official page, caucus profile).
+            ...ownLinks,
+            openStates.url ?? '',
           ].filter(Boolean),
+          identifier: [{ name: 'Open States', value: openStates.id }],
           knowsAbout: legislator.committees?.map(c => c.name),
           telephone: legislator.phone,
           email: legislator.email,
@@ -185,6 +199,7 @@ export default async function StateLegislatorPage({ params, searchParams }: Page
       <SimpleStateLegislatorProfile
         legislator={legislator}
         fromAddress={search.address}
+        outsideLinks={{ officialPage, openStates }}
         lede={stateLegislatorLede({
           name: legislator.name,
           surname: legislator.lastName?.trim() || legislator.name.split(' ').pop() || '',

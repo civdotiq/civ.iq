@@ -156,6 +156,28 @@ export async function getAllPeople(): Promise<{
   return { people, upstreamCommittedAt: index.file.upstreamCommittedAt };
 }
 
+let sharedLinksMemo: Promise<ReadonlySet<string>> | null = null;
+
+/**
+ * Links listed for more than one legislator (a chamber's email directory, a
+ * caucus home page). They identify no one, so profile links skip them.
+ */
+export function getSharedPersonLinks(): Promise<ReadonlySet<string>> {
+  sharedLinksMemo ??= (async () => {
+    const all = await getAllPeople();
+    const seen = new Set<string>();
+    const shared = new Set<string>();
+    for (const person of all?.people ?? []) {
+      for (const link of new Set(person.links)) {
+        if (seen.has(link)) shared.add(link);
+        else seen.add(link);
+      }
+    }
+    return shared;
+  })();
+  return sharedLinksMemo;
+}
+
 /**
  * One member by `ocd-person/<uuid>` id — the same identifier the v3 API returns,
  * so a caller holding an id from either source can look it up here.
