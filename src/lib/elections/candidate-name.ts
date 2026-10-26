@@ -5,7 +5,10 @@
 
 /** Accent- and case-insensitive form for matching names. */
 function fold(s: string): string {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+  return s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase();
 }
 
 const ROMAN = /^(II|III|IV|V|VI)$/;
