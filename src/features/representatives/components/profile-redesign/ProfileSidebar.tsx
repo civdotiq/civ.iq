@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { EnhancedRepresentative } from '@/types/representative';
 import { CommitteeLink } from '@/components/shared/links/EntityLinks';
 import { FiledCandidates2026, raceId2026 } from '@/components/elections/FiledCandidates2026';
-import { getStateName } from '@/lib/data/us-states';
+import { getStateName, houseSeatLabel } from '@/lib/data/us-states';
 import { isSubcommitteeId } from '@/lib/committee-id';
 import type { ProfileCommittee } from './types';
 import { bioguideUrl, wikidataUrl, wikipediaUrl } from '@/lib/outside-ids';
@@ -150,7 +150,13 @@ export function ProfileSidebar({
       )}
 
       {isHouse && r.district && (
-        <SidebarCard title={`District ${r.state}-${r.district}`}>
+        <SidebarCard
+          title={
+            houseSeatLabel(r.district) === 'At-Large'
+              ? `${r.state} At-Large`
+              : `District ${r.state}-${r.district}`
+          }
+        >
           <p>
             <Link
               href={`/districts/${r.state}-${r.district}`}

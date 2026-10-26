@@ -19,7 +19,7 @@ import { notFound } from 'next/navigation';
 import { BreadcrumbsWithContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
 import { RecordCardLabel } from '@/features/record-card/components/RecordCardLabel';
 import { getRecordCardData } from '@/features/record-card/record-card-data';
-import { getStateName } from '@/lib/data/us-states';
+import { getStateName, houseSeatLabel } from '@/lib/data/us-states';
 import { ProfilePageSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { partyAdjective } from '@/lib/party-label';
 import { recordCardMetaDescription } from '@/lib/seo/meta-descriptions';
@@ -95,7 +95,7 @@ export default async function RecordCardPage({
         url={canonicalUrl}
         person={{
           name: member.name,
-          jobTitle: `${role} - ${member.state}${member.district ? ` District ${member.district}` : ''}`,
+          jobTitle: `${role} - ${member.state}${member.district ? ` ${houseSeatLabel(member.district)}` : ''}`,
           description: `${member.name}'s congressional record from government sources: bills, votes, campaign money, and district federal funding.`,
           image: member.imageUrl,
           affiliation: partyAdjective(member.party),

@@ -7,7 +7,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { US_STATES, getStateName, isValidStateCode } from '@/lib/data/us-states';
+import { US_STATES, getStateName, houseSeatLabel, isValidStateCode } from '@/lib/data/us-states';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { DelegationExportButton } from './DelegationExportButton';
@@ -198,7 +198,12 @@ export default async function StateDelegationPage({ params }: PageProps) {
         member={delegationData.map(m => ({
           name: m.name,
           url: `https://civdotiq.org/representative/${m.bioguideId}`,
-          role: m.chamber === 'Senate' ? 'Senator' : `Representative, District ${m.district}`,
+          role:
+            m.chamber === 'Senate'
+              ? 'Senator'
+              : m.district
+                ? `Representative, ${houseSeatLabel(m.district)}`
+                : 'Representative',
         }))}
       />
       <BreadcrumbSchema

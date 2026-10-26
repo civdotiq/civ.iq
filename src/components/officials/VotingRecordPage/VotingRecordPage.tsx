@@ -17,6 +17,7 @@ import { SummaryStats } from './SummaryStats';
 import { applyFilters, uniqueCategories, uniqueYears } from './data';
 import { INITIAL_FILTERS } from './types';
 import type { FilterState, VotesResponse, VotingRecordPageProps } from './types';
+import { houseSeatLabel } from '@/lib/data/us-states';
 
 const VOTES_LIMIT = 50;
 
@@ -94,7 +95,7 @@ export function VotingRecordPage({ representative: r }: VotingRecordPageProps) {
       >
         <CqLabel>
           ← Federal · {r.chamber} · {r.state}
-          {r.district ? ` · District ${r.district}` : ''} · Voting record
+          {r.district ? ` · ${houseSeatLabel(r.district)}` : ''} · Voting record
         </CqLabel>
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
           <CqSourceTag compact source="Congress.gov" id="roll-call" />
