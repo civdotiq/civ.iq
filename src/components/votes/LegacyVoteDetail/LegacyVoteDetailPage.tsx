@@ -34,6 +34,7 @@ import {
   officialVoteRecordUrl,
   voteMeasureBillHref,
 } from '@/lib/votes/vote-links';
+import { explainVoteOutcome, requiredMajorityLabel } from '@/lib/votes/vote-wording';
 
 /**
  * "HR 1234", but "PN12-1" rather than "PN PN12-1": Senate roll calls carry a
@@ -269,55 +270,11 @@ export function LegacyVoteDetailPage({
 
           <div className="bg-civiq-blue/10 border-l-4 border-civiq-blue p-4 mb-4">
             <h3 className="font-semibold text-civiq-blue mb-2">What This Vote Means</h3>
-            <p className="text-sm text-civiq-blue">
-              {(() => {
-                const q = voteDetail.question.toLowerCase();
-                const r = voteDetail.result.toLowerCase();
-                const chamber = voteDetail.chamber || 'Senate';
-                const otherChamber = chamber === 'House' ? 'Senate' : 'House of Representatives';
-
-                if (q.includes('cloture')) {
-                  if (r.includes('agreed') || r.includes('invoked')) {
-                    return `The ${chamber} voted to end debate and move forward with this bill. This breaks any filibuster and allows the ${chamber} to proceed to a final vote.`;
-                  }
-                  return `The ${chamber} voted NOT to end debate. The filibuster continues, and the bill cannot move forward to a final vote at this time. 60 votes were needed.`;
-                }
-                if (q.includes('passage') || q.includes('pass the bill')) {
-                  if (r.includes('passed')) {
-                    return `The bill PASSED the ${chamber} and will now move to the ${otherChamber} (or to the President if already passed by the ${otherChamber}).`;
-                  }
-                  return 'The bill FAILED to pass. It will not become law unless reconsidered.';
-                }
-                if (q.includes('confirmation')) {
-                  if (r.includes('confirmed')) {
-                    return `The ${chamber} CONFIRMED this nomination. The nominee will assume their position.`;
-                  }
-                  return `The ${chamber} REJECTED this nomination. The nominee will not assume the position.`;
-                }
-                if (q.includes('amendment')) {
-                  if (r.includes('agreed')) {
-                    return 'This amendment was ADOPTED and will be included in the bill.';
-                  }
-                  return 'This amendment was REJECTED and will not be included in the bill.';
-                }
-                if (q.includes('motion to') || q.includes('agreeing to the resolution')) {
-                  if (r.includes('agreed') || r.includes('passed')) {
-                    return `The ${chamber} APPROVED this measure.`;
-                  }
-                  return `The ${chamber} REJECTED this procedural motion.`;
-                }
-                if (r.includes('passed') || r.includes('agreed')) {
-                  return `This measure PASSED the ${chamber}.`;
-                }
-                return `This measure did NOT pass the ${chamber}.`;
-              })()}
-            </p>
+            <p className="text-sm text-civiq-blue">{explainVoteOutcome(voteDetail)}</p>
             {voteDetail.requiredMajority && (
               <p className="text-xs text-civiq-blue mt-2">
-                <strong>Required to pass:</strong> {voteDetail.requiredMajority} majority
-                {voteDetail.requiredMajority === '3/5' && ' (60 votes)'}
-                {voteDetail.requiredMajority === '2/3' && ' (67 votes)'}
-                {voteDetail.requiredMajority === '1/2' && ' (51 votes, or 50 + VP)'}
+                <strong>Required to pass:</strong>{' '}
+                {requiredMajorityLabel(voteDetail.requiredMajority, voteDetail.chamber)}
               </p>
             )}
             {officialRecordUrl && (
