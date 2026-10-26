@@ -19,6 +19,7 @@
  */
 
 import { cachedFetch } from '@/lib/cache';
+import { cachedStaleWhileRevalidate } from '@/services/cache/unified-cache.service';
 import logger from '@/lib/logging/simple-logger';
 import { mapWithConcurrency } from '@/lib/utils/concurrency';
 
@@ -41,6 +42,16 @@ const MEETINGS_LIST_LIMIT = 250;
 // Meeting details are fetched this many at a time: an unbounded burst of 250
 // gets throttled, and each dropped detail silently hid a hearing.
 const MEETING_DETAIL_CONCURRENCY = 10;
+
+// Meeting lists are served stale-while-revalidate, like member bill counts:
+// fresh for 2 hours, then served while refreshed in the background, for up to
+// a week.
+const MEETINGS_FRESH_MS = 2 * 60 * 60 * 1000;
+const MEETINGS_MAX_STALE_MS = 7 * 24 * 60 * 60 * 1000;
+
+// More failed meeting details than this share means a throttled run; it is
+// not saved.
+const MAX_DETAIL_FAILURE_SHARE = 0.1;
 
 // ── Public Types ──────────────────────────────────────────────────
 
@@ -198,10 +209,19 @@ export async function fetchCommitteeActivity(
   chamber: 'House' | 'Senate' | 'Joint'
 ): Promise<CommitteeActivityResult> {
   const [meetings, bills] = await Promise.all([
-    fetchCommitteeMeetingsSimple(committeeId, chamber).catch(() => []),
+    fetchCommitteeMeetingsSimple(committeeId, chamber).catch(() => ({
+      meetings: [],
+      fetchedAt: null,
+    })),
     fetchCommitteeBills(committeeId, chamber).catch(() => []),
   ]);
-  return { meetings, bills, fetchedAt: new Date().toISOString() };
+  // "As of" is when the served hearing list was read, which can be up to the
+  // stale window old; fall back to now when there is no saved list.
+  return {
+    meetings: meetings.meetings,
+    bills,
+    fetchedAt: new Date(meetings.fetchedAt ?? Date.now()).toISOString(),
+  };
 }
 
 // ── Meetings (Simple — used by question page) ─────────────────────
@@ -209,104 +229,114 @@ export async function fetchCommitteeActivity(
 async function fetchCommitteeMeetingsSimple(
   committeeId: string,
   chamber: 'House' | 'Senate' | 'Joint'
-): Promise<CommitteeActivityMeeting[]> {
+): Promise<{ meetings: CommitteeActivityMeeting[]; fetchedAt: number | null }> {
   const detailed = await fetchCommitteeMeetings(committeeId, chamber, 5);
-  return detailed.meetings.map(m => ({
+  const meetings = detailed.meetings.map(m => ({
     eventId: m.eventId,
     date: m.date,
     title: m.title,
     type: m.type,
     chamber: m.chamber,
   }));
+  return { meetings, fetchedAt: detailed.fetchedAt };
 }
 
 // ── Meetings (Detailed — used by API route) ───────────────────────
 
 /**
- * Fetch detailed meetings for a committee from Congress.gov.
- *
- * Returns at most `limit` meetings (default 20). Because Congress.gov
- * only exposes a chamber-wide meeting list (not committee-filtered),
- * this function fetches the list and then fetches meeting details in
- * parallel before filtering to the target committee.
+ * A committee's most recent held meetings, served stale-while-revalidate like
+ * member bill counts: a saved list younger than MEETINGS_FRESH_MS is served
+ * as is; an older one (up to MEETINGS_MAX_STALE_MS) is served immediately and
+ * refreshed in the background, so no visitor waits on the ~250 Congress.gov
+ * requests a refresh takes. Only a first-ever (or week-old) request fetches
+ * inline. `fetchedAt` is when the served list was read, for "As of" dates.
  */
 export async function fetchCommitteeMeetings(
   committeeId: string,
   chamber: 'House' | 'Senate' | 'Joint',
   limit: number = 20,
   offset: number = 0
-): Promise<{ meetings: CommitteeMeetingDetailed[]; total: number }> {
+): Promise<{ meetings: CommitteeMeetingDetailed[]; total: number; fetchedAt: number | null }> {
   if (!CONGRESS_API_KEY) {
     logger.warn('[CommitteeActivity] CONGRESS_API_KEY not configured');
-    return { meetings: [], total: 0 };
+    return { meetings: [], total: 0, fetchedAt: null };
   }
 
   const apiChamber = chamberToApiSegment(chamber);
-  // v5: meetings sorted by date from a 250-item window, details fetched in
-  // batches (v3 kept the first matches in update order; v4 was a test run)
-  const cacheKey = `committee-meetings-v5:${committeeId}:${apiChamber}:${limit}:${offset}`;
+  // v6: stale-while-revalidate envelope (v5 was a plain 2-hour cache entry).
+  const cacheKey = `committee-meetings-v6:${committeeId}:${apiChamber}:${limit}:${offset}`;
+
+  try {
+    const { data, fetchedAt } = await cachedStaleWhileRevalidate(
+      cacheKey,
+      () => loadCommitteeMeetings(committeeId, apiChamber, limit, offset),
+      { freshMs: MEETINGS_FRESH_MS, maxStaleMs: MEETINGS_MAX_STALE_MS, source: 'congress.gov' }
+    );
+    return { ...data, fetchedAt };
+  } catch (error) {
+    logger.error('[CommitteeActivity] Meeting fetch failed', error as Error, { committeeId });
+    return { meetings: [], total: 0, fetchedAt: null };
+  }
+}
+
+/**
+ * Read the chamber's meeting list and the committee's meetings from
+ * Congress.gov. Throws on failure so nothing is cached and a saved list keeps
+ * being served.
+ */
+async function loadCommitteeMeetings(
+  committeeId: string,
+  apiChamber: 'house' | 'senate',
+  limit: number,
+  offset: number
+): Promise<{ meetings: CommitteeMeetingDetailed[]; total: number }> {
   // Fetch many list items because most won't match the target committee —
   // Congress.gov does not expose a committee-filtered meeting endpoint.
-  const fetchLimit = MEETINGS_LIST_LIMIT;
+  // Congress.gov API requires explicit format=json; the Accept header is ignored
+  const listUrl = `https://api.congress.gov/v3/committee-meeting/${CURRENT_CONGRESS}/${apiChamber}?limit=${MEETINGS_LIST_LIMIT}&offset=${offset}&format=json`;
+  const listResponse = await fetch(listUrl, {
+    headers: { Accept: 'application/json', 'X-API-Key': CONGRESS_API_KEY! },
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!listResponse.ok) {
+    throw new Error(`Meeting list fetch failed: HTTP ${listResponse.status}`);
+  }
 
-  return cachedFetch(
-    cacheKey,
-    async () => {
-      try {
-        // Congress.gov API requires explicit format=json; the Accept header is ignored
-        const listUrl = `https://api.congress.gov/v3/committee-meeting/${CURRENT_CONGRESS}/${apiChamber}?limit=${fetchLimit}&offset=${offset}&format=json`;
-        const listResponse = await fetch(listUrl, {
-          headers: { Accept: 'application/json', 'X-API-Key': CONGRESS_API_KEY! },
-        });
+  const listData = await listResponse.json();
+  const meetingsList: CongressMeetingListItem[] = listData.committeeMeetings || [];
+  const total: number = listData.pagination?.count ?? 0;
 
-        if (!listResponse.ok) {
-          logger.error('[CommitteeActivity] Meeting list fetch failed', undefined, {
-            committeeId,
-            status: listResponse.status,
-          });
-          return { meetings: [], total: 0 };
-        }
-
-        const listData = await listResponse.json();
-        const meetingsList: CongressMeetingListItem[] = listData.committeeMeetings || [];
-        const total: number = listData.pagination?.count ?? 0;
-
-        // Parallelize all detail fetches (was serial N+1 before)
-        const detailResults = await mapWithConcurrency(
-          meetingsList,
-          MEETING_DETAIL_CONCURRENCY,
-          item => fetchMeetingDetail(item.eventId, apiChamber)
-        );
-
-        const upperCommitteeId = committeeId.toUpperCase();
-        // For parent committees (codes ending in "00" like "HSIF00"), the
-        // chamber-wide meeting list returns subcommittee meetings under
-        // codes like "HSIF03" or "HSIF14". Matching the 4-letter base
-        // prefix catches those; without it the pod looked empty for major
-        // committees because nearly all their hearings happen in
-        // subcommittees.
-        const matchPrefix = upperCommitteeId.endsWith('00')
-          ? upperCommitteeId.slice(0, 4)
-          : upperCommitteeId;
-        const matched = selectRecentMeetings(detailResults, matchPrefix, apiChamber, limit);
-
-        logger.info('[CommitteeActivity] Fetched meetings', {
-          committeeId,
-          chamber: apiChamber,
-          listCount: meetingsList.length,
-          matchedCount: matched.length,
-        });
-
-        return { meetings: matched, total };
-      } catch (error) {
-        logger.error('[CommitteeActivity] Meeting fetch failed', error as Error, {
-          committeeId,
-        });
-        return { meetings: [], total: 0 };
-      }
-    },
-    ACTIVITY_TTL
+  const detailResults = await mapWithConcurrency(meetingsList, MEETING_DETAIL_CONCURRENCY, item =>
+    fetchMeetingDetail(item.eventId, apiChamber)
   );
+  // A heavily throttled run would save a list with hearings missing; keep the
+  // previous list instead.
+  const failed = detailResults.filter(d => d === null).length;
+  if (meetingsList.length > 0 && failed / meetingsList.length > MAX_DETAIL_FAILURE_SHARE) {
+    throw new Error(`${failed} of ${meetingsList.length} meeting details failed`);
+  }
+
+  const upperCommitteeId = committeeId.toUpperCase();
+  // For parent committees (codes ending in "00" like "HSIF00"), the
+  // chamber-wide meeting list returns subcommittee meetings under
+  // codes like "HSIF03" or "HSIF14". Matching the 4-letter base
+  // prefix catches those; without it the pod looked empty for major
+  // committees because nearly all their hearings happen in
+  // subcommittees.
+  const matchPrefix = upperCommitteeId.endsWith('00')
+    ? upperCommitteeId.slice(0, 4)
+    : upperCommitteeId;
+  const matched = selectRecentMeetings(detailResults, matchPrefix, apiChamber, limit);
+
+  logger.info('[CommitteeActivity] Fetched meetings', {
+    committeeId,
+    chamber: apiChamber,
+    listCount: meetingsList.length,
+    failedDetails: failed,
+    matchedCount: matched.length,
+  });
+
+  return { meetings: matched, total };
 }
 
 /** One meeting's detail; retried once, since a dropped detail hides a hearing. */
