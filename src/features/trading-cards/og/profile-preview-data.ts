@@ -14,6 +14,7 @@
 import type { EnhancedRepresentative } from '@/types/representative';
 import type { ChamberBaselines } from '@/lib/intelligence/analyzers/chamber-baselines';
 import { getStateName } from '@/lib/data/us-states';
+import { commonName } from '@/features/representatives/utils/common-name';
 
 export interface CachedSummary {
   billsSponsored?: number;
@@ -125,7 +126,7 @@ export function buildProfilePreview(
 
   return {
     // "Eleanor Holmes Norton", not the roster's short "Eleanor Norton".
-    name: rep.fullName?.official || rep.name,
+    name: commonName(rep),
     party: rep.party,
     ...roleAndPlace(rep),
     phone: rep.currentTerm?.phone || rep.phone || undefined,

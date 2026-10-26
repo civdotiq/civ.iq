@@ -21,9 +21,12 @@ import {
 } from 'recharts';
 import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
 import type { ElectionParty, RaceCandidateResult } from '@/types/elections';
+import { candidateDisplayName } from '@/lib/elections/candidate-name';
 
 interface DistrictChartsProps {
   districtData: {
+    /** Current member, for naming them in the 2024 results. */
+    representative?: { name: string } | null;
     demographics?: {
       population: number;
       medianIncome: number;
@@ -227,7 +230,7 @@ export function RacialCompositionChart({ demographics }: { demographics: Demogra
 }
 
 const PARTY_NAMES: Record<ElectionParty, string> = {
-  D: 'Democrat',
+  D: 'Democratic',
   R: 'Republican',
   L: 'Libertarian',
   OTHER: 'Other',
@@ -247,11 +250,14 @@ export function ElectionHistoryChart({
   winner,
   turnout,
   candidates,
+  member,
 }: {
   currentMargin: number;
   winner?: string;
   turnout?: number;
   candidates?: RaceCandidateResult[];
+  /** The district's current member, named as the site names them. */
+  member?: { name: string } | null;
 }) {
   const hasRealData = winner && winner !== 'Data unavailable';
   const leader = candidates?.[0];
@@ -270,7 +276,9 @@ export function ElectionHistoryChart({
                 <div key={c.name}>
                   <div className="flex justify-between gap-2 text-sm mb-1">
                     <span>
-                      <span className="font-semibold text-gray-900">{c.name}</span>{' '}
+                      <span className="font-semibold text-gray-900">
+                        {candidateDisplayName(c.name, member)}
+                      </span>{' '}
                       <span style={{ color: candidatePartyColor(c.partyCode) }}>
                         {PARTY_NAMES[c.partyCode]}
                       </span>
@@ -297,7 +305,7 @@ export function ElectionHistoryChart({
             <p className="text-sm text-gray-700">
               {leader ? (
                 <strong style={{ color: candidatePartyColor(leader.partyCode) }}>
-                  {leader.name}
+                  {candidateDisplayName(leader.name, member)}
                 </strong>
               ) : (
                 <strong>{winner}</strong>
@@ -431,6 +439,7 @@ export function DistrictCharts({ districtData }: DistrictChartsProps) {
           winner={districtData.political.lastElection.winner}
           turnout={districtData.political.lastElection.turnout}
           candidates={districtData.political.lastElection.candidates}
+          member={districtData.representative}
         />
       </div>
 

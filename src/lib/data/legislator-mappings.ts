@@ -7,6 +7,7 @@ import yaml from 'js-yaml';
 import fs from 'fs';
 import path from 'path';
 import logger from '@/lib/logging/simple-logger';
+import { goesByName } from '@/features/representatives/utils/common-name';
 
 interface LegislatorIds {
   bioguide?: string;
@@ -24,7 +25,10 @@ interface Legislator {
   id: LegislatorIds;
   name: {
     first: string;
+    middle?: string;
     last: string;
+    suffix?: string;
+    nickname?: string;
     official_full?: string;
   };
   bio: {
@@ -177,8 +181,15 @@ async function loadLegislatorInfoMap(): Promise<Map<string, LegislatorInfo>> {
           bioguideId: legislator.id.bioguide,
           firstName: legislator.name.first,
           lastName: legislator.name.last,
-          fullName:
-            legislator.name.official_full || `${legislator.name.first} ${legislator.name.last}`,
+          // The name the member goes by ("Bernie Sanders", "Eleanor Holmes Norton").
+          fullName: goesByName({
+            first: legislator.name.first,
+            middle: legislator.name.middle,
+            last: legislator.name.last,
+            suffix: legislator.name.suffix,
+            nickname: legislator.name.nickname,
+            official_full: legislator.name.official_full,
+          }),
           party,
           state: latestTerm.state,
           district: latestTerm.district,

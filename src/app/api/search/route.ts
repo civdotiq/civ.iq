@@ -403,7 +403,14 @@ async function performSearch(filters: SearchFilters): Promise<SearchOutcome> {
         const searchWords = searchTerm.split(' ').filter(word => word.length > 0);
         const matchesAll = searchWords.every(word => {
           // Check name with nickname support
-          if (rep.name && nameMatches(word, rep.name)) return true;
+          // The displayed name ("Bernie Sanders") plus the official and legal
+          // names ("Bernard Sanders", "Margaret Wood Hassan"), so either finds them.
+          const names = [
+            rep.name,
+            rep.fullName?.official,
+            rep.fullName ? `${rep.fullName.first} ${rep.fullName.last}` : undefined,
+          ].filter((n): n is string => Boolean(n));
+          if (names.some(n => nameMatches(word, n))) return true;
           // Check other fields
           return searchableText.includes(word.toLowerCase());
         });

@@ -11,13 +11,10 @@
  */
 
 import vacanciesData from './vacancies.json';
+import { partyAdjective } from '@/lib/party-label';
 
 export type VacancyReason =
-  | 'death'
-  | 'resignation'
-  | 'expulsion'
-  | 'executive_appointment'
-  | 'other';
+  'death' | 'resignation' | 'expulsion' | 'executive_appointment' | 'other';
 
 export type SuccessorMethod = 'appointed' | 'elected';
 
@@ -116,12 +113,7 @@ export function getVacancyHistory(state: string, district: string | null): Congr
 }
 
 export type MemberStatus =
-  | 'active'
-  | 'pending_resignation'
-  | 'resigned'
-  | 'expelled'
-  | 'deceased'
-  | 'retired';
+  'active' | 'pending_resignation' | 'resigned' | 'expelled' | 'deceased' | 'retired';
 
 export interface MemberStatusInfo {
   status: MemberStatus;
@@ -196,7 +188,7 @@ export function formatVacancyMessage(vacancy: CongressionalVacancy): string {
       : `${vacancy.state}-${vacancy.district}`;
 
   if (isVacancyFilled(vacancy)) {
-    return `${seatLabel} was filled on ${vacancy.successor?.installedDate} by ${vacancy.successor?.name} (${vacancy.successor?.party}).`;
+    return `${seatLabel} was filled on ${vacancy.successor?.installedDate} by ${vacancy.successor?.name} (${partyAdjective(vacancy.successor?.party)}).`;
   }
 
   const electionDate = vacancy.specialElection?.date;
@@ -208,5 +200,6 @@ export function formatVacancyMessage(vacancy: CongressionalVacancy): string {
     return `${seatLabel} is currently vacant. Special election scheduled for ${electionDate}.`;
   }
 
-  return `${seatLabel} is currently vacant. Previous representative: ${vacancy.previousMember.name} (${vacancy.previousMember.party}). Special election date TBD.`;
+  // No special election date is on file; say nothing about one rather than "TBD".
+  return `${seatLabel} is currently vacant. Previous representative: ${vacancy.previousMember.name} (${partyAdjective(vacancy.previousMember.party)}).`;
 }

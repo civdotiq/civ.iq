@@ -79,7 +79,8 @@ function getCommitteeMetadata(committeeId: string) {
 async function fetchCommitteeFromCongressLegislators(
   committeeId: string
 ): Promise<Committee | null> {
-  const cacheKey = `committee-real-${committeeId}`;
+  // v2: member names as they go by ("Bernie Sanders").
+  const cacheKey = `committee-real-v2-${committeeId}`;
 
   return cachedFetch(
     cacheKey,
@@ -460,7 +461,7 @@ export async function getCommitteeDataService(
 
   // If cache bypass requested, delete cached entry first
   if (bypassCache) {
-    const cacheKey = `committee-real-${committeeId}`;
+    const cacheKey = `committee-real-v2-${committeeId}`;
     await cache.delete(cacheKey);
     logger.info('Cache bypassed - deleted cached entry', { cacheKey });
   }

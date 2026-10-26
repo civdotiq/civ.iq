@@ -2036,7 +2036,8 @@ export function districtDetailsResponse(district: DistrictDetails) {
 export function getCachedDistrictDetails(districtId: string): Promise<DistrictDetails | null> {
   return cachedFetch(
     // v4: ACS 2024 5-year (119th Congress boundaries).
-    `district-details-v4-${districtId}`,
+    // v5: member names as they go by ("Eleanor Holmes Norton").
+    `district-details-v5-${districtId}`,
     () => getDistrictDetails(districtId),
     // Seconds. Was 15552000000 (a ms value) → clamped to 90 days; the payload
     // also carries the representative, so keep it to a week.

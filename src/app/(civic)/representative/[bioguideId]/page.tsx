@@ -27,7 +27,7 @@ import {
 } from '@/features/representatives/profile-metadata';
 import { partyAdjective } from '@/lib/party-label';
 import { describeTenure } from '@/features/representatives/utils/tenure';
-import { commonName } from '@/features/representatives/utils/common-name';
+import { commonName, officialNameIfDifferent } from '@/features/representatives/utils/common-name';
 import { memberLede } from '@/lib/seo/answer-first';
 import {
   getNextHouseElection,
@@ -324,7 +324,8 @@ export default async function RepresentativeProfilePage({
       <ProfilePageSchema
         url={`https://civdotiq.org/representative/${bioguideId}`}
         person={{
-          name: representative.name,
+          name: commonName(representative),
+          alternateName: officialNameIfDifferent(representative),
           jobTitle: `${representative.role} - ${representative.state}${representative.district ? ` District ${representative.district}` : ''}`,
           description: `${partyAdjective(representative.party)} ${representative.role} representing ${representative.state} in the U.S. Congress`,
           image: representative.imageUrl,

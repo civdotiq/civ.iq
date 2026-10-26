@@ -60,3 +60,17 @@ describe('UnifiedRepresentativeCard', () => {
     expect(screen.queryByText('Democrat')).not.toBeInTheDocument();
   });
 });
+
+describe('UnifiedRepresentativeCard non-voting seats', () => {
+  it('calls the DC member "Delegate", not "Representative"', () => {
+    render(
+      <UnifiedRepresentativeCard
+        representative={{ bioguideId: 'N000147', name: 'Eleanor Holmes Norton', party: 'Democrat' }}
+        districtName="District of Columbia At-Large"
+        federalTitle="Delegate"
+      />
+    );
+    expect(screen.getByText('Delegate for District of Columbia At-Large')).toBeInTheDocument();
+    expect(screen.queryByText(/Representative for/)).not.toBeInTheDocument();
+  });
+});

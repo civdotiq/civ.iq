@@ -73,6 +73,7 @@ export class StateLegislatureCoreService {
       Independent: 'Independent',
       Green: 'Green',
       Libertarian: 'Libertarian',
+      Nonpartisan: 'Nonpartisan',
     };
     const party: StateParty = partyMap[osLegislator.party] || 'Other';
 
@@ -153,6 +154,7 @@ export class StateLegislatureCoreService {
       Independent: 'Independent',
       Green: 'Green',
       Libertarian: 'Libertarian',
+      Nonpartisan: 'Nonpartisan',
     };
     const party: StateParty = partyMap[osLegislator.party] || 'Other';
 
@@ -323,7 +325,8 @@ export class StateLegislatureCoreService {
     state: string,
     chamber?: StateChamber
   ): Promise<EnhancedStateLegislator[]> {
-    const cacheKey = `core:state-legislators:${state}:${chamber || 'all'}`;
+    // v2 (all three roster keys): Nebraska's party stored as "Nonpartisan".
+    const cacheKey = `core:state-legislators:v2:${state}:${chamber || 'all'}`;
     const startTime = Date.now();
 
     try {
@@ -406,7 +409,7 @@ export class StateLegislatureCoreService {
     state: string,
     chamber?: StateChamber
   ): Promise<StateLegislatorSummary[]> {
-    const cacheKey = `core:state-legislators-summary:${state}:${chamber || 'all'}`;
+    const cacheKey = `core:state-legislators-summary:v2:${state}:${chamber || 'all'}`;
     const startTime = Date.now();
 
     try {
@@ -474,7 +477,8 @@ export class StateLegislatureCoreService {
     const normalizedState = state.toUpperCase();
     // v2: corpus-only shape (office address, real term start, no bill counts).
     // Entries under the old key carry the current-year term for everyone.
-    const cacheKey = `core:state-legislator:v2:${normalizedState}:${legislatorId}`;
+    // v3: Nebraska's party stored as "Nonpartisan", not "Other".
+    const cacheKey = `core:state-legislator:v3:${normalizedState}:${legislatorId}`;
     const startTime = Date.now();
 
     try {
@@ -838,7 +842,7 @@ export class StateLegislatureCoreService {
    * Get state legislators by ZIP code - DIRECT lookup with state mapping
    */
   static async getStateLegislatorsByZip(zipCode: string): Promise<ZipCodeStateLegislators | null> {
-    const cacheKey = `core:state-legislators:zip:${zipCode}`;
+    const cacheKey = `core:state-legislators:v2:zip:${zipCode}`;
     const startTime = Date.now();
 
     try {

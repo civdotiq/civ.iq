@@ -45,7 +45,7 @@ interface CacheInvalidationResponse {
 
 /**
  * POST /api/admin/cache - Invalidate cache by pattern
- * Body: { pattern: "core:state-legislators:MI", clearAll: false }
+ * Body: { pattern: "core:state-legislators:v2:MI", clearAll: false }
  */
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
       message: 'Cache statistics endpoint',
       note: 'Statistics tracking not yet implemented - use POST to clear cache',
       availablePatterns: [
-        'core:state-legislators:{state}',
+        'core:state-legislators:v2:{state}',
         'core:state-legislator:{state}:{id}',
         'core:state-legislator-votes:{state}:{id}',
         'core:state-bill:{state}:{id}',

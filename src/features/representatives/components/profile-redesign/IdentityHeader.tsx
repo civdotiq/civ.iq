@@ -15,6 +15,7 @@ import { partyFillClasses } from './types';
 import { tenureFact } from '../../utils/tenure';
 import { dcOfficeLines, safeHttpUrl, telHref } from './contact';
 import { partyAdjective } from '@/lib/party-label';
+import { commonName } from '@/features/representatives/utils/common-name';
 
 interface IdentityHeaderProps {
   representative: EnhancedRepresentative;
@@ -57,7 +58,8 @@ export function IdentityHeader({
   const [imageError, setImageError] = useState(false);
   const photoUrl = r.imageUrl || `/api/photo/${r.bioguideId}`;
 
-  const displayName = r.fullName?.official || r.name;
+  // The name the member goes by; the official full name is in the biography.
+  const displayName = commonName(r);
   const age = computeAge(r.bio?.birthday);
   // The roster keeps contact details on the current term; top-level fields
   // are fallbacks only.

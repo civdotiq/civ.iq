@@ -62,6 +62,8 @@ import {
   getSenateVacancy,
   getVacancyInfo,
   isDistrictVacant,
+  formatVacancyMessage,
+  type CongressionalVacancy,
 } from '../congressional-vacancies';
 
 describe('congressional vacancy lookups', () => {
@@ -87,5 +89,25 @@ describe('congressional vacancy lookups', () => {
 
   it('lists only open seats', () => {
     expect(getAllVacancies().map(v => `${v.state}-${v.district}`)).toEqual(['FL-20']);
+  });
+});
+
+describe('formatVacancyMessage without a special election on file', () => {
+  const vacancy: CongressionalVacancy = {
+    state: 'FL',
+    chamber: 'House',
+    district: '20',
+    senateClass: null,
+    vacantSince: '2026-04-21',
+    reason: 'resignation',
+    previousMember: { name: 'Sheila Cherfilus-McCormick', party: 'Democrat' },
+  };
+
+  it('labels the party "Democratic" and says nothing about a date', () => {
+    const message = formatVacancyMessage(vacancy);
+    expect(message).toBe(
+      'FL-20 is currently vacant. Previous representative: Sheila Cherfilus-McCormick (Democratic).'
+    );
+    expect(message).not.toMatch(/TBD|\(Democrat\)/);
   });
 });

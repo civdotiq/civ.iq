@@ -24,7 +24,7 @@ export const dynamic = 'force-dynamic';
 interface StateLegislator {
   id: string;
   name: string;
-  party: 'Democratic' | 'Republican' | 'Independent' | 'Other';
+  party: 'Democratic' | 'Republican' | 'Independent' | 'Nonpartisan' | 'Other';
   chamber: 'upper' | 'lower';
   district: string;
   email?: string;
@@ -388,8 +388,7 @@ async function fetchStateLegislators(
         // 46 senators and DC's 13 councilmembers are neither upper nor lower.
         const chamberMembers = (results as unknown[]).filter(person => {
           const role = (person as Record<string, unknown>).current_role as
-            | Record<string, unknown>
-            | undefined;
+            Record<string, unknown> | undefined;
           const classification = role?.org_classification;
           return (
             classification === 'upper' ||
@@ -476,11 +475,9 @@ function transformLegislator(person: unknown, stateAbbrev: string): StateLegisla
   const contactDetails = (personData.contact_details as Record<string, unknown>[]) || [];
 
   const email = contactDetails.find((c: Record<string, unknown>) => c.type === 'email')?.value as
-    | string
-    | undefined;
+    string | undefined;
   const phone = contactDetails.find((c: Record<string, unknown>) => c.type === 'voice')?.value as
-    | string
-    | undefined;
+    string | undefined;
 
   return {
     id: (personData.id as string) || `${stateAbbrev}-${orgClassification}-${currentRole?.district}`,
@@ -491,8 +488,7 @@ function transformLegislator(person: unknown, stateAbbrev: string): StateLegisla
     email,
     phone,
     office: contactDetails.find((c: Record<string, unknown>) => c.type === 'address')?.value as
-      | string
-      | undefined,
+      string | undefined,
     photoUrl: personData.image as string | undefined,
     committees: [], // Would need separate API call to get committee memberships
     // Only report a term when OpenStates gives us real dates. The previous
@@ -529,6 +525,7 @@ function normalizeParty(party: string): StateLegislator['party'] {
   if (normalized.includes('democrat')) return 'Democratic';
   if (normalized.includes('republican')) return 'Republican';
   if (normalized.includes('independent')) return 'Independent';
+  if (normalized.includes('nonpartisan')) return 'Nonpartisan';
   return 'Other';
 }
 
@@ -717,8 +714,7 @@ export async function GET(
                 startDate: sessionStartDate,
                 endDate: sessionEndDate,
                 type: (currentSession.classification === 'special' ? 'special' : 'regular') as
-                  | 'regular'
-                  | 'special',
+                  'regular' | 'special',
                 status: determineSessionStatus(sessionStartDate, sessionEndDate),
                 // Note: recesses and deadlines require state-specific data not provided by OpenStates API
                 // These fields can be populated with manual data or state-specific scraping in the future

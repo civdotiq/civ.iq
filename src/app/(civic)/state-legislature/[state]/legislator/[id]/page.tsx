@@ -191,8 +191,7 @@ export default async function StateLegislatorPage({ params, searchParams }: Page
           stateName: getStateName(legislator.state) || legislator.state,
           role: getLegislatorRoleTitle(legislator.state, legislator.chamber),
           district: formatStateDistrict(legislator.district),
-          // Nebraska's Legislature is officially nonpartisan; the roster records "Other".
-          party: legislator.state.toUpperCase() === 'NE' ? 'Nonpartisan' : legislator.party,
+          party: legislator.party,
           inSeatSince: legislator.terms?.[0]?.startYear,
           committees: (legislator.committees ?? []).map(c => ({ name: c.name, role: c.role })),
           phone: legislator.phone || legislator.contact?.capitolOffice?.phone,
