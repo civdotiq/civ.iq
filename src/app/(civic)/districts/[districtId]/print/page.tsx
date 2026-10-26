@@ -16,6 +16,7 @@ import '@/styles/civic-pack-print.css';
 import { PrintButton } from './PrintButton';
 import { PrintDistrictPage } from '@/components/embed/PrintDistrictPage';
 import { partyAdjective } from '@/lib/party-label';
+import { ACS_5YR_VINTAGE } from '@/lib/census-vintage';
 
 interface PageProps {
   params: Promise<{ districtId: string }>;
@@ -437,7 +438,7 @@ export default async function PrintCivicPackPage({ params, searchParams }: PageP
       {/* Footer: Data sources + last updated */}
       <footer className="civic-pack-footer">
         <div>
-          Data: Congress.gov, Census Bureau ACS 2022, USASpending.gov
+          Data: Congress.gov, Census Bureau ACS {ACS_5YR_VINTAGE} 5-year, USASpending.gov
           <br />
           Generated{' '}
           {now.toLocaleDateString('en-US', {

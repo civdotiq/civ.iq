@@ -96,8 +96,12 @@ interface RepresentativeLobbyingResponse {
     committees: Array<{
       committeeCode: string;
       committeeName: string;
+      /** Reported spend on matched reports. A report counts toward every
+       *  committee it matches, so this overstates; the profile shows counts. */
       windowTotal: number;
-      quarterly: Array<{ quarter: string; total: number }>;
+      /** LD-2 reports matched to the committee across the window. */
+      windowFilingCount: number;
+      quarterly: Array<{ quarter: string; total: number; filings: number }>;
       peer: { medianTotal: number; ratioToMedian: number };
       topIssues: Array<{ code: string; label: string; count: number }>;
       topOrgs: Array<{
@@ -145,6 +149,7 @@ async function buildCorpusLobbying(
       committeeCode: totals.committeeCode,
       committeeName: totals.committeeName,
       windowTotal: totals.windowTotal,
+      windowFilingCount: totals.windowFilingCount,
       quarterly: totals.quarterly,
       peer: totals.peer,
       topIssues: totals.topIssues,
@@ -153,7 +158,7 @@ async function buildCorpusLobbying(
   }
 
   if (committees.length === 0) return undefined;
-  committees.sort((a, b) => b.windowTotal - a.windowTotal);
+  committees.sort((a, b) => b.windowFilingCount - a.windowFilingCount);
   return { quarters: meta.quarters, generatedAt: meta.generatedAt, committees };
 }
 

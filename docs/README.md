@@ -18,6 +18,7 @@ Start with the repo [README](../README.md). This page explains what each documen
 | [DATA_NETWORK.md](./DATA_NETWORK.md)                                       | The cross-domain join layer that links bills, spending, lobbying and votes.                        |
 | [architecture/CACHE_ARCHITECTURE.md](./architecture/CACHE_ARCHITECTURE.md) | Redis caching and TTLs. The TTL table is current; the file list predates some newer cache helpers. |
 | [DATA-SOURCE-TIERS.md](./DATA-SOURCE-TIERS.md)                             | How each data source is ranked by importance and how it's maintained.                              |
+| [CONGRESS-120-TRANSITION.md](./CONGRESS-120-TRANSITION.md)                 | What must change when the 120th Congress convenes on January 3, 2027.                              |
 | [MONITORING.md](./MONITORING.md)                                           | The `/api/health` probe and external monitoring for each source.                                   |
 
 ## Working on the code

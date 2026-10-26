@@ -131,7 +131,8 @@ export interface CommitteeCorpusTotals {
   windowTotal: number;
   /** LD-2 reports matched to this committee across the window (amendments deduped). */
   windowFilingCount: number;
-  quarterly: Array<{ quarter: string; total: number }>;
+  /** Per quarter: reported spend and the number of matched reports. */
+  quarterly: Array<{ quarter: string; total: number; filings: number }>;
   topIssues: CommitteeQuarterAgg['topIssues'];
   /** Top organizations across the window, merged by canonical company name. */
   topOrgs: OrgAgg[];
@@ -156,7 +157,7 @@ export async function getCommitteeCorpusTotals(
     committeeName: rows[0]!.committeeName,
     windowTotal,
     windowFilingCount: rows.reduce((sum, r) => sum + r.filingCount, 0),
-    quarterly: rows.map(r => ({ quarter: r.quarter, total: r.total })),
+    quarterly: rows.map(r => ({ quarter: r.quarter, total: r.total, filings: r.filingCount })),
     topIssues,
     topOrgs: mergeTopOrgs(rows.map(r => r.topOrgs)),
     peer: {

@@ -411,7 +411,7 @@ describe('LobbyingTab', () => {
     expect(screen.getByText(/sample of recent filings, not a complete tally/)).toBeInTheDocument();
   });
 
-  it('renders corpus-backed per-committee totals with a peer baseline', () => {
+  it('renders corpus-backed per-committee report counts, not dollars', () => {
     const data = {
       ...makeLobbyingData(),
       corpusLobbying: {
@@ -422,9 +422,10 @@ describe('LobbyingTab', () => {
             committeeCode: 'HSIF',
             committeeName: 'Energy and Commerce',
             windowTotal: 60_000_000,
+            windowFilingCount: 1_240,
             quarterly: [
-              { quarter: '2025-Q1', total: 30_000_000 },
-              { quarter: '2025-Q2', total: 30_000_000 },
+              { quarter: '2025-Q1', total: 30_000_000, filings: 600 },
+              { quarter: '2025-Q2', total: 30_000_000, filings: 640 },
             ],
             peer: { medianTotal: 30_000_000, ratioToMedian: 2 },
             topIssues: [{ code: 'HCR', label: 'Health Issues', count: 40 }],
@@ -451,15 +452,19 @@ describe('LobbyingTab', () => {
       { data: undefined, error: undefined, isLoading: false }
     );
     render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
-    expect(screen.getByText('Lobbying spending by committee')).toBeInTheDocument();
-    expect(screen.getByText('$60.0M')).toBeInTheDocument();
-    expect(screen.getByText(/2.0× the median committee/)).toBeInTheDocument();
+    expect(screen.getByText('Lobbying reports by committee')).toBeInTheDocument();
+    expect(screen.getByText('1,240 reports')).toBeInTheDocument();
+    expect(screen.getByText('8 reports')).toBeInTheDocument();
+    // A report counts toward every committee it matches, so dollars overstate.
+    expect(screen.queryByText('$60.0M')).not.toBeInTheDocument();
+    expect(screen.queryByText('$12.0M')).not.toBeInTheDocument();
+    expect(screen.queryByText(/median committee/)).not.toBeInTheDocument();
     // Corpus top orgs render; the self-filer links, the merged org does not
     const chamber = screen.getByText('US CHAMBER OF COMMERCE');
     expect(chamber.closest('a')).toHaveAttribute('href', '/lobby/301');
     expect(screen.getByText('MERGED MULTI-FIRM CLIENT').closest('a')).toBeNull();
     // Methodology makes the not-summed-across-committees caveat explicit
-    expect(screen.getByText(/not summed across\s+committees/)).toBeInTheDocument();
+    expect(screen.getByText(/not added\s+across committees/)).toBeInTheDocument();
   });
 
   it('shows corpus totals even when the live sample has no companies', () => {
@@ -481,7 +486,8 @@ describe('LobbyingTab', () => {
             committeeCode: 'SSFI',
             committeeName: 'Finance',
             windowTotal: 100_000_000,
-            quarterly: [{ quarter: '2025-Q1', total: 100_000_000 }],
+            windowFilingCount: 2_050,
+            quarterly: [{ quarter: '2025-Q1', total: 100_000_000, filings: 2_050 }],
             peer: { medianTotal: 50_000_000, ratioToMedian: 2 },
             topIssues: [],
           },
@@ -495,7 +501,7 @@ describe('LobbyingTab', () => {
     render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
     // Not the empty state — corpus section renders
     expect(screen.queryByText(/No lobbying data found/)).not.toBeInTheDocument();
-    expect(screen.getByText('Lobbying spending by committee')).toBeInTheDocument();
-    expect(screen.getByText('$100.0M')).toBeInTheDocument();
+    expect(screen.getByText('Lobbying reports by committee')).toBeInTheDocument();
+    expect(screen.getByText('2,050 reports')).toBeInTheDocument();
   });
 });

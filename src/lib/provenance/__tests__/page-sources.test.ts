@@ -277,7 +277,7 @@ describe('districtPageSources', () => {
   it('dates the Census ACS vintage and the live-fetched record', () => {
     const sources = districtPageSources(makeDistrict());
     const acs = sources.find(s => s.name === 'American Community Survey');
-    expect(acs?.asOf).toBe('ACS 2018–2022 5-year estimates');
+    expect(acs?.asOf).toBe('ACS 2020–2024 5-year estimates');
     expect(acs?.fetchedAt).toBe(LOADED);
     expect(sources.find(s => s.name === 'Wikidata')?.fetchedAt).toBe(LOADED);
     // Shipped with the site: a vintage, no load time.

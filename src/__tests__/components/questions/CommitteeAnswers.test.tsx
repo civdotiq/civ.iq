@@ -466,7 +466,7 @@ describe('CommitteeLobbyingAnswer', () => {
     expect(screen.queryByText('Committee jurisdiction')).not.toBeInTheDocument();
   });
 
-  it('renders the corpus-backed total even when the sample insight is null', () => {
+  it('renders corpus report counts, not dollars, even when the sample insight is null', () => {
     render(
       <CommitteeLobbyingAnswer
         lobbying={null}
@@ -476,8 +476,8 @@ describe('CommitteeLobbyingAnswer', () => {
           windowTotal: 6_420_000_000,
           windowFilingCount: 52_310,
           quarterly: [
-            { quarter: '2025-Q1', total: 800_000_000 },
-            { quarter: '2025-Q2', total: 820_000_000 },
+            { quarter: '2025-Q1', total: 800_000_000, filings: 6_400 },
+            { quarter: '2025-Q2', total: 820_000_000, filings: 6_610 },
           ],
           topIssues: [],
           topOrgs: [],
@@ -493,8 +493,10 @@ describe('CommitteeLobbyingAnswer', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('52,310 reports')).toBeInTheDocument();
     expect(screen.getByText(/reports don't name committees/)).toBeInTheDocument();
-    expect(screen.getByText('$6.4B')).toBeInTheDocument();
-    expect(screen.getByText(/2.8× the median committee/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Matched reports per quarter')).toBeInTheDocument();
+    // A report counts toward every committee it matches, so dollars overstate.
+    expect(screen.queryByText(/\$\d/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/median committee/)).not.toBeInTheDocument();
     // The sample "unavailable" pod still shows below the corpus total
     expect(screen.getByText('Lobbying analysis unavailable')).toBeInTheDocument();
   });

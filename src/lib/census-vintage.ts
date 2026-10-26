@@ -32,5 +32,12 @@ export function currentOfficeholderVintage(now: Date = new Date()): string {
   return now.getTime() < CONGRESS_120_CONVENES_MS ? SITTING_119TH_VINTAGE : LATEST_VINTAGE;
 }
 
-/** ACS 5-year release behind district demographics (2022 = 2018–2022 estimates). */
-export const ACS_5YR_VINTAGE = 2022;
+/**
+ * ACS 5-year release behind district demographics (2024 = 2020–2024
+ * estimates). 2024 is the first release tabulated on the sitting lines: the
+ * 119th Congressional Districts and the 2024 state legislative districts.
+ * Earlier releases use the 118th Congress, which differs in AL, GA, LA, NC
+ * (and slightly in NY). Changing this also needs a district-details cache
+ * key bump, or cached figures keep the old year's numbers.
+ */
+export const ACS_5YR_VINTAGE = 2024;
