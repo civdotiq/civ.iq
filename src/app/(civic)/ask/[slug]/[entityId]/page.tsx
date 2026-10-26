@@ -512,11 +512,11 @@ export default async function QuestionPage({ params }: PageProps) {
               committee: committee.name,
               meetings: committeeActivity.meetings,
               billsShown: shownBills.length,
-              newestBillDate:
-                shownBills
-                  .map(b => b.introducedDate)
-                  .sort()
-                  .reverse()[0] ?? null,
+              // ISO dates compare as strings; keep the latest.
+              newestBillDate: shownBills.reduce<string | null>(
+                (latest, b) => (latest && latest >= b.introducedDate ? latest : b.introducedDate),
+                null
+              ),
               asOf: committeeActivity.fetchedAt,
             })
           : slug === 'committee-lobbying'
