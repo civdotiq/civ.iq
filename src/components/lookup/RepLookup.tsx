@@ -20,6 +20,7 @@ import { formatStateDistrict } from '@/types/state-legislature';
 import { membersForSeat, type LookupLegislator } from '@/lib/state-hub/lookup-match';
 import type { HubMember } from '@/lib/state-hub/types';
 import { ContactLinks } from './ContactLinks';
+import { partyAdjective } from '@/lib/party-label';
 
 export interface RepLookupChamber {
   key: 'upper' | 'lower';
@@ -297,7 +298,7 @@ function LookupResults({ result, stateCode }: { result: LookupResult; stateCode:
                     {m.name}
                   </Link>
                   <p className="text-sm text-gray-600">
-                    <span className={getPartyTextClass(m.party)}>{m.party}</span> ·{' '}
+                    <span className={getPartyTextClass(m.party)}>{partyAdjective(m.party)}</span> ·{' '}
                     {formatStateDistrict(m.district)}
                   </p>
                   <ContactLinks phone={m.phone} email={m.email} />
@@ -321,7 +322,8 @@ function LookupResults({ result, stateCode }: { result: LookupResult; stateCode:
                   {rep.name}
                 </Link>
                 <p className="text-sm text-gray-600">
-                  <span className={getPartyTextClass(rep.party)}>{rep.party}</span> · {rep.title}
+                  <span className={getPartyTextClass(rep.party)}>{partyAdjective(rep.party)}</span>{' '}
+                  · {rep.title}
                 </p>
                 <ContactLinks phone={rep.phone} />
               </li>

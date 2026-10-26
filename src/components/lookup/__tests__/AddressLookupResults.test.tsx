@@ -88,7 +88,7 @@ describe('AddressLookupResults', () => {
     );
   });
 
-  it('gives members of Congress a phone and contact form, and one party noun', () => {
+  it('gives members of Congress a phone and contact form, and one party label', () => {
     render(<AddressLookupResults result={detroit} />);
     const peters = screen.getByText('Gary Peters').closest('li');
     expect(peters).not.toBeNull();
@@ -101,9 +101,11 @@ describe('AddressLookupResults', () => {
       'href',
       'https://www.peters.senate.gov/contact/email-gary'
     );
+    // "Democrat" is a noun for a person; as a label both chambers say "Democratic".
+    expect(card.getByText('Democratic')).toBeInTheDocument();
     const mcmorrow = screen.getByText('Mallory McMorrow').closest('li');
-    expect(within(mcmorrow as HTMLElement).getByText('Democrat')).toBeInTheDocument();
-    expect(screen.queryByText('Democratic')).not.toBeInTheDocument();
+    expect(within(mcmorrow as HTMLElement).getByText('Democratic')).toBeInTheDocument();
+    expect(screen.queryByText('Democrat')).not.toBeInTheDocument();
   });
 
   it('explains DC’s delegate and council, and does not link at-large seats', () => {

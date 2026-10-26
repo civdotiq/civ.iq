@@ -5,6 +5,7 @@
 
 import Link from 'next/link';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
+import { partyAdjective } from '@/lib/party-label';
 
 interface Representative {
   name: string;
@@ -46,7 +47,7 @@ export default function DistrictRepresentative({
                     : 'bg-white border-2 border-gray-300 text-gray-800'
               }`}
             >
-              {representative.party}
+              {partyAdjective(representative.party)}
             </span>
             {representative.yearsInOffice && (
               <span className="text-sm text-gray-500">

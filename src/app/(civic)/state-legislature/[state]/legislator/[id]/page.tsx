@@ -25,6 +25,7 @@ import {
   type EnhancedStateLegislator,
 } from '@/types/state-legislature';
 import { getLegislator } from './get-legislator';
+import { stateLegislatorMetaDescription } from '@/lib/seo/meta-descriptions';
 
 const BASE_URL = 'https://civdotiq.org';
 
@@ -59,17 +60,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { stateName, role, district, url } = describe(legislator);
   const title = `${legislator.name}, ${stateName} ${role} (${district})`;
 
-  // Contact first: it is what people searching a legislator's name came for.
-  const contact = [
-    legislator.phone && `Phone ${legislator.phone}`,
-    legislator.email && `email ${legislator.email}`,
-  ].filter(Boolean);
-  const description =
-    `${legislator.name} is the ${stateName} ${role} for ${district}` +
-    (legislator.party ? ` (${legislator.party})` : '') +
-    '. ' +
-    (contact.length > 0 ? `${contact.join(', ')}. ` : '') +
-    'Office address, committees, sponsored bills and votes.';
+  const description = stateLegislatorMetaDescription({
+    name: legislator.name,
+    stateName,
+    role,
+    district,
+    party: legislator.party,
+    phone: legislator.phone,
+    email: legislator.email,
+  });
 
   return {
     title,

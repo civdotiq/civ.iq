@@ -11,6 +11,7 @@ import { getEnhancedRepresentative } from '@/features/representatives/services/c
 import { VotingRecordPage } from '@/components/officials/VotingRecordPage';
 import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 import { commonName } from '@/features/representatives/utils/common-name';
+import { partyAdjective } from '@/lib/party-label';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600;
@@ -68,7 +69,7 @@ export async function generateMetadata({
     // the title leads with that phrase, under the name the member goes by.
     const name = commonName(representative);
     const title = `${name} voting record (119th Congress)`;
-    const description = `${name}'s voting record: roll-call votes by ${chamberLabel} ${name} (${representative.party}, ${representative.state}${districtLabel}) in the 119th Congress, from ${representative.chamber === 'Senate' ? 'Senate.gov' : 'House Clerk'} records. Filter by topic, year, and outcome.`;
+    const description = `${name}'s voting record: roll-call votes by ${chamberLabel} ${name} (${partyAdjective(representative.party)}, ${representative.state}${districtLabel}) in the 119th Congress, from ${representative.chamber === 'Senate' ? 'Senate.gov' : 'House Clerk'} records. Filter by topic, year, and outcome.`;
     const url = `https://civdotiq.org/representative/${bioguideId}/votes`;
     return {
       title,

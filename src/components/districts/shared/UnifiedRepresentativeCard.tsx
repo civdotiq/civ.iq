@@ -9,7 +9,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { buildStateLegislatorUrl } from '@/lib/helpers/url-builders';
-import type { EnhancedStateLegislator } from '@/types/state-legislature';
+import { getLegislatorTitle, type EnhancedStateLegislator } from '@/types/state-legislature';
+import { partyAdjective } from '@/lib/party-label';
 
 /**
  * Federal representative type (minimal props needed for display)
@@ -72,8 +73,11 @@ export default function UnifiedRepresentativeCard({
     ? `/representative/${representative.bioguideId}`
     : buildStateLegislatorUrl(representative.state, representative.id, representative.name);
 
-  // Normalize party names (state uses "Democratic", federal uses "Democrat")
-  const displayParty = party === 'Democratic' ? 'Democrat' : party;
+  const displayParty = partyAdjective(party);
+  // State senators are "Senator", assembly members "Assemblymember", etc.
+  const roleTitle = isFederal
+    ? 'Representative'
+    : getLegislatorTitle(representative.state, representative.chamber);
   const partyColorClass =
     party === 'Democrat' || party === 'Democratic'
       ? 'bg-party-dem/10 text-party-dem'
@@ -120,7 +124,9 @@ export default function UnifiedRepresentativeCard({
           {/* District Title */}
           <div className="text-sm text-gray-600 space-y-2">
             <div className="flex items-center gap-2">
-              <span className="font-semibold">Representative for {districtName}</span>
+              <span className="font-semibold">
+                {roleTitle} for {districtName}
+              </span>
             </div>
 
             {/* Party Badge */}

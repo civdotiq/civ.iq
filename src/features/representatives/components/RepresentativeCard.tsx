@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { memo, useState } from 'react';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { getCommitteeName } from '@/lib/data/committee-names';
+import { partyAdjective } from '@/lib/party-label';
 
 interface Representative {
   bioguideId: string;
@@ -96,7 +97,7 @@ export const RepresentativeCard = memo(function RepresentativeCard({
               <span
                 className={`px-2 py-0.5 text-xs font-medium ${getPartyColor(representative.party)}`}
               >
-                {representative.party}
+                {partyAdjective(representative.party)}
               </span>
               {representative.chamber === 'House' && representative.district && (
                 <Link

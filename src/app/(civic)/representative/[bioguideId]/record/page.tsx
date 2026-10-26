@@ -21,6 +21,8 @@ import { RecordCardLabel } from '@/features/record-card/components/RecordCardLab
 import { getRecordCardData } from '@/features/record-card/record-card-data';
 import { getStateName } from '@/lib/data/us-states';
 import { ProfilePageSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { partyAdjective } from '@/lib/party-label';
+import { recordCardMetaDescription } from '@/lib/seo/meta-descriptions';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600; // ISR: hourly, matching the profile page
@@ -54,10 +56,7 @@ export async function generateMetadata({
       ? `${member.state}-${(member.district ?? '').padStart(2, '0')}`
       : `${getStateName(member.state) ?? member.state} Senator`;
   const title = `${member.name} — Incumbent Record Card (${seat})`;
-  const description =
-    `${member.name}'s congressional record from government sources: bills, votes, ` +
-    `campaign money, and district federal funding. Every number cited to ` +
-    `Congress.gov, the FEC, and USASpending.`;
+  const description = recordCardMetaDescription(member.name);
 
   return {
     title,
@@ -99,7 +98,7 @@ export default async function RecordCardPage({
           jobTitle: `${role} - ${member.state}${member.district ? ` District ${member.district}` : ''}`,
           description: `${member.name}'s congressional record from government sources: bills, votes, campaign money, and district federal funding.`,
           image: member.imageUrl,
-          affiliation: member.party,
+          affiliation: partyAdjective(member.party),
           sameAs: [`https://bioguide.congress.gov/search/bio/${member.bioguideId}`],
           worksFor: {
             name:

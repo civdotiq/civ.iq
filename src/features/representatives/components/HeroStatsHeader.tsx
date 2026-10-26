@@ -12,6 +12,7 @@ import { Crown, Phone, ExternalLink } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
 import { RepresentativeShareButton } from '@/components/shared/social/ShareButton';
 import { AlertSubscribeButton } from '@/components/alerts/AlertSubscribeButton';
+import { partyAdjective } from '@/lib/party-label';
 
 interface HeroStatsHeaderProps {
   representative: EnhancedRepresentative;
@@ -217,7 +218,7 @@ export function HeroStatsHeader({
                         : 'bg-gray-50 text-gray-800 border-black'
                   }`}
                 >
-                  {representative.party}
+                  {partyAdjective(representative.party)}
                 </span>
               )}
               {getAge() && (

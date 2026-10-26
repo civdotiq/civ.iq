@@ -13,6 +13,7 @@ import RepresentativePhoto from '@/features/representatives/components/Represent
 import { DelegationExportButton } from './DelegationExportButton';
 import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
+import { partyAdjective } from '@/lib/party-label';
 
 // ISR: Revalidate daily
 export const revalidate = 86400;
@@ -104,7 +105,7 @@ function DelegationCard({ member }: { member: DelegationMember }) {
             <span
               className={`px-2 py-0.5 text-xs font-medium border ${getPartyColor(member.party)}`}
             >
-              {member.party}
+              {partyAdjective(member.party)}
             </span>
             {member.chamber === 'Senate' && (
               <span className="px-2 py-0.5 text-xs font-medium bg-civiq-blue/10 text-civiq-blue border border-civiq-blue">
@@ -229,8 +230,12 @@ export default async function StateDelegationPage({ params }: PageProps) {
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">{stateName}</h1>
-              <p className="text-lg text-gray-600 mt-1">Federal Congressional Delegation</p>
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+                {stateName} Congressional Delegation
+              </h1>
+              <p className="text-lg text-gray-600 mt-1">
+                U.S. Senators and Representatives from {stateName}
+              </p>
             </div>
 
             <div className="flex items-center gap-4">

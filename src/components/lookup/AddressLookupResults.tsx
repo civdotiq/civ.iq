@@ -18,11 +18,12 @@ import {
 } from '@/lib/helpers/url-builders';
 import { getStateLegislatureName, getStateName, isTerritory } from '@/lib/data/us-states';
 import { formatStateDistrict, getLegislatorRoleTitle } from '@/types/state-legislature';
-import { memberPartyLabel } from '@/lib/state-hub/hub-copy';
+import { rosterPartyLabel } from '@/lib/state-hub/hub-copy';
 import { RedistrictingNote } from '@/components/RedistrictingNote';
 import type { UnifiedGeocodeResult } from '@/types/unified-geocode';
 import type { StateSeat } from '@/services/lookup/resolve-representatives.service';
 import { ContactLinks } from './ContactLinks';
+import { partyAdjective } from '@/lib/party-label';
 
 interface AddressLookupResultsProps {
   result: UnifiedGeocodeResult;
@@ -171,8 +172,8 @@ export function AddressLookupResults({
                   {rep.name}
                 </Link>
                 <p className="text-sm text-gray-600">
-                  <span className={getPartyTextClass(rep.party)}>{rep.party}</span> ·{' '}
-                  {federalTitle(state, rep)}
+                  <span className={getPartyTextClass(rep.party)}>{partyAdjective(rep.party)}</span>{' '}
+                  · {federalTitle(state, rep)}
                 </p>
                 <FederalConstituency state={state} rep={rep} />
                 <ContactLinks phone={rep.phone} contactForm={rep.contactForm} />
@@ -213,7 +214,7 @@ export function AddressLookupResults({
                 {seat.members.length > 0 && (
                   <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {seat.members.map(m => {
-                      const party = memberPartyLabel(m.party);
+                      const party = rosterPartyLabel(m.party);
                       return (
                         <li key={m.id} className="border-2 border-gray-300 p-3">
                           <Link

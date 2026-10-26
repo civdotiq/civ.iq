@@ -22,6 +22,7 @@ import { PrintQRCode } from '@/features/record-card/components/PrintQRCode';
 import { PrintButton } from '@/features/record-card/components/PrintButton';
 import { fmtDate, fmtInt, fmtMoney, fmtMoneyCompact, fmtPct } from '@/features/record-card/format';
 import { getStateName } from '@/lib/data/us-states';
+import { partyAdjective } from '@/lib/party-label';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600;
@@ -114,7 +115,7 @@ export default async function RecordCardPrintPage({
               </h1>
               <div className="mt-grid-1 flex items-center gap-grid-1">
                 <span className="border-2 border-black px-grid-1 py-[1px] text-xs font-bold uppercase tracking-[0.08em]">
-                  {member.party}
+                  {partyAdjective(member.party)}
                 </span>
                 <span className="text-sm font-medium tracking-[0.025em]">{seatLabel}</span>
               </div>

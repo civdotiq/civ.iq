@@ -15,6 +15,7 @@
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { useResponsiveChartHeight } from '@/hooks/useResponsiveChartHeight';
 import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
+import { partyAdjective } from '@/lib/party-label';
 
 interface FinanceData {
   totalRaised: number;
@@ -100,7 +101,7 @@ export function FinanceComparison({ representatives }: FinanceComparisonProps) {
             style={{ borderTopColor: partyColors[rep.party], borderTopWidth: '4px' }}
           >
             <h3 className="text-sm font-medium text-gray-700 mb-1">{rep.name}</h3>
-            <p className="text-xs text-gray-500 mb-2">{rep.party}</p>
+            <p className="text-xs text-gray-500 mb-2">{partyAdjective(rep.party)}</p>
             <p className="text-2xl font-bold text-gray-900">
               {formatCurrency(rep.financeData.totalRaised)}
             </p>
