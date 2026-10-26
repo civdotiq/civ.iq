@@ -10,6 +10,7 @@ import {
   getCommitteeNamesByMember,
 } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
+import { foldForSearch } from '@/lib/utils/fold-for-search';
 import { cache } from '@/lib/cache';
 import { getServerBaseUrl } from '@/lib/server-url';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
@@ -348,7 +349,7 @@ async function performSearch(filters: SearchFilters): Promise<SearchOutcome> {
     const filtered = representatives.filter(rep => {
       // Text search across multiple fields with enhanced name matching
       if (filters.query) {
-        const searchTerm = filters.query.toLowerCase();
+        const searchTerm = foldForSearch(filters.query);
 
         // Common nickname mappings for flexible name matching
         const nicknameMap: { [key: string]: string[] } = {
@@ -376,8 +377,8 @@ async function performSearch(filters: SearchFilters): Promise<SearchOutcome> {
 
         // Function to check if a search word matches a name considering nicknames
         const nameMatches = (searchWord: string, repName: string): boolean => {
-          const searchLower = searchWord.toLowerCase();
-          const nameLower = repName.toLowerCase();
+          const searchLower = foldForSearch(searchWord);
+          const nameLower = foldForSearch(repName);
 
           // Direct match
           if (nameLower.includes(searchLower)) return true;

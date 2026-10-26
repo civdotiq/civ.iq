@@ -41,6 +41,18 @@ const ROSTER = [
     terms: [{ startYear: '2025' }, { startYear: '2007' }],
     committees: [],
   },
+  {
+    bioguideId: 'D000600',
+    name: 'Mario Díaz-Balart',
+    fullName: { first: 'Mario', last: 'Diaz-Balart', official: 'Mario Diaz-Balart' },
+    party: 'Republican',
+    state: 'FL',
+    district: '26',
+    chamber: 'House',
+    yearsInOffice: 23,
+    terms: [{ startYear: '2025' }, { startYear: '2003' }],
+    committees: [],
+  },
 ];
 jest.mock('@/features/representatives/services/congress.service', () => ({
   getAllEnhancedRepresentatives: async () => ROSTER.map(r => ({ ...r })),
@@ -75,6 +87,13 @@ describe('GET /api/search', () => {
     const data = await search('q=smith&committee=Armed');
     expect(data.results.map((r: { bioguideId: string }) => r.bioguideId)).toEqual(['S000510']);
     expect(data.results[0].committees).toEqual(['House Committee on Armed Services']);
+  });
+
+  it('finds names with or without accents', async () => {
+    for (const q of ['diaz', 'D%C3%ADaz', 'd%C3%ADaz-balart', 'DIAZ-BALART']) {
+      const data = await search(`q=${q}`);
+      expect(data.results.map((r: { bioguideId: string }) => r.bioguideId)).toEqual(['D000600']);
+    }
   });
 
   it('uses real chamber tenure, not the newest term, for years in office', async () => {
