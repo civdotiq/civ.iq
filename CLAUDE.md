@@ -2,6 +2,8 @@
 
 Civic data platform (civdotiq.org): factual, nonpartisan representative profiles built only from real government sources. Next.js 16 + TypeScript + React 18.
 
+**Start every session by reading `docs/HANDOFF.md`** (a local file in the main checkout, not in git): open pull requests, agreed rules, known problems and what's next.
+
 ## Rules that never bend
 
 1. **Real data only.** Real government APIs or an explicit "Data unavailable" — never fake, mock, or estimated-as-real data.

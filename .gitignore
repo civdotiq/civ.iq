@@ -87,6 +87,8 @@ training-data/
 
 # Internal development docs (session notes, debug guides, implementation summaries)
 docs/internal/
+# Session handoff note: local only, never committed
+docs/HANDOFF.md
 
 # Backup files
 *.backup
