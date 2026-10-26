@@ -14,7 +14,7 @@ function firstThatFits(candidates: string[]): string {
 }
 
 export const ABOUT_META_DESCRIPTION =
-  'Nonpartisan data on 535 members of Congress and 50 state legislatures, from 29 government sources and 11 open datasets.';
+  'Nonpartisan data on Congress (535 voting members and 6 non-voting delegates) and 50 state legislatures, from 29 government sources and 11 open datasets.';
 
 /** "Elissa Slotkin's record: bills, votes, campaign money and district federal funding, …" */
 export function recordCardMetaDescription(name: string): string {
@@ -54,5 +54,34 @@ export function stateLegislatorMetaDescription(opts: {
     withContact,
     phone ? `${identity} ${phone}.` : identity,
     identity,
+  ]);
+}
+
+/**
+ * Federal profile: "Democratic Representative Debbie Dingell (MI-6): voting
+ * record, campaign finance and bills in the 119th Congress. Serves on 7
+ * committees." Drops the committee count, then the Congress, until it fits.
+ */
+export function memberProfileMetaDescription(opts: {
+  /** "Democratic", "Republican", "Independent" */
+  party: string;
+  /** "Senator", "Representative", "Delegate", "Resident Commissioner" */
+  title: string;
+  name: string;
+  state: string;
+  /** House district number; absent, "0" or "AL" for at-large seats and senators */
+  district?: string | null;
+  committeeCount?: number;
+}): string {
+  const atLarge =
+    !opts.district || opts.district === '0' || /^at-?large$|^al$/i.test(opts.district);
+  const seat = atLarge ? opts.state : `${opts.state}-${opts.district}`;
+  const who = `${opts.party} ${opts.title} ${opts.name} (${seat})`.replace(/^\s+/, '');
+  const n = opts.committeeCount ?? 0;
+  const committees = n > 0 ? ` Serves on ${n} committee${n === 1 ? '' : 's'}.` : '';
+  return firstThatFits([
+    `${who}: voting record, campaign finance and bills in the 119th Congress.${committees}`,
+    `${who}: voting record, campaign finance and bills in the 119th Congress.`,
+    `${who}: voting record, campaign finance and bills.`,
   ]);
 }

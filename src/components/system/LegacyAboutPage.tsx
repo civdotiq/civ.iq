@@ -51,11 +51,11 @@ export function LegacyAboutPage() {
         {/* What CIV.IQ Provides - Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-grid-4 mb-grid-8">
           <div className="aicher-card p-grid-4">
-            <div className="text-3xl font-bold text-black mb-grid-1">535</div>
-            <h2 className="text-lg font-semibold text-black mb-grid-2">Members of Congress</h2>
+            <div className="text-3xl font-bold text-black mb-grid-1">541</div>
+            <h2 className="text-lg font-semibold text-black mb-grid-2">Seats in Congress</h2>
             <p className="text-gray-600 text-sm">
-              435 House members and 100 Senators. Voting records, committee assignments, sponsored
-              legislation, and plain-language summaries.
+              435 House members, 100 Senators and 6 non-voting delegates. Voting records, committee
+              assignments, sponsored legislation, and plain-language summaries.
             </p>
           </div>
 

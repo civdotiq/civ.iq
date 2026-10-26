@@ -12,6 +12,7 @@ import { EnhancedRepresentative } from '@/types/representative';
 import { AlertSubscribeButton } from '@/components/alerts/AlertSubscribeButton';
 import { RepresentativeShareButton } from '@/components/shared/social/ShareButton';
 import { partyFillClasses } from './types';
+import { tenureFact } from '../../utils/tenure';
 import { dcOfficeLines, safeHttpUrl, telHref } from './contact';
 import { partyAdjective } from '@/lib/party-label';
 
@@ -64,11 +65,10 @@ export function IdentityHeader({
   const websiteHost = website?.replace(/^https?:\/\//, '').replace(/\/$/, '');
   const contactForm = safeHttpUrl(r.currentTerm?.contactForm || r.contact?.contactForm);
 
-  // Terms are sorted most-recent-first; the earliest term is last.
+  // Terms are sorted most-recent-first.
   const terms = r.terms ?? [];
-  const sinceYear = terms[terms.length - 1]?.startYear;
   const termRange = terms[0] ? `${terms[0].startYear}–${terms[0].endYear}` : null;
-  const termCount = terms.length;
+  const tenure = tenureFact(terms, { chamber: r.chamber, role: r.role });
   const showElection = nextElection && r.status !== 'resigned' && r.status !== 'deceased';
   const partyClasses = partyFillClasses(r.party);
 
@@ -152,13 +152,7 @@ export function IdentityHeader({
         <div className="col-span-2 sm:col-span-1 sm:col-start-2">
           <dl className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 pt-4 border-t border-civiq-blue/30">
             {termRange && <Fact label="Current term" value={termRange} />}
-            {sinceYear && (
-              <Fact
-                label="In Congress"
-                value={termCount === 1 ? '1st term' : `Since ${sinceYear}`}
-                caption={`${termCount} ${termCount === 1 ? 'term' : 'terms'} served`}
-              />
-            )}
+            {tenure && <Fact {...tenure} />}
             {showElection && <Fact label="Next election" value={`November ${nextElection}`} />}
             {age !== null && <Fact label="Age" value={String(age)} />}
           </dl>

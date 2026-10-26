@@ -9,6 +9,7 @@ import type { AtomFeedConfig, AtomEntry } from '@/lib/feeds/atom-generator';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { getCachedDistrictImpactEntries } from '@/lib/feeds/district-impact-feed-helper';
 import logger from '@/lib/logging/simple-logger';
+import { partyAbbreviation } from '@/lib/party-label';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,7 +56,7 @@ export async function GET(
     for (const rep of districtReps) {
       entries.push({
         id: `${baseUrl}/representative/${rep.bioguideId}#district-${districtId}`,
-        title: `${rep.title} ${rep.name} (${rep.party}-${rep.state})`,
+        title: `${rep.title} ${rep.name} (${partyAbbreviation(rep.party)}-${rep.state})`,
         link: `${baseUrl}/representative/${rep.bioguideId}`,
         updated: rep.currentTerm ? new Date(rep.currentTerm.start) : now,
         author: { name: rep.name, uri: `${baseUrl}/representative/${rep.bioguideId}` },

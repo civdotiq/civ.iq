@@ -26,6 +26,7 @@ import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 import GlossaryLink from '@/components/shared/ui/GlossaryLink';
 import { CommitteeDetail } from '@/components/committees/CommitteeDetail';
 import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
+import { partyAbbreviation } from '@/lib/party-label';
 
 // Dynamically import client components
 const SubcommitteeCard = dynamic(
@@ -429,7 +430,7 @@ async function CommitteeContent({
               {
                 question: `Who chairs the ${committee.name}?`,
                 answer: committee.leadership.chair
-                  ? `${committee.leadership.chair.representative.name} (${committee.leadership.chair.representative.party}-${committee.leadership.chair.representative.state}) serves as the chairperson.`
+                  ? `${committee.leadership.chair.representative.name} (${partyAbbreviation(committee.leadership.chair.representative.party)}-${committee.leadership.chair.representative.state}) serves as the chairperson.`
                   : 'The committee chair information is currently unavailable.',
               },
               {

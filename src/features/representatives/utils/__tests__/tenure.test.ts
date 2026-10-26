@@ -1,4 +1,4 @@
-import { describeTenure, type TenureTerm } from '../tenure';
+import { describeTenure, tenureFact, type TenureTerm } from '../tenure';
 
 /** Terms as congress-legislators lists them, oldest first; the helper takes newest first. */
 const newestFirst = (...terms: Array<[string, string, 'House' | 'Senate']>): TenureTerm[] =>
@@ -70,5 +70,55 @@ describe('describeTenure', () => {
 
   it('returns null without terms', () => {
     expect(describeTenure([], { chamber: 'House' })).toBeNull();
+  });
+});
+
+describe('tenureFact', () => {
+  it('shows the current chamber and the earlier one for a House-to-Senate member', () => {
+    const slotkin = newestFirst(...house(2019, 2025), ['2025', '2031', 'Senate']);
+    expect(tenureFact(slotkin, { chamber: 'Senate' })).toEqual({
+      label: 'In the Senate',
+      value: 'Since 2025',
+      caption: 'In Congress since 2019 (House 2019–2025)',
+    });
+  });
+
+  it('counts terms only within one chamber', () => {
+    expect(tenureFact(newestFirst(...house(2015, 2027)), { chamber: 'House' })).toEqual({
+      label: 'In the House',
+      value: 'Since 2015',
+      caption: '6 terms served',
+    });
+  });
+
+  it('lists earlier service after a gap instead of "in Congress since"', () => {
+    const mfume = newestFirst(
+      ...house(1987, 1997),
+      ['2020', '2021', 'House'],
+      ...house(2021, 2027)
+    );
+    mfume[mfume.length - 5]!.endYear = '1996';
+    expect(tenureFact(mfume, { chamber: 'House' })).toEqual({
+      label: 'In the House',
+      value: 'Since 2020',
+      caption: 'Earlier service: House 1987–1996',
+    });
+  });
+
+  it('says first term for a new member', () => {
+    expect(tenureFact(newestFirst(['2025', '2031', 'Senate']), { chamber: 'Senate' })).toEqual({
+      label: 'In the Senate',
+      value: 'Since 2025',
+      caption: 'First term',
+    });
+  });
+
+  it('never gives a term count that mixes chambers', () => {
+    const durbin = newestFirst(
+      ...house(1983, 1997),
+      ['1997', '2003', 'Senate'],
+      ['2021', '2027', 'Senate']
+    );
+    expect(tenureFact(durbin, { chamber: 'Senate' })?.caption).not.toMatch(/terms? served/);
   });
 });

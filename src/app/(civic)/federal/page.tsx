@@ -43,7 +43,7 @@ const categories = [
       {
         name: 'Representatives',
         href: '/representatives',
-        detail: 'Browse and compare all 535 members of the House and Senate',
+        detail: 'Browse and compare all 541 seats in Congress, including 6 non-voting delegates',
       },
       {
         name: 'Congress',

@@ -135,7 +135,7 @@ export default function CongressHubPage() {
       <GovernmentOrganizationSchema
         name="United States Congress"
         url="https://civdotiq.org/congress"
-        description="The legislative branch of the United States federal government, composed of the Senate and House of Representatives. The 119th Congress has 535 voting members: 100 Senators and 435 Representatives."
+        description="The legislative branch of the United States federal government, composed of the Senate and House of Representatives. The 119th Congress has 535 voting members (100 Senators and 435 Representatives) and 6 non-voting delegates."
         parentOrganization="United States Federal Government"
         subOrganization={[
           { name: 'United States Senate', url: 'https://civdotiq.org/congress#senate' },

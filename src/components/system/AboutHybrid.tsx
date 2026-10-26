@@ -9,7 +9,7 @@
  *   commitments grid, ledger-style coverage table). The reference's fake
  *   staff roster and funding ledger are dropped — CIV.IQ doesn't have a
  *   501(c)(3) yet, no audited financials, no staff names to publish.
- *   Real CIV.IQ stats stay (535 reps, 50 states, Apache-2.0 code).
+ *   Real CIV.IQ stats stay (541 seats in Congress, 50 states, Apache-2.0 code).
  */
 
 import Link from 'next/link';
@@ -46,7 +46,7 @@ const COMMITMENTS: ReadonlyArray<{
 ] as const;
 
 const HEADLINE_STATS: ReadonlyArray<{ value: string; label: string; caption: string }> = [
-  { value: '535', label: 'Members of Congress', caption: '435 House · 100 Senate' },
+  { value: '541', label: 'Seats in Congress', caption: '435 House · 100 Senate · 6 delegates' },
   { value: '50', label: 'State legislatures', caption: '7,383 legislators' },
   { value: '26', label: 'Government data sources', caption: '8 core · 18 supplementary' },
 ] as const;

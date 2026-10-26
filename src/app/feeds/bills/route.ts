@@ -19,6 +19,7 @@ import {
 } from '@/lib/feeds/atom-generator';
 import { buildBillUrl } from '@/lib/helpers/url-builders';
 import { getServerBaseUrl } from '@/lib/server-url';
+import { partyAbbreviation } from '@/lib/party-label';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,7 +71,7 @@ export async function GET(): Promise<NextResponse> {
   const entries: AtomEntry[] = bills.map(bill => {
     const date = bill.latestAction?.actionDate ?? bill.introducedDate ?? new Date().toISOString();
     const sponsorInfo = bill.sponsor
-      ? ` by ${bill.sponsor.name} (${bill.sponsor.party}-${bill.sponsor.state})`
+      ? ` by ${bill.sponsor.name} (${partyAbbreviation(bill.sponsor.party)}-${bill.sponsor.state})`
       : '';
 
     const billPath = buildBillUrl(bill.congress, bill.type, bill.number);

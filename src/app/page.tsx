@@ -121,8 +121,8 @@ function buildFeatureCards(counts: HomeCounts): FeatureCard[] {
       href: '/representatives',
       iconClass: styles.cardIconBlue,
       title: 'Federal Representatives',
-      desc: 'All 535 House and Senate members with profiles and contact info',
-      stat: '535 Members',
+      desc: 'All 541 seats in Congress, including 6 non-voting delegates, with profiles and contact info',
+      stat: '541 Seats',
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
           <path d="M4 21V8h6v13M14 21V4h6v17M4 21h16" />
@@ -370,11 +370,12 @@ export default async function HomePage() {
           </p>
           <p>
             <strong>Honest about coverage.</strong> Federal data is deep: voting records, sponsored
-            bills, committee seats, contributions by industry, and district-level spending for all
-            535 members of Congress. State coverage is thinner — legislator rosters and bills for
-            all 50 states via <Link href="/states">state legislatures</Link>, but no state-level
-            campaign finance. City and county government is not covered. Each page labels what its
-            sources can and cannot show.
+            bills, committee seats, contributions by industry, and district-level spending for every
+            seat in Congress (535 voting members and 6 non-voting delegates). State coverage is
+            thinner — legislator rosters and bills for all 50 states via{' '}
+            <Link href="/states">state legislatures</Link>, but no state-level campaign finance.
+            City and county government is not covered. Each page labels what its sources can and
+            cannot show.
           </p>
           <p>
             <strong>Nonpartisan by construction.</strong> CIV.IQ publishes the record, not ratings:

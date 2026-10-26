@@ -29,7 +29,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
       'All current members of the 119th Congress with party, state, district, and contact info.',
     source: 'congress-legislators',
     sourceUrl: 'https://github.com/unitedstates/congress-legislators',
-    approximateRows: '~535',
+    approximateRows: '~540',
     // Stacked caches: 24h govCache over 6h Redis/file tiers over congress-legislators.
     freshness: 'Refreshed every 1–2 days',
     columnLabels: [
