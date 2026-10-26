@@ -13,6 +13,7 @@ import { FiledCandidates2026, raceId2026 } from '@/components/elections/FiledCan
 import { getStateName } from '@/lib/data/us-states';
 import { isSubcommitteeId } from '@/lib/committee-id';
 import type { ProfileCommittee } from './types';
+import { bioguideUrl, wikidataUrl, wikipediaUrl } from '@/lib/outside-ids';
 
 interface SidebarCardProps {
   title: string;
@@ -183,6 +184,33 @@ export function ProfileSidebar({
             All {stateName} representatives →
           </Link>
         </p>
+      </SidebarCard>
+
+      <SidebarCard title="Also listed in">
+        <ul>
+          {[
+            { label: 'Biographical Directory of Congress', href: bioguideUrl(r.bioguideId) },
+            { label: 'Wikipedia', href: wikipediaUrl(r.ids?.wikipedia) },
+            { label: 'Wikidata', href: wikidataUrl(r.ids?.wikidata) },
+          ]
+            .filter((link): link is { label: string; href: string } => Boolean(link.href))
+            .map(link => (
+              <li
+                key={link.label}
+                className="py-2 border-b border-gray-100 first:pt-0 last:border-b-0 last:pb-0"
+              >
+                <a
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-civiq-blue hover:underline"
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+        </ul>
+        <p className="text-xs text-gray-500 mt-2">Matched by Bioguide ID, not by name.</p>
       </SidebarCard>
 
       <SidebarCard title="Data sources">

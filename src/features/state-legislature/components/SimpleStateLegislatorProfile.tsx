@@ -103,12 +103,18 @@ interface SimpleStateLegislatorProfileProps {
   fromAddress?: string;
   /** Answer-first opening, built on the server from facts the page shows. */
   lede?: string | null;
+  /** The legislator's own page on the legislature's site, and their Open States record. */
+  outsideLinks?: {
+    officialPage: string | null;
+    openStates: { id: string; url: string | null };
+  };
 }
 
 export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfileProps> = ({
   legislator,
   fromAddress,
   lede,
+  outsideLinks,
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [imageError, setImageError] = useState(false);
@@ -1134,6 +1140,43 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
             )}
           </div>
         </div>
+
+        {outsideLinks && (
+          <div className="bg-white aicher-border p-4 sm:p-6 mb-6">
+            <h3 className="aicher-heading type-lg text-gray-900 mb-4">Also listed in</h3>
+            <ul className="space-y-3 type-sm">
+              {outsideLinks.officialPage && (
+                <li>
+                  <a
+                    href={outsideLinks.officialPage}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline break-all"
+                  >
+                    Official legislature page
+                  </a>
+                </li>
+              )}
+              <li>
+                {outsideLinks.openStates.url ? (
+                  <a
+                    href={outsideLinks.openStates.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    Open States
+                  </a>
+                ) : (
+                  'Open States'
+                )}
+                <span className="block type-xs text-gray-600 break-all">
+                  ID {outsideLinks.openStates.id}
+                </span>
+              </li>
+            </ul>
+          </div>
+        )}
 
         {/* Data Sources Attribution - matching federal design */}
         <div className="bg-white aicher-border p-4 sm:p-6">

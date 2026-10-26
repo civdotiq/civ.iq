@@ -904,6 +904,8 @@ interface ProfilePageSchemaProps {
     description?: string;
     image?: string;
     sameAs?: string[];
+    /** Identifiers in other registries ("Bioguide ID", "Wikidata", "Open States"). */
+    identifier?: Array<{ name: string; value: string }>;
     affiliation?: string;
     birthDate?: string;
     knowsAbout?: string[];
@@ -967,6 +969,13 @@ export function ProfilePageSchema({ person, url }: ProfilePageSchemaProps) {
     }));
   }
 
+  if (person.identifier && person.identifier.length > 0) {
+    personData.identifier = person.identifier.map(id => ({
+      '@type': 'PropertyValue',
+      propertyID: id.name,
+      value: id.value,
+    }));
+  }
   if (person.sameAs && person.sameAs.length > 0) {
     personData.sameAs = person.sameAs;
   }

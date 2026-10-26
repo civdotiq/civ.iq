@@ -33,6 +33,7 @@ import {
   getNextHouseElection,
   getNextSenateElectionFromTermEnd,
 } from '@/lib/data/congressional-constants';
+import { bioguideUrl, wikidataUrl, wikipediaUrl } from '@/lib/outside-ids';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600; // ISR: revalidate every hour
@@ -300,7 +301,18 @@ export default async function RepresentativeProfilePage({
   // Build identity links for schema. The Congressional Bioguide entry is the
   // authoritative government identifier — it anchors knowledge-graph
   // reconciliation, so it leads regardless of which social links exist.
-  const sameAs: string[] = [`https://bioguide.congress.gov/search/bio/${bioguideId}`];
+  // Matched by Bioguide ID through congress-legislators, never by name.
+  const wikipedia = wikipediaUrl(representative.ids?.wikipedia);
+  const wikidata = wikidataUrl(representative.ids?.wikidata);
+  const sameAs: string[] = [bioguideUrl(bioguideId)];
+  if (wikipedia) sameAs.push(wikipedia);
+  if (wikidata) sameAs.push(wikidata);
+  const identifiers = [
+    { name: 'Bioguide ID', value: bioguideId },
+    ...(wikidata && representative.ids?.wikidata
+      ? [{ name: 'Wikidata', value: representative.ids.wikidata }]
+      : []),
+  ];
   if (representative.socialMedia?.twitter) {
     sameAs.push(`https://twitter.com/${representative.socialMedia.twitter}`);
   }
@@ -338,6 +350,7 @@ export default async function RepresentativeProfilePage({
           },
           memberOf,
           sameAs,
+          identifier: identifiers,
           affiliation: partyAdjective(representative.party),
           birthDate: representative.bio?.birthday,
           knowsAbout: representative.committees?.map(c => c.name),
