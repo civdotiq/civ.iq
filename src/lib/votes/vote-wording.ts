@@ -4,13 +4,48 @@
  */
 
 import type { UnifiedVoteDetail } from '@/lib/services/vote.service';
+import { isNominationNumber } from '@/lib/senate-vote-fields';
 
-type VoteOutcomeInput = Pick<UnifiedVoteDetail, 'question' | 'result' | 'chamber'>;
+type VoteOutcomeInput = Pick<
+  UnifiedVoteDetail,
+  'question' | 'result' | 'chamber' | 'requiredMajority' | 'bill'
+>;
+
+/**
+ * What a cloture vote moves forward, from the measure's number ("S.Res. 532",
+ * "H.J.Res. 4", "PN373") or type. "measure" when the source names none.
+ */
+function clotureMeasureNoun(bill: VoteOutcomeInput['bill']): string {
+  if (!bill) return 'measure';
+  if (bill.type.toUpperCase() === 'PN' || isNominationNumber(bill.number)) return 'nomination';
+  const prefix = (bill.number.match(/^[A-Za-z.\s]+/)?.[0] ?? bill.type)
+    .replace(/[^A-Za-z]/g, '')
+    .toUpperCase();
+  if (prefix.endsWith('JRES')) return 'joint resolution';
+  if (prefix.endsWith('CONRES')) return 'concurrent resolution';
+  if (prefix.endsWith('RES')) return 'resolution';
+  if (prefix === 'HR' || prefix === 'S') return 'bill';
+  return 'measure';
+}
+
+/** The threshold a failed cloture vote missed, per the official record. */
+function clotureThresholdSentence(requiredMajority: string | undefined): string {
+  switch (requiredMajority) {
+    case '3/5':
+      return ' 60 votes were needed.';
+    case '1/2':
+      return ' A majority of senators voting was needed.';
+    default:
+      return '';
+  }
+}
 
 /**
  * Plain-language meaning of a roll call's result, keyed on the official
  * question and result text. Senate nominations are asked "On the Nomination"
  * and resolve "Confirmed"; House and Senate bills resolve "Passed"/"Failed".
+ * Rulings from the chair and points of order resolve "Sustained", "Not
+ * Sustained" or "Well Taken".
  */
 export function explainVoteOutcome(vote: VoteOutcomeInput): string {
   const q = vote.question.toLowerCase();
@@ -18,11 +53,23 @@ export function explainVoteOutcome(vote: VoteOutcomeInput): string {
   const chamber = vote.chamber || 'Senate';
   const otherChamber = chamber === 'House' ? 'Senate' : 'House of Representatives';
 
-  if (q.includes('cloture')) {
-    if (r.includes('agreed') || r.includes('invoked')) {
-      return `The ${chamber} voted to end debate and move forward with this bill. This breaks any filibuster and allows the ${chamber} to proceed to a final vote.`;
+  if (q.includes('decision of the chair') || q.includes('point of order')) {
+    const upheld = !r.startsWith('not') && (r.includes('sustained') || r.includes('well taken'));
+    if (q.includes('decision of the chair')) {
+      return upheld
+        ? `The ${chamber} UPHELD the chair's ruling.`
+        : `The ${chamber} OVERTURNED the chair's ruling.`;
     }
-    return `The ${chamber} voted NOT to end debate. The filibuster continues, and the bill cannot move forward to a final vote at this time. 60 votes were needed.`;
+    return upheld
+      ? `The ${chamber} UPHELD this point of order.`
+      : `The ${chamber} REJECTED this point of order.`;
+  }
+  if (q.includes('cloture')) {
+    const measure = clotureMeasureNoun(vote.bill);
+    if (r.includes('agreed') || r.includes('invoked')) {
+      return `The ${chamber} voted to end debate and move forward with this ${measure}. This breaks any filibuster and allows the ${chamber} to proceed to a final vote.`;
+    }
+    return `The ${chamber} voted NOT to end debate. The filibuster continues, and the ${measure} cannot move forward to a final vote at this time.${clotureThresholdSentence(vote.requiredMajority)}`;
   }
   if (q.includes('passage') || q.includes('pass the bill')) {
     if (r.includes('passed')) {
@@ -55,8 +102,9 @@ export function explainVoteOutcome(vote: VoteOutcomeInput): string {
 }
 
 /**
- * The "Required to pass" threshold. A simple majority counts those voting,
- * not seats, so a 50–35 vote passes.
+ * The "Required to pass" threshold. A simple majority and two-thirds count
+ * those voting, not seats, so a 50–35 vote passes. Only cloture on
+ * legislation (3/5) counts sworn senators: 60 with no vacancies.
  */
 export function requiredMajorityLabel(
   requiredMajority: string,
@@ -70,7 +118,7 @@ export function requiredMajorityLabel(
     case '3/5':
       return '3/5 majority (60 votes)';
     case '2/3':
-      return '2/3 majority (67 votes)';
+      return chamber === 'House' ? 'two-thirds of members voting' : 'two-thirds of senators voting';
     default:
       return `${requiredMajority} majority`;
   }

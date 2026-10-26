@@ -5,9 +5,7 @@ import {
 } from '@/lib/votes/vote-wording';
 
 // Question/result pairs in the 119th Congress Senate vote menu (915 roll calls,
-// mirrored from senate.gov, read 2026-10-25). Not yet covered: "On the
-// Decision of the Chair" and "On the Point of Order" (6 roll calls), whose
-// "Sustained"/"Well Taken" results still fall through to "did NOT pass".
+// mirrored from senate.gov, read 2026-10-25).
 const SENATE_119_PAIRS: Array<[string, string]> = [
   ['On the Cloture Motion', 'Agreed to'],
   ['On the Nomination', 'Confirmed'],
@@ -34,6 +32,10 @@ const SENATE_119_PAIRS: Array<[string, string]> = [
   ['On the Motion to Reconsider', 'Agreed to'],
   ['On the Motion to Adjourn', 'Rejected'],
   ['On the Concurrent Resolution', 'Rejected'],
+  ['On the Decision of the Chair', 'Sustained'],
+  ['On the Decision of the Chair', 'Not Sustained'],
+  ['On the Point of Order', 'Sustained'],
+  ['On the Point of Order', 'Well Taken'],
 ];
 
 describe('explainVoteOutcome', () => {
@@ -53,14 +55,133 @@ describe('explainVoteOutcome', () => {
     'never contradicts a successful Senate result: %s / %s',
     (question, result) => {
       const text = explainVoteOutcome({ question, result, chamber: 'Senate' });
-      const succeeded = /agreed|passed|confirmed/i.test(result);
+      const succeeded = /^(agreed|passed|confirmed|sustained|well taken)/i.test(result);
       if (succeeded) {
-        expect(text).not.toMatch(/did NOT|REJECTED|FAILED|voted NOT/);
+        expect(text).not.toMatch(/did NOT|REJECTED|FAILED|voted NOT|OVERTURNED/);
       } else {
-        expect(text).not.toMatch(/PASSED|CONFIRMED|APPROVED|ADOPTED|voted to end debate/);
+        expect(text).not.toMatch(/PASSED|CONFIRMED|APPROVED|ADOPTED|UPHELD|voted to end debate/);
       }
     }
   );
+
+  it.each<[string, string]>([
+    ['Sustained', "The Senate UPHELD the chair's ruling."],
+    ['Not Sustained', "The Senate OVERTURNED the chair's ruling."],
+  ])('says a ruling from the chair was upheld or overturned: %s', (result, expected) => {
+    expect(
+      explainVoteOutcome({ question: 'On the Decision of the Chair', result, chamber: 'Senate' })
+    ).toBe(expected);
+  });
+
+  it.each<[string, string]>([
+    ['Sustained', 'The Senate UPHELD this point of order.'],
+    ['Well Taken', 'The Senate UPHELD this point of order.'],
+    ['Not Sustained', 'The Senate REJECTED this point of order.'],
+    ['Not Well Taken', 'The Senate REJECTED this point of order.'],
+  ])('says a point of order was upheld or rejected: %s', (result, expected) => {
+    expect(
+      explainVoteOutcome({ question: 'On the Point of Order', result, chamber: 'Senate' })
+    ).toBe(expected);
+  });
+
+  it('says cloture on a nomination moves the nomination forward, not a bill', () => {
+    expect(
+      explainVoteOutcome({
+        question: 'On the Cloture Motion',
+        result: 'Agreed to',
+        chamber: 'Senate',
+        requiredMajority: '1/2',
+        bill: { number: 'PN373', title: 'Sara Bailey', type: 'PN' },
+      })
+    ).toBe(
+      'The Senate voted to end debate and move forward with this nomination. This breaks any filibuster and allows the Senate to proceed to a final vote.'
+    );
+  });
+
+  it('recognizes a partitioned nomination number from the XML feed', () => {
+    expect(
+      explainVoteOutcome({
+        question: 'On the Cloture Motion',
+        result: 'Agreed to',
+        chamber: 'Senate',
+        bill: { number: 'PN12-19', title: '', type: 'Nomination' },
+      })
+    ).toContain('move forward with this nomination');
+  });
+
+  it('says failed cloture on a nomination needed a simple majority, not 60', () => {
+    expect(
+      explainVoteOutcome({
+        question: 'On the Cloture Motion',
+        result: 'Rejected',
+        chamber: 'Senate',
+        requiredMajority: '1/2',
+        bill: { number: 'PN25-28', title: '', type: 'PN' },
+      })
+    ).toBe(
+      'The Senate voted NOT to end debate. The filibuster continues, and the nomination cannot move forward to a final vote at this time. A majority of senators voting was needed.'
+    );
+  });
+
+  it('keeps 60 votes for failed cloture on legislation', () => {
+    expect(
+      explainVoteOutcome({
+        question: 'On Cloture on the Motion to Proceed',
+        result: 'Rejected',
+        chamber: 'Senate',
+        requiredMajority: '3/5',
+        bill: { number: 'H.R. 5371', title: '', type: 'HR' },
+      })
+    ).toBe(
+      'The Senate voted NOT to end debate. The filibuster continues, and the bill cannot move forward to a final vote at this time. 60 votes were needed.'
+    );
+  });
+
+  it.each<[string, string, string]>([
+    ['S.Res. 532', 'SRES', 'resolution'],
+    ['H.Res. 12', 'HRES', 'resolution'],
+    ['S.J.Res. 55', 'SJRES', 'joint resolution'],
+    ['H.J.Res. 4', 'HJRES', 'joint resolution'],
+    ['H.Con.Res. 14', 'HCONRES', 'concurrent resolution'],
+    ['H.R. 5371', 'HR', 'bill'],
+    ['S. 1071', 'S', 'bill'],
+    ['PN373', 'PN', 'nomination'],
+    ['Treaty Doc. 118-1', 'TREATYDOC', 'measure'],
+  ])('names the measure a cloture vote moves forward: %s', (number, type, noun) => {
+    expect(
+      explainVoteOutcome({
+        question: 'On the Cloture Motion',
+        result: 'Agreed to',
+        chamber: 'Senate',
+        bill: { number, title: '', type },
+      })
+    ).toBe(
+      `The Senate voted to end debate and move forward with this ${noun}. This breaks any filibuster and allows the Senate to proceed to a final vote.`
+    );
+  });
+
+  it("reads the measure type from the XML feed's dotted document type", () => {
+    expect(
+      explainVoteOutcome({
+        question: 'On the Cloture Motion',
+        result: 'Agreed to',
+        chamber: 'Senate',
+        bill: { number: '', title: '', type: 'S.J.Res.' },
+      })
+    ).toContain('move forward with this joint resolution');
+  });
+
+  it('states no number for failed cloture when the source gives no threshold', () => {
+    expect(
+      explainVoteOutcome({
+        question: 'On the Cloture Motion',
+        result: 'Rejected',
+        chamber: 'Senate',
+      })
+    ).toBe(
+      'The Senate voted NOT to end debate. The filibuster continues, and the measure cannot move forward to a final vote at this time.'
+    );
+  });
 
   it.each<[string, string, string]>([
     [
@@ -97,9 +218,14 @@ describe('requiredMajorityLabel', () => {
     );
   });
 
-  it('keeps the cloture and two-thirds thresholds', () => {
+  it('keeps 60 votes for cloture on legislation', () => {
     expect(requiredMajorityLabel('3/5', 'Senate')).toBe('3/5 majority (60 votes)');
-    expect(requiredMajorityLabel('2/3', 'Senate')).toBe('2/3 majority (67 votes)');
+  });
+
+  it('counts those voting for two-thirds, not a flat 67', () => {
+    expect(requiredMajorityLabel('2/3', 'Senate')).toBe('two-thirds of senators voting');
+    expect(requiredMajorityLabel('2/3', 'House')).toBe('two-thirds of members voting');
+    expect(requiredMajorityLabel('2/3', 'Senate')).not.toMatch(/67/);
   });
 });
 
