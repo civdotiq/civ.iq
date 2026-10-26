@@ -14,6 +14,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import logger from '@/lib/logging/simple-logger';
 import { lookupVote, type VoteLookup } from '@/lib/services/vote.service';
+import { voteMetaDescription } from '@/lib/votes/vote-wording';
 import { LegacyVoteDetailPage } from '@/components/votes/LegacyVoteDetail';
 import { RollCallDetail, loadRollCallDetailData } from '@/components/votes/RollCallDetail';
 
@@ -65,7 +66,7 @@ export async function generateMetadata({
     const { vote } = lookup;
 
     const title = `${vote.chamber} Roll Call #${vote.rollNumber}: ${vote.title} — ${vote.result}`;
-    const description = `The ${vote.chamber} voted ${vote.result.toLowerCase()} on ${vote.question}. Yeas: ${vote.yeas}, Nays: ${vote.nays}. View all member positions and party breakdown.`;
+    const description = voteMetaDescription(vote);
     const url = `https://civdotiq.org/vote/${voteId}`;
 
     return {
