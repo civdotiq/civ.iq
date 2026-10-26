@@ -190,7 +190,7 @@ const FAQS: FAQ[] = [
   },
   {
     q: 'What about local officials (city council, school board)?',
-    a: 'Not yet. Google Civic covered some local officials. CIV.IQ currently covers federal Congress (535 members), state legislators (7,383), and governors. Local official data is on the roadmap.',
+    a: 'Not yet. Google Civic covered some local officials. CIV.IQ currently covers Congress (535 voting members and 6 non-voting delegates), state legislators (7,383), and governors. Local official data is on the roadmap.',
   },
   {
     q: 'Is the data real-time?',
@@ -335,7 +335,10 @@ export default function GoogleCivicMigrationPage() {
                 <tr className="border-b border-gray-200">
                   <td className="py-2 pr-4">Federal legislators</td>
                   <td className="py-2 pr-4 line-through text-gray-400">Shut down</td>
-                  <td className="py-2">535 members, refreshed every 1–2 days</td>
+                  <td className="py-2">
+                    All 541 seats in Congress, including 6 non-voting delegates. Refreshed every 1–2
+                    days
+                  </td>
                 </tr>
                 <tr className="border-b border-gray-200">
                   <td className="py-2 pr-4">State legislators</td>

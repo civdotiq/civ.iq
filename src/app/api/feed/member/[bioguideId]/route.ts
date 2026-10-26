@@ -11,6 +11,7 @@ import { getVotesByMember } from '@/features/representatives/services/congress-a
 import { getComprehensiveBillsByMember } from '@/services/congress/optimized-congress.service';
 import logger from '@/lib/logging/simple-logger';
 import { buildBillUrl } from '@/lib/helpers/url-builders';
+import { partyAbbreviation } from '@/lib/party-label';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,7 +44,7 @@ export async function GET(
     // Entry for current role
     entries.push({
       id: `${baseUrl}/representative/${bioguideId}#role`,
-      title: `${rep.title} ${rep.name} (${rep.party}-${rep.state})`,
+      title: `${rep.title} ${rep.name} (${partyAbbreviation(rep.party)}-${rep.state})`,
       link: `${baseUrl}/representative/${bioguideId}`,
       updated: now,
       summary: `Currently serving as ${rep.title} for ${rep.state}${rep.district ? ` District ${rep.district}` : ''}. Party: ${rep.party}.`,

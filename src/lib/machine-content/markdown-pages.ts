@@ -71,7 +71,7 @@ CIV.IQ is a nonpartisan civic intelligence platform. One home address shows your
 ## Start here
 
 - Find your representatives (Congress and state legislature) by street address: ${SITE}/your-reps
-- All 535 members of Congress: ${SITE}/representatives
+- All 541 seats in Congress, including 6 non-voting delegates: ${SITE}/representatives
 - Bills and votes: ${SITE}/legislation
 - Who is my state representative? One page per state, e.g. ${SITE}/state-legislature/mi
 - State overviews: ${SITE}/states

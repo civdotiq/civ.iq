@@ -1603,7 +1603,7 @@
     "/representatives/all": {
       "get": {
         "summary": "List all representatives",
-        "description": "List all 535 current members of Congress.",
+        "description": "List current members of Congress: all 541 seats in Congress, including 6 non-voting delegates.",
         "operationId": "listAllRepresentatives",
         "tags": ["Representatives"],
         "parameters": [

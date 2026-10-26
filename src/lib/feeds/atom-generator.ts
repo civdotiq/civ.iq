@@ -12,6 +12,8 @@
  * @see https://validator.w3.org/feed/docs/atom.html
  */
 
+import { partyAbbreviation } from '@/lib/party-label';
+
 export interface AtomFeedConfig {
   id: string;
   title: string;
@@ -203,7 +205,7 @@ export function createRepresentativeFeedConfig(
 
   return {
     id: `${baseUrl}/feeds/representative/${bioguideId}`,
-    title: `${name} (${party}-${state}) - Activity Feed | CIV.IQ`,
+    title: `${name} (${partyAbbreviation(party)}-${state}) - Activity Feed | CIV.IQ`,
     subtitle: `Legislative activity, votes, and news for ${name}`,
     link: `${baseUrl}/representative/${bioguideId}`,
     selfLink: `${baseUrl}/api/feed/member/${bioguideId}`,

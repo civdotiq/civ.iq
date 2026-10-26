@@ -1,6 +1,7 @@
 import {
   ABOUT_META_DESCRIPTION,
   META_DESCRIPTION_MAX,
+  memberProfileMetaDescription,
   recordCardMetaDescription,
   stateLegislatorMetaDescription,
 } from '@/lib/seo/meta-descriptions';
@@ -8,7 +9,9 @@ import {
 describe('ABOUT_META_DESCRIPTION', () => {
   it('fits and keeps the main fact', () => {
     expect(ABOUT_META_DESCRIPTION.length).toBeLessThanOrEqual(META_DESCRIPTION_MAX);
-    expect(ABOUT_META_DESCRIPTION).toMatch(/^Nonpartisan data on 535 members of Congress/);
+    expect(ABOUT_META_DESCRIPTION).toMatch(
+      /^Nonpartisan data on Congress \(535 voting members and 6 non-voting delegates\)/
+    );
   });
 });
 
@@ -72,5 +75,61 @@ describe('stateLegislatorMetaDescription', () => {
     expect(stateLegislatorMetaDescription({ ...hoskins, phone: null })).toContain(
       '(Democratic). Email jasonhoskins@house.mi.gov.'
     );
+  });
+});
+
+describe('memberProfileMetaDescription', () => {
+  it('names party, role, member and seat first', () => {
+    expect(
+      memberProfileMetaDescription({
+        party: 'Democratic',
+        title: 'Representative',
+        name: 'Debbie Dingell',
+        state: 'MI',
+        district: '6',
+        committeeCount: 7,
+      })
+    ).toBe(
+      'Democratic Representative Debbie Dingell (MI-6): voting record, campaign finance and bills in the 119th Congress. Serves on 7 committees.'
+    );
+  });
+
+  it('fits the longest current House entry, keeping its committee count', () => {
+    const text = memberProfileMetaDescription({
+      party: 'Democratic',
+      title: 'Resident Commissioner',
+      name: 'Pablo José Hernández Rivera',
+      state: 'PR',
+      district: '0',
+      committeeCount: 6,
+    });
+    expect(text.length).toBeLessThanOrEqual(META_DESCRIPTION_MAX);
+    expect(text).toContain('(PR):');
+    expect(text).toContain('Serves on 6 committees.');
+  });
+
+  it('never prints "District 0" for at-large seats', () => {
+    expect(
+      memberProfileMetaDescription({
+        party: 'Republican',
+        title: 'Representative',
+        name: 'Nick Begich',
+        state: 'AK',
+        district: '0',
+      })
+    ).toMatch(/^Republican Representative Nick Begich \(AK\):/);
+  });
+
+  it('drops the committee count before going over the limit', () => {
+    const text = memberProfileMetaDescription({
+      party: 'Independent',
+      title: 'Resident Commissioner',
+      name: 'Bartholomew Alexander Montgomery-Whitfield',
+      state: 'PR',
+      district: '0',
+      committeeCount: 12,
+    });
+    expect(text.length).toBeLessThanOrEqual(META_DESCRIPTION_MAX);
+    expect(text).not.toContain('committees');
   });
 });

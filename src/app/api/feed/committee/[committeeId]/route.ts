@@ -14,6 +14,7 @@ import { generateAtomFeed } from '@/lib/feeds/atom-generator';
 import type { AtomFeedConfig, AtomEntry } from '@/lib/feeds/atom-generator';
 import { getCommitteeDataService } from '@/lib/services/committee.service';
 import logger from '@/lib/logging/simple-logger';
+import { partyAbbreviation } from '@/lib/party-label';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,7 +58,7 @@ export async function GET(
     for (const member of committee.members.slice(0, 30)) {
       entries.push({
         id: `${baseUrl}/committee/${committeeId}#member-${member.representative.bioguideId}`,
-        title: `${member.representative.name} (${member.representative.party}-${member.representative.state}) — ${member.role}`,
+        title: `${member.representative.name} (${partyAbbreviation(member.representative.party)}-${member.representative.state}) — ${member.role}`,
         link: `${baseUrl}/representative/${member.representative.bioguideId}`,
         updated: now,
         author: { name: member.representative.name },

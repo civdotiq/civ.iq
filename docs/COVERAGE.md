@@ -10,12 +10,12 @@ This page is the canonical answer to "what does CIV.IQ actually cover?" It super
 
 ## TL;DR
 
-| Level                  | Coverage                             | One-line reality                                                                           |
-| ---------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------ |
-| **Federal**            | Complete across all wired domains    | 535 members, all bills, all roll calls, full FEC + LDA + USASpending + Federal Register.   |
-| **State legislatures** | Complete for legislators/bills/votes | All 50 states via OpenStates. Campaign finance is **not currently available** (see below). |
-| **State executives**   | Partial                              | Governors and AGs sourced from Wikidata SPARQL.                                            |
-| **Local government**   | Not covered                          | No city/county data. Local records lack a shared standard or central source.               |
+| Level                  | Coverage                             | One-line reality                                                                                                           |
+| ---------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| **Federal**            | Complete across all wired domains    | 535 voting members and 6 non-voting delegates, all bills, all roll calls, full FEC + LDA + USASpending + Federal Register. |
+| **State legislatures** | Complete for legislators/bills/votes | All 50 states via OpenStates. Campaign finance is **not currently available** (see below).                                 |
+| **State executives**   | Partial                              | Governors and AGs sourced from Wikidata SPARQL.                                                                            |
+| **Local government**   | Not covered                          | No city/county data. Local records lack a shared standard or central source.                                               |
 
 If you came here expecting "all 50 states + every city in America," that does not exist anywhere — and CIV.IQ is honest enough not to pretend it does.
 

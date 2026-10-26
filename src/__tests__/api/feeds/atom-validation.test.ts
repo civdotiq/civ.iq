@@ -302,6 +302,11 @@ describe('Atom Feed Generator', () => {
 
   describe('Feed Config Helpers', () => {
     describe('createRepresentativeFeedConfig()', () => {
+      it('abbreviates the party as "(D-CA)", not "(Democrat-CA)"', () => {
+        const config = createRepresentativeFeedConfig('P000197', 'Nancy Pelosi', 'Democrat', 'CA');
+        expect(config.title).toBe('Nancy Pelosi (D-CA) - Activity Feed | CIV.IQ');
+      });
+
       it('should create valid config for a representative', () => {
         const config = createRepresentativeFeedConfig('P000197', 'Nancy Pelosi', 'D', 'CA');
 

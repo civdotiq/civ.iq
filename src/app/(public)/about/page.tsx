@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     images: SITE_OG_IMAGES,
     title: 'About CIV.IQ',
     description:
-      'Nonpartisan civic intelligence platform. 535 members of Congress, 50 state legislatures, 29 government data sources and 11 open datasets.',
+      'Nonpartisan civic intelligence platform. Congress (535 voting members and 6 non-voting delegates), 50 state legislatures, 29 government data sources and 11 open datasets.',
     type: 'website',
   },
   alternates: {
@@ -39,10 +39,10 @@ export default async function AboutPageRoute({ searchParams }: AboutPageProps) {
           { name: 'About', url: 'https://civdotiq.org/about' },
         ]}
       />
-      <OrganizationSchema description="CIV.IQ is a civic intelligence platform providing access to federal and state government data. 535 members of Congress, 50 state legislatures (legislators, bills, votes), and machine-learning analysis of federal money-in-politics patterns." />
+      <OrganizationSchema description="CIV.IQ is a civic intelligence platform providing access to federal and state government data. Congress (535 voting members and 6 non-voting delegates), 50 state legislatures (legislators, bills, votes), and machine-learning analysis of federal money-in-politics patterns." />
       <AboutPageSchema
         name="About CIV.IQ"
-        description="CIV.IQ provides nonpartisan access to government data for 535 members of Congress, 50 state legislatures, 29 government data sources, and 11 open datasets."
+        description="CIV.IQ provides nonpartisan access to government data for Congress (535 voting members and 6 non-voting delegates), 50 state legislatures, 29 government data sources, and 11 open datasets."
         url="https://civdotiq.org/about"
       />
       {useRedesign ? <AboutHybrid /> : <LegacyAboutPage />}

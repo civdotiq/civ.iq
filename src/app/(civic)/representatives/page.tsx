@@ -17,12 +17,12 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/representatives' },
   title: 'Representatives',
   description:
-    'Browse all 535 members of the U.S. House and Senate. Filter by state, party, and chamber.',
+    'Browse all 541 seats in Congress, including 6 non-voting delegates. Filter by state, party, and chamber.',
   openGraph: {
     images: SITE_OG_IMAGES,
     title: 'Representatives | CIV.IQ',
     description:
-      'Browse all 535 members of the U.S. House and Senate. Filter by state, party, and chamber.',
+      'Browse all 541 seats in Congress, including 6 non-voting delegates. Filter by state, party, and chamber.',
     url: 'https://civdotiq.org/representatives',
     siteName: 'CIV.IQ',
     type: 'website',
@@ -93,7 +93,7 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
       />
       <CollectionPageSchema
         name="U.S. Representatives"
-        description="Browse all 535 members of the U.S. House and Senate. Filter by state, party, and chamber."
+        description="Browse all 541 seats in Congress, including 6 non-voting delegates. Filter by state, party, and chamber."
         url="https://civdotiq.org/representatives"
       />
       <div className="min-h-screen bg-white">

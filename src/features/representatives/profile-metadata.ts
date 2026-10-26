@@ -17,6 +17,7 @@ import { notFound } from 'next/navigation';
 import { getEnhancedRepresentative } from './services/congress.service';
 import { commonName } from './utils/common-name';
 import { partyAbbreviation, partyAdjective } from '@/lib/party-label';
+import { memberProfileMetaDescription } from '@/lib/seo/meta-descriptions';
 
 export interface RepresentativeDetails {
   bioguideId: string;
@@ -119,12 +120,20 @@ export async function buildProfileMetadata(
     // The name the member goes by ("Bernie Sanders"), which is what people search for
     const name = commonName(representative);
     const title = `${name} (${partyAbbreviation(representative.party)}-${representative.state})`;
-    const chamberLabel = representative.chamber === 'Senate' ? 'Senator' : 'Representative';
-    const districtLabel = representative.district ? `, District ${representative.district}` : '';
-    const committeeNote = representative.committees?.length
-      ? `. Serves on ${representative.committees.length} committee${representative.committees.length === 1 ? '' : 's'}`
-      : '';
-    const description = `${partyAdjective(representative.party)} ${chamberLabel} ${name} (${representative.state}${districtLabel}) — voting record, campaign finance, and legislative activity in the 119th Congress${committeeNote}.`;
+    const chamberLabel =
+      representative.chamber === 'Senate'
+        ? 'Senator'
+        : representative.role === 'Delegate' || representative.role === 'Resident Commissioner'
+          ? representative.role
+          : 'Representative';
+    const description = memberProfileMetaDescription({
+      party: partyAdjective(representative.party),
+      title: chamberLabel,
+      name,
+      state: representative.state,
+      district: representative.chamber === 'House' ? representative.district : null,
+      committeeCount: representative.committees?.length,
+    });
     const url = `https://civdotiq.org/representative/${bioguideId.toUpperCase()}`;
 
     // Build OG image URL - default to profile card, override with specific card type
@@ -160,7 +169,7 @@ export async function buildProfileMetadata(
             url: ogImageUrl,
             width: 1200,
             height: 630,
-            alt: `${name}, ${representative.party} ${chamberLabel}`,
+            alt: `${name}, ${partyAdjective(representative.party)} ${chamberLabel}`,
           },
         ],
       },
