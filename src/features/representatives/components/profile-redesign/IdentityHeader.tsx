@@ -19,6 +19,8 @@ import { partyAdjective } from '@/lib/party-label';
 interface IdentityHeaderProps {
   representative: EnhancedRepresentative;
   nextElection: number | null;
+  /** Answer-first opening shown under the name. */
+  lede?: string | null;
   focusAreas: string[];
   /** Opens the full biography / contact drill-down section. */
   onOpenBio: () => void;
@@ -48,6 +50,7 @@ function Fact({ label, value, caption }: { label: string; value: string; caption
 export function IdentityHeader({
   representative: r,
   nextElection,
+  lede,
   focusAreas,
   onOpenBio,
 }: IdentityHeaderProps) {
@@ -146,6 +149,7 @@ export function IdentityHeader({
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-gray-900 mt-3">
             {displayName}
           </h1>
+          {lede && <p className="mt-3 max-w-3xl text-base text-gray-700 leading-relaxed">{lede}</p>}
         </div>
 
         {/* Facts + focus areas */}

@@ -24,13 +24,13 @@ function partyColor(party: string): string {
   return 'text-gray-600';
 }
 
-function partyStateLabel(rep: EnhancedRepresentative): string {
+export function partyStateLabel(rep: EnhancedRepresentative): string {
   const party = rep.party?.charAt(0) ?? '';
   const district = rep.chamber === 'House' && rep.district ? `-${rep.district}` : '';
   return `(${party}-${rep.state}${district})`;
 }
 
-function displayName(rep: EnhancedRepresentative): string {
+export function displayName(rep: EnhancedRepresentative): string {
   return rep.fullName?.official ?? rep.name;
 }
 

@@ -27,6 +27,12 @@ import {
 } from '@/features/representatives/profile-metadata';
 import { partyAdjective } from '@/lib/party-label';
 import { describeTenure } from '@/features/representatives/utils/tenure';
+import { commonName } from '@/features/representatives/utils/common-name';
+import { memberLede } from '@/lib/seo/answer-first';
+import {
+  getNextHouseElection,
+  getNextSenateElectionFromTermEnd,
+} from '@/lib/data/congressional-constants';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600; // ISR: revalidate every hour
@@ -367,6 +373,37 @@ export default async function RepresentativeProfilePage({
       role: committee.role,
     }));
 
+  // Answer-first opening under the name; only facts the profile shows.
+  const committeeIds = (representative.committees ?? []).map(c => c.id || c.thomas_id);
+  const isCurrentMember =
+    !representative.status ||
+    representative.status === 'active' ||
+    representative.status === 'pending_resignation';
+  const lede = isCurrentMember
+    ? memberLede({
+        name: commonName(representative),
+        surname:
+          representative.fullName?.last?.trim() || representative.name.split(' ').pop() || '',
+        party: partyAdjective(representative.party),
+        chamber: representative.chamber,
+        role: representative.role,
+        stateName: getStateName(representative.state) || representative.state,
+        district: representative.district,
+        terms: representative.terms ?? [],
+        nextElection:
+          representative.chamber === 'House'
+            ? getNextHouseElection()
+            : representative.currentTerm?.end
+              ? getNextSenateElectionFromTermEnd(
+                  new Date(representative.currentTerm.end).getFullYear()
+                )
+              : null,
+        // Same split as the profile's "Committees" fact.
+        committeeCount: committeeIds.filter(id => !isSubcommitteeId(id)).length,
+        subcommitteeCount: committeeIds.filter(id => isSubcommitteeId(id)).length,
+      })
+    : null;
+
   return (
     <>
       {/* Structured Data for SEO */}
@@ -384,7 +421,7 @@ export default async function RepresentativeProfilePage({
 
         <ErrorBoundary>
           <ChunkLoadErrorBoundary>
-            <ProfileRedesign representative={representative} />
+            <ProfileRedesign representative={representative} lede={lede} />
           </ChunkLoadErrorBoundary>
         </ErrorBoundary>
 

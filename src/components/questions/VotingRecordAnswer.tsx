@@ -41,6 +41,9 @@ interface VotesData {
 }
 
 // Bill type codes from Congress.gov -> citizen-friendly prefix.
+/** Recent votes the pod lists; the page's opening sentence counts the same rows. */
+export const RECENT_VOTES_SHOWN = 10;
+
 const BILL_TYPE_LABEL: Record<string, string> = {
   hr: 'H.R.',
   hres: 'H.Res.',
@@ -127,7 +130,7 @@ function RecentVotesPod({
     );
   }
 
-  const recent = votes.votes.slice(0, 10);
+  const recent = votes.votes.slice(0, RECENT_VOTES_SHOWN);
 
   // When a bill title appears more than once in the rendered list, the two
   // votes are almost always distinct procedural steps (e.g., motion to recommit
@@ -187,9 +190,10 @@ function RecentVotesPod({
           );
         })}
       </ul>
-      {votes.totalResults > 10 && (
+      {votes.totalResults > RECENT_VOTES_SHOWN && (
         <p className="type-xs text-gray-500 mt-3">
-          Showing 10 of the last {votes.totalResults.toLocaleString()} recorded votes.
+          Showing {RECENT_VOTES_SHOWN} of the last {votes.totalResults.toLocaleString()} recorded
+          votes.
         </p>
       )}
       <FullRecordCta fullRecord={fullRecord} />

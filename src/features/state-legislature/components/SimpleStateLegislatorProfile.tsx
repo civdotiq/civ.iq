@@ -101,11 +101,14 @@ const stateLegislatorTabs = [
 interface SimpleStateLegislatorProfileProps {
   legislator: EnhancedStateLegislator;
   fromAddress?: string;
+  /** Answer-first opening, built on the server from facts the page shows. */
+  lede?: string | null;
 }
 
 export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfileProps> = ({
   legislator,
   fromAddress,
+  lede,
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [imageError, setImageError] = useState(false);
@@ -900,6 +903,10 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                 <p className="profile-hero-title accent-title-underline-blue mb-6">
                   {getFullTitle()}
                 </p>
+
+                {lede && (
+                  <p className="mb-6 max-w-3xl text-base text-gray-700 leading-relaxed">{lede}</p>
+                )}
 
                 {/* Geometric badges */}
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">

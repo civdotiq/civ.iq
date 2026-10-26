@@ -71,6 +71,8 @@ export interface BillsSponsoredData {
   }>;
   sponsoredCount: number;
   cosponsoredCount: number;
+  /** When Congress.gov was read for these counts. */
+  fetchedAt?: string;
 }
 
 // ── Donor-Voting Alignment ────────────────────────────────────
@@ -97,6 +99,8 @@ export interface CampaignContributionsData {
     cycle: number;
     /** False when the member had no current-cycle filings and an older cycle is shown. */
     isCurrentCycle: boolean;
+    /** Last day covered by the FEC reports behind these totals. */
+    coverageEndDate?: string;
   } | null;
   /** The FEC could not be reached — not the same as "no filings". */
   financeUnavailable: boolean;
@@ -268,6 +272,7 @@ export async function fetchCampaignContributionsData(
         candidateSelfFunding: newest.data.candidate_contribution ?? 0,
         cycle: newest.cycle,
         isCurrentCycle: newest.cycle === currentCycle,
+        coverageEndDate: newest.data.coverage_end_date || undefined,
       }
     : null;
   const industries = processedFinance?.industryBreakdown?.length
@@ -427,6 +432,7 @@ export async function fetchBillsSponsoredData(bioguideId: string): Promise<Bills
     cosponsoredCount:
       response.metadata.cosponsoredCount ??
       response.bills.filter(b => b.relationship === 'cosponsored').length,
+    fetchedAt: response.metadata.fetchedAt,
   };
 }
 

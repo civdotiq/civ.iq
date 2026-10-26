@@ -33,6 +33,8 @@ import { isSubcommitteeId } from '@/lib/committee-id';
 
 interface ProfileRedesignProps {
   representative: EnhancedRepresentative;
+  /** Answer-first opening, built on the server from facts the page shows. */
+  lede?: string | null;
 }
 
 interface CommitteesApiResponse {
@@ -83,7 +85,7 @@ async function fetchOverviewBatch(bioguideId: string): Promise<ProfileBatchRespo
  * reference sidebar. Drill-down detail reuses the existing dashboard
  * section panels via the same `?section=` navigation as the classic layout.
  */
-export function ProfileRedesign({ representative }: ProfileRedesignProps) {
+export function ProfileRedesign({ representative, lede }: ProfileRedesignProps) {
   const { activeSection, navigateToSection, navigateBack } = useSectionNavigation({
     validSections: [...REPRESENTATIVE_SECTIONS],
   });
@@ -187,6 +189,7 @@ export function ProfileRedesign({ representative }: ProfileRedesignProps) {
           <IdentityHeader
             representative={representative}
             nextElection={nextElection}
+            lede={lede}
             focusAreas={focusAreas}
             onOpenBio={() => openSection('overview')}
           />
