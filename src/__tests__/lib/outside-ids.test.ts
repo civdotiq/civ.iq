@@ -55,6 +55,18 @@ describe('state outside IDs', () => {
     ).toBe('https://assembly.state.ny.us/mem/Al-Stirpe');
   });
 
+  it("accepts Minnesota's Senate site, which is not on .gov", () => {
+    expect(
+      officialLegislatureUrl(
+        [
+          'https://www.mnsenaterepublicans.com/senator-jim-abeler/',
+          'https://www.senate.mn/members/member_bio.html?mem_id=1216',
+        ],
+        new Set()
+      )
+    ).toBe('https://www.senate.mn/members/member_bio.html?mem_id=1216');
+  });
+
   it('never treats a caucus site as the official page', () => {
     expect(officialLegislatureUrl(['https://housedems.com/Alabas-Farhat/'], new Set())).toBeNull();
     expect(
