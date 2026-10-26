@@ -31,6 +31,7 @@ import type { RecordCardData } from '../record-card-data';
 import { termOrdinal } from '../record-card-data';
 import { ProvenancePopover } from './ProvenancePopover';
 import { MONEY_AND_VOTES_CAVEAT, ROLL_CALL_CAVEAT } from '@/lib/constants/standing-caveats';
+import { partyAdjective } from '@/lib/party-label';
 
 // ── Formatting ───────────────────────────────────────────────────────
 
@@ -163,7 +164,7 @@ function CardHeader({ data }: { data: RecordCardData }) {
                 isDem ? 'bg-party-dem' : isRep ? 'bg-party-rep' : 'bg-party-ind'
               }`}
             >
-              {member.party}
+              {partyAdjective(member.party)}
             </span>
             <span className="text-sm font-medium tracking-[0.025em]">{seatLabel}</span>
           </div>

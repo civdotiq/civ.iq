@@ -15,6 +15,7 @@ import { QRCode } from './QRCode';
 import '@/styles/civic-pack-print.css';
 import { PrintButton } from './PrintButton';
 import { PrintDistrictPage } from '@/components/embed/PrintDistrictPage';
+import { partyAdjective } from '@/lib/party-label';
 
 interface PageProps {
   params: Promise<{ districtId: string }>;
@@ -227,7 +228,7 @@ export default async function PrintCivicPackPage({ params, searchParams }: PageP
             <div>
               <div className="civic-pack-rep-name">{rep.name}</div>
               <div className="civic-pack-rep-detail">
-                <span className={partyClass(rep.party)}>{rep.party}</span>
+                <span className={partyClass(rep.party)}>{partyAdjective(rep.party)}</span>
                 {' \u00b7 '}
                 {rep.chamber === 'Senate' ? 'U.S. Senator' : 'U.S. Representative'}
               </div>

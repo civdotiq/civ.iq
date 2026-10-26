@@ -13,6 +13,7 @@ import type { Metadata } from 'next';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { EmbedRepsCard } from '@/components/embed/EmbedRepsCard';
 import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
+import { partyAdjective } from '@/lib/party-label';
 
 interface PageProps {
   params: Promise<{ districtId: string }>;
@@ -137,7 +138,9 @@ export default async function EmbedRepsPage({ params, searchParams }: PageProps)
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontWeight: 600, fontSize: '14px', color: '#111827' }}>{rep.name}</div>
               <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                <span style={{ color: partyColor(rep.party), fontWeight: 500 }}>{rep.party}</span>
+                <span style={{ color: partyColor(rep.party), fontWeight: 500 }}>
+                  {partyAdjective(rep.party)}
+                </span>
                 {' · '}
                 {rep.chamber === 'Senate' ? 'U.S. Senator' : `U.S. Representative`}
               </div>

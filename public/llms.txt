@@ -149,7 +149,7 @@ All commands print JSON to stdout. Run `npx @civiq/sdk --help` for the full comm
 
 ## Data Sources
 
-All data comes from official government sources:
+Federal data comes from official government sources. State legislature data comes from Open States, which compiles it from official state legislature websites:
 - Congress.gov API v3 (bills, members, votes)
 - FEC.gov API (campaign finance)
 - Senate LDA API (lobbying disclosures)
@@ -158,6 +158,7 @@ All data comes from official government sources:
 - Census Bureau ACS (demographics)
 - Bureau of Labor Statistics (employment)
 - GovInfo.gov (hearing transcripts)
+- Open States (state legislators and their contact details, state bills, state legislative votes)
 
 ## License
 

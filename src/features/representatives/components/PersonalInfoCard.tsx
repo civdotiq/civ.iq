@@ -9,6 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { RepresentativesIcon, LocationIcon } from '@/components/icons/AicherIcons';
 import { EnhancedRepresentative } from '@/types/representative';
 import { getAgeFromWikidata, getBiographyFromWikidata } from '@/lib/api/wikidata';
+import { partyAdjective } from '@/lib/party-label';
 
 interface PersonalInfoCardProps {
   representative: EnhancedRepresentative;
@@ -103,7 +104,7 @@ export function PersonalInfoCard({ representative, className = '' }: PersonalInf
             <span
               className={`inline-flex items-center px-3 py-1.5 text-sm font-bold aicher-heading border-2 ${partyColor}`}
             >
-              {representative.party}
+              {partyAdjective(representative.party)}
             </span>
           </div>
         </div>

@@ -10,6 +10,7 @@ import RepresentativePhoto from '@/features/representatives/components/Represent
 import { DataSourceBadge } from '@/components/shared/ui/DataTransparency';
 import { NonVotingBadge } from './NonVotingBadge';
 import type { RepresentativeRole } from '@/types/representative';
+import { partyAdjective } from '@/lib/party-label';
 
 interface RepresentativeHeaderProps {
   representative: {
@@ -118,7 +119,7 @@ export function RepresentativeHeader({ representative, metrics }: Representative
                 <span
                   className={`aicher-button px-3 py-1 text-sm ${getPartyBadgeColor(representative.party)} aicher-no-radius`}
                 >
-                  {representative.party}
+                  {partyAdjective(representative.party)}
                 </span>
                 <span className="aicher-heading-wide text-gray-600 text-sm">
                   {representative.title}

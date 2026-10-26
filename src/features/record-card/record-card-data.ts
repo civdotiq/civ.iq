@@ -88,7 +88,7 @@ export interface VotingSection {
   medianMissedPct: number | null;
   /** Median alignment for this member's party. */
   medianPartyAlignmentPct: number | null;
-  partyLabel: 'Democrat' | 'Republican' | null;
+  partyLabel: 'Democratic' | 'Republican' | null;
   dataAsOf: string;
   methodology: string;
 }
@@ -206,9 +206,9 @@ async function fetchVotingSection(
   if (!stats) return null;
 
   const p = party.trim().toUpperCase();
-  const partyLabel = p.startsWith('D') ? 'Democrat' : p.startsWith('R') ? 'Republican' : null;
+  const partyLabel = p.startsWith('D') ? 'Democratic' : p.startsWith('R') ? 'Republican' : null;
   const medianPartyAlignmentPct =
-    partyLabel === 'Democrat'
+    partyLabel === 'Democratic'
       ? baselines.medianAlignmentByParty.Democratic
       : partyLabel === 'Republican'
         ? baselines.medianAlignmentByParty.Republican

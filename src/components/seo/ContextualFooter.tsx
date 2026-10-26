@@ -235,7 +235,7 @@ export function ContextualFooter({
                   href="/congress?party=Democrat"
                   className="text-sm text-gray-700 hover:text-[#3ea2d4] hover:underline block py-0.5"
                 >
-                  Democrat
+                  Democratic
                 </Link>
               </li>
               <li>

@@ -13,6 +13,7 @@ import { AlertSubscribeButton } from '@/components/alerts/AlertSubscribeButton';
 import { RepresentativeShareButton } from '@/components/shared/social/ShareButton';
 import { partyFillClasses } from './types';
 import { dcOfficeLines, safeHttpUrl, telHref } from './contact';
+import { partyAdjective } from '@/lib/party-label';
 
 interface IdentityHeaderProps {
   representative: EnhancedRepresentative;
@@ -138,7 +139,7 @@ export function IdentityHeader({
             <span
               className={`rounded-[2px] px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${partyClasses}`}
             >
-              {r.party}
+              {partyAdjective(r.party)}
             </span>
             <p className="text-base font-medium text-gray-800">{roleTitle}</p>
           </div>

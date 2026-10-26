@@ -73,6 +73,7 @@ describe('data-source counts match docs/COVERAGE.md', () => {
     'CITATION.cff',
     'packages/sdk/README.md',
     'src/app/(public)/about/page.tsx',
+    'src/lib/seo/meta-descriptions.ts',
   ])('every source count stated in %s matches COVERAGE.md', path => {
     const [, total, gov, open] = heading!.map(Number);
     const text = read(path).replace(/\s+/g, ' ');

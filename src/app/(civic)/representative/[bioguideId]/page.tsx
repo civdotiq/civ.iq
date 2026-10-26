@@ -25,6 +25,8 @@ import {
   getProfileRepresentative as getRepresentativeData,
   type RepresentativeDetails,
 } from '@/features/representatives/profile-metadata';
+import { partyAdjective } from '@/lib/party-label';
+import { describeTenure } from '@/features/representatives/utils/tenure';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600; // ISR: revalidate every hour
@@ -84,21 +86,11 @@ function CitableFacts({
     ? `${stateName}, District ${representative.district}`
     : stateName;
 
-  // Compute tenure. Terms are sorted most-recent-first by getEnhancedRepresentative,
-  // so the earliest term sits at the end of the array.
-  const terms = representative.terms ?? [];
-  const termCount = terms.length;
-  const firstElectedYear = terms[terms.length - 1]?.startYear;
-  const currentTermStartYear =
-    terms[0]?.startYear ?? representative.currentTerm?.start?.split('-')[0];
-  const currentTermEndYear = terms[0]?.endYear ?? representative.currentTerm?.end?.split('-')[0];
-  const hasTenure = Boolean(firstElectedYear);
-  const isFreshman = termCount <= 1 || firstElectedYear === currentTermStartYear;
-  const tenureText = !hasTenure
-    ? null
-    : isFreshman
-      ? `In Congress since ${currentTermStartYear} (${termCount} ${termCount === 1 ? 'term' : 'terms'})`
-      : `Elected ${firstElectedYear} · current term ${currentTermStartYear}–${currentTermEndYear} · ${termCount} terms total`;
+  // Terms are sorted most-recent-first by getEnhancedRepresentative.
+  const tenureText = describeTenure(representative.terms ?? [], {
+    chamber: representative.chamber,
+    role: representative.role,
+  });
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -119,7 +111,7 @@ function CitableFacts({
       <dl>
         <div className="flex gap-2">
           <dt className="text-gray-500 shrink-0">Party</dt>
-          <dd className="font-medium text-gray-900">{representative.party}</dd>
+          <dd className="font-medium text-gray-900">{partyAdjective(representative.party)}</dd>
         </div>
         <div className="flex gap-2">
           <dt className="text-gray-500 shrink-0">Represents</dt>
@@ -328,7 +320,7 @@ export default async function RepresentativeProfilePage({
         person={{
           name: representative.name,
           jobTitle: `${representative.role} - ${representative.state}${representative.district ? ` District ${representative.district}` : ''}`,
-          description: `${representative.party} ${representative.role} representing ${representative.state} in the U.S. Congress`,
+          description: `${partyAdjective(representative.party)} ${representative.role} representing ${representative.state} in the U.S. Congress`,
           image: representative.imageUrl,
           worksFor: {
             name:
@@ -339,7 +331,7 @@ export default async function RepresentativeProfilePage({
           },
           memberOf,
           sameAs,
-          affiliation: representative.party,
+          affiliation: partyAdjective(representative.party),
           birthDate: representative.bio?.birthday,
           knowsAbout: representative.committees?.map(c => c.name),
         }}

@@ -3,11 +3,11 @@ import { BreadcrumbSchema, OrganizationSchema, AboutPageSchema } from '@/compone
 import { LegacyAboutPage } from '@/components/system/LegacyAboutPage';
 import { AboutHybrid } from '@/components/system/AboutHybrid';
 import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
+import { ABOUT_META_DESCRIPTION } from '@/lib/seo/meta-descriptions';
 
 export const metadata: Metadata = {
   title: 'About CIV.IQ — Civic Intelligence from Real Government Data',
-  description:
-    'CIV.IQ organizes government data about elected officials from 29 government sources and 11 open datasets — Congress.gov, FEC, Census Bureau, and more — so citizens can understand who represents them. 535 members of Congress, 50 state legislatures (legislators, bills, committees). Local government is not covered. Nonpartisan.',
+  description: ABOUT_META_DESCRIPTION,
   openGraph: {
     images: SITE_OG_IMAGES,
     title: 'About CIV.IQ',

@@ -12,7 +12,7 @@ import {
   getStateDistrictDemographics,
   type StateDistrictDemographics,
 } from '@/lib/services/state-census-api.service';
-import { getChamberName } from '@/types/state-legislature';
+import { getChamberName, getLegislatorTitle } from '@/types/state-legislature';
 import { MapPin, Users } from 'lucide-react';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
 import { normalizeStateIdentifier, getStateName, STATE_CODE_TO_FIPS } from '@/lib/data/us-states';
@@ -72,7 +72,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return {
     title: `${stateName} ${chamberName} District ${district}`,
-    description: `View information about ${stateName} ${chamberName} District ${district}, including representatives and demographics.`,
+    description: `View information about ${stateName} ${chamberName} District ${district}, including its legislators and demographics.`,
     alternates: {
       canonical: `https://civdotiq.org/state-districts/${state.toLowerCase()}/${validChamber}/${encodeURIComponent(district)}`,
     },
@@ -98,6 +98,7 @@ export default async function StateDistrictPage({ params }: PageProps) {
 
   // Get chamber info and full state name for display
   const chamberName = getChamberName(stateCode, chamber);
+  const legislatorTitle = getLegislatorTitle(stateCode, chamber);
   const stateName = getStateName(stateCode) || stateCode;
 
   // The three sources are independent; each degrades to empty on failure
@@ -191,7 +192,7 @@ export default async function StateDistrictPage({ params }: PageProps) {
           </h1>
           <p className="text-gray-600">
             {chamberName} • {districtLegislators.length}{' '}
-            {districtLegislators.length === 1 ? 'Representative' : 'Representatives'}
+            {districtLegislators.length === 1 ? legislatorTitle : `${legislatorTitle}s`}
           </p>
         </div>
 
