@@ -69,7 +69,7 @@ export function ComparePage({ bioguideA, bioguideB }: ComparePageProps) {
       Boolean(d)
     );
     if (dates.length === 0) return null;
-    const oldest = dates.reduce((x, y) => (y < x ? y : x));
+    const oldest = dates.slice(1).reduce((x, y) => (y < x ? y : x), dates[0] ?? '');
     return formatDateOnly(oldest, { month: 'short', day: 'numeric', year: 'numeric' }) || null;
   }, [a.voting?.votesDataAsOf, b.voting?.votesDataAsOf]);
   const senateChamber =

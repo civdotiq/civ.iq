@@ -23,7 +23,7 @@ const fixture = (name: string) =>
 
 describe('parseSenateRecordVoteTotal', () => {
   it('reads the running total on a vote day (Sep 30, 2026: four votes, total 256)', () => {
-    expect(parseSenateRecordVoteTotal(fixture('CREC-2026-09-30-senate-digest.htm'))).toBe(256);
+    expect(parseSenateRecordVoteTotal(fixture('CREC-2026-09-30-senate-digest.txt'))).toBe(256);
   });
 
   it('reads "One record vote was taken today" (Jan 7, 2026)', () => {
@@ -34,7 +34,7 @@ describe('parseSenateRecordVoteTotal', () => {
 
   it('returns null for a pro forma session (Oct 26, 2026)', () => {
     expect(
-      parseSenateRecordVoteTotal(fixture('CREC-2026-10-26-senate-digest-pro-forma.htm'))
+      parseSenateRecordVoteTotal(fixture('CREC-2026-10-26-senate-digest-pro-forma.txt'))
     ).toBeNull();
   });
 
@@ -115,7 +115,7 @@ describe('readSenateDigest', () => {
         },
         { granuleId: 'X', title: 'Some floor speech', granuleClass: 'SENATE' },
       ],
-      { S: fixture('CREC-2026-09-30-senate-digest.htm'), H: '(Total--999)' }
+      { S: fixture('CREC-2026-09-30-senate-digest.txt'), H: '(Total--999)' }
     );
     await expect(
       readSenateDigest({ packageId: 'CREC-2026-09-30', dateIssued: '2026-09-30' })

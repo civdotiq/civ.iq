@@ -198,12 +198,11 @@ export async function checkSenateVoteFreshness(
       .sort()
       .at(-1);
     const from = [
-      congressStart,
       newestKnownTotal ? addDays(newestKnownTotal, 1) : null,
       prev?.latestIssueRead ? addDays(prev.latestIssueRead, -REREAD_DAYS) : null,
     ]
       .filter((d): d is string => d !== null)
-      .reduce((a, b) => (b > a ? b : a));
+      .reduce((a, b) => (b > a ? b : a), congressStart);
 
     let latestIssueRead = prev?.latestIssueRead ?? null;
     if (from <= today) {
