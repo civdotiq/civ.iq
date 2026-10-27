@@ -18,6 +18,10 @@ import logger from '@/lib/logging/simple-logger';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { cachedFetch, govCache as _govCache } from '@/services/cache';
 import {
+  senateVoteFreshnessFields,
+  type VoteFreshnessFields,
+} from '@/features/representatives/services/senate-vote-freshness';
+import {
   categorizeVote,
   determineKeyVote,
   fetchBillDetails,
@@ -40,6 +44,8 @@ interface VoteResponse {
   dataSource: string;
   success: boolean;
   error?: string;
+  /** Senators: how current the stored Senate votes are (read outside the cache). */
+  voteFreshness?: VoteFreshnessFields;
   metadata: {
     timestamp: string;
     phase: string;
@@ -660,6 +666,7 @@ export async function GET(
       cached = false;
     }
 
+    const voteFreshness = await senateVoteFreshnessFields(chamber);
     const response: VoteResponse = {
       votes,
       totalResults: votes.length,
@@ -670,6 +677,7 @@ export async function GET(
       },
       dataSource,
       success: true,
+      ...(voteFreshness ? { voteFreshness } : {}),
       metadata: {
         timestamp: new Date().toISOString(),
         phase: 'Phase 3 - Roll-call Enriched (N+1 Pattern)',

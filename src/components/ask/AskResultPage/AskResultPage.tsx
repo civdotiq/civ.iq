@@ -416,7 +416,8 @@ export function AskResultPage({
   relatedQuestions,
   asof,
 }: AskResultPageProps) {
-  const today = asof ?? new Date().toISOString().slice(0, 10);
+  // The data's own date when the caller has one; never today's date.
+  const dataDate = asof ?? null;
   const methodology = getMethodologyForSlug(slug);
   const entityId =
     entity.type === 'representative'
@@ -431,7 +432,7 @@ export function AskResultPage({
       crumbs={['Ask', slug, `${entityId} · ${entity.name}`]}
       crumbRight={
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg3)' }}>
-          Answered {today} · Confidence {confidence.toFixed(2)}
+          {dataDate ? `As of ${dataDate} · ` : ''}Confidence {confidence.toFixed(2)}
         </span>
       }
     >
@@ -540,7 +541,7 @@ export function AskResultPage({
           {methodology && <CqLimitations items={methodology.limitations} />}
           <CqDisclaimer
             confidence={confidence}
-            asof={today}
+            asof={dataDate}
             method="Retrieval over canonical sources · extractive only"
           />
         </aside>

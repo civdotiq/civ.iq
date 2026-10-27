@@ -4,7 +4,8 @@ type ConfidenceBand = 'high' | 'medium' | 'low';
 
 interface CqDisclaimerProps {
   confidence: number;
-  asof: string;
+  /** Date of the newest record shown. Omitted when unknown: never today's date. */
+  asof?: string | null;
   method?: string;
   children?: ReactNode;
 }
@@ -39,7 +40,8 @@ export function CqDisclaimer({
         paddingTop: 6,
       }}
     >
-      Confidence {band} · As of {asof} · {method} · Correlation does not imply causation.
+      Confidence {band} · {asof ? `As of ${asof} · ` : ''}
+      {method} · Correlation does not imply causation.
       {children}
     </div>
   );

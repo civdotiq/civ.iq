@@ -16,6 +16,7 @@ import { SectionBlock, SectionEmptyState, SectionSkeleton } from './SectionBlock
 import { groupVotesByMeasure, voteKind, type VoteGroup } from './vote-groups';
 import { PartyBreakdown, TallyBar, useVoteTally } from './VoteTally';
 import { formatDateOnly } from '@/lib/utils/date-only';
+import { SenateVoteFreshnessClient } from '@/components/votes/SenateVoteFreshnessClient';
 
 interface RecentVotesSectionProps {
   bioguideId: string;
@@ -194,10 +195,11 @@ export function RecentVotesSection({
       }
       source={
         chamber === 'Senate'
-          ? 'Source: Senate.gov roll-call XML · updated hourly'
-          : 'Source: Congress.gov House roll-call data · updated hourly'
+          ? 'Source: Senate.gov roll-call XML'
+          : 'Source: Congress.gov House roll-call data'
       }
     >
+      <SenateVoteFreshnessClient chamber={chamber} className="mb-3" />
       {loading ? (
         <SectionSkeleton rows={5} />
       ) : error || groups.length === 0 ? (

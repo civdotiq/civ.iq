@@ -133,6 +133,7 @@ interface ComparisonEnvelope {
   votingRecord?: {
     totalVotes?: number;
     partyLoyaltyScore?: number | null;
+    dataAsOf?: string | null;
   } | null;
   effectiveness?: {
     current?: {
@@ -161,6 +162,7 @@ function toVoting(envelope: ComparisonEnvelope | null): CompareVoting | null {
     partyLoyaltyScore: countOrNull(voting?.partyLoyaltyScore),
     billsSponsored: countOrNull(current?.billsSponsored),
     billsEnacted: countOrNull(current?.billsEnacted),
+    votesDataAsOf: voting?.dataAsOf ?? null,
   };
 }
 

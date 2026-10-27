@@ -24,6 +24,8 @@ export interface CompareVoting {
   partyLoyaltyScore: number | null;
   billsSponsored: number | null;
   billsEnacted: number | null;
+  /** Date of the newest roll call behind the vote numbers. */
+  votesDataAsOf: string | null;
 }
 
 export interface CompareFinance {

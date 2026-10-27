@@ -15,6 +15,10 @@
  */
 
 import type { RecordCardData } from './record-card-data';
+import type { SenateVoteFreshness } from '@/features/representatives/services/senate-vote-freshness';
+import { formatDateOnly } from '@/lib/utils/date-only';
+
+const SHORT_DATE: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
 
 const SITE = 'https://civdotiq.org';
 
@@ -60,6 +64,7 @@ const STYLES = `
   .bar8 { height: 8px; background: #000; }
   .bar3 { height: 3px; background: #000; }
   .rows { padding: 8px 24px 16px; }
+  .notice { margin: 8px 0 0; border-left: 4px solid #d97706; background: #fffbeb; padding: 8px 12px; font-size: 12px; }
   .cols { display: grid; grid-template-columns: 1fr 96px 96px; gap: 0 16px; }
   .col-h { padding: 8px 0 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
            text-transform: uppercase; color: #6b7280; text-align: right; }
@@ -78,7 +83,10 @@ const STYLES = `
          white-space: nowrap; }
 `;
 
-export function renderRecordEmbed(data: RecordCardData): string {
+export function renderRecordEmbed(
+  data: RecordCardData,
+  senateVoteFreshness?: SenateVoteFreshness | null
+): string {
   const { member, legislation, voting, money, districtMoney } = data;
   const p = member.party.toUpperCase();
   const chipColor = p.startsWith('D') ? '#2563eb' : p.startsWith('R') ? '#e11d07' : '#6b7280';
@@ -146,6 +154,15 @@ export function renderRecordEmbed(data: RecordCardData): string {
   }
 
   const asOf = voting ? fmtDate(voting.dataAsOf) : fmtDate(data.generatedAt);
+  // Senators: when the stored Senate votes were last confirmed, and the
+  // notice only when the Congressional Record lists votes we don't have.
+  const senate = member.chamber === 'Senate' ? senateVoteFreshness : null;
+  const checked = senate?.checkedAt
+    ? ` · Senate votes checked ${esc(formatDateOnly(senate.checkedAt, SHORT_DATE))}`
+    : '';
+  const missing = senate?.missing
+    ? `<div class="notice">The Senate has held roll-call votes${senate.missing.ourLatestDate ? ` since ${esc(formatDateOnly(senate.missing.ourLatestDate, SHORT_DATE))}` : ''} that aren&#39;t counted here yet. The Congressional Record lists Senate votes through No. ${senate.missing.recordTotal}; this card has through No. ${senate.missing.ourLatestRoll}.</div>`
+    : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -168,10 +185,10 @@ export function renderRecordEmbed(data: RecordCardData): string {
       <div class="kicker">Incumbent<br>Record</div>
     </div>
     <div class="bar8"></div>
-    <div class="rows">${rows.join('')}</div>
+    <div class="rows">${rows.join('')}${missing}</div>
     <div class="bar3"></div>
     <div class="foot">
-      <span>Congress.gov · FEC · USASpending · ${member.chamber === 'House' ? 'House Clerk' : 'Senate.gov'}<br>as of ${esc(asOf)} · <a href="${SITE}/methodology" target="_blank" rel="noopener">Methodology</a></span>
+      <span>Congress.gov · FEC · USASpending · ${member.chamber === 'House' ? 'House Clerk' : 'Senate.gov'}<br>as of ${esc(asOf)}${checked} · <a href="${SITE}/methodology" target="_blank" rel="noopener">Methodology</a></span>
       <a class="cta" href="${SITE}${recordPath}" target="_blank" rel="noopener">Full record →</a>
     </div>
   </div>

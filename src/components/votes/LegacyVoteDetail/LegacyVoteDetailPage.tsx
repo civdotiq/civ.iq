@@ -35,6 +35,8 @@ import {
   voteMeasureBillHref,
 } from '@/lib/votes/vote-links';
 import { explainVoteOutcome, requiredMajorityLabel } from '@/lib/votes/vote-wording';
+import { SenateVoteFreshness } from '@/components/votes/SenateVoteFreshness';
+import type { SenateVoteFreshness as VoteFreshness } from '@/features/representatives/services/senate-vote-freshness';
 
 /**
  * "HR 1234", but "PN12-1" rather than "PN PN12-1": Senate roll calls carry a
@@ -51,6 +53,8 @@ interface LegacyVoteDetailPageProps {
   voteDetail: UnifiedVoteDetail | null;
   fromBioguideId?: string;
   fromRepName?: string;
+  /** Senate votes: "Vote held · Checked" (one past vote is never incomplete, so no notice). */
+  senateVoteFreshness?: VoteFreshness | null;
 }
 
 export function LegacyVoteDetailPage({
@@ -58,6 +62,7 @@ export function LegacyVoteDetailPage({
   voteDetail,
   fromBioguideId,
   fromRepName,
+  senateVoteFreshness,
 }: LegacyVoteDetailPageProps) {
   if (!voteDetail) {
     return (
@@ -377,6 +382,13 @@ export function LegacyVoteDetailPage({
               </div>
             )}
           </div>
+          {voteDetail.chamber === 'Senate' && (
+            <SenateVoteFreshness
+              freshness={senateVoteFreshness}
+              voteDate={voteDetail.date}
+              className="mt-3"
+            />
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

@@ -10,6 +10,8 @@ import {
   getRepresentativeSummary,
 } from '@/services/batch/representative-batch.service';
 import { container, initializeServices } from '@/core/services/container';
+import { senateVoteFreshnessFields } from '@/features/representatives/services/senate-vote-freshness';
+import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 
 // ISR: Revalidate every day - batch data is composite of multiple cached endpoints
 export const dynamic = 'force-dynamic';
@@ -132,12 +134,18 @@ export async function GET(
   try {
     if (summaryOnly) {
       // Use optimized summary service for quick stats
-      const summary = await getRepresentativeSummary(upperBioguideId);
+      const [summary, member] = await Promise.all([
+        getRepresentativeSummary(upperBioguideId),
+        getEnhancedRepresentative(upperBioguideId),
+      ]);
+      // Read outside the summary cache, so it is never older than the note.
+      const voteFreshness = await senateVoteFreshnessFields(member?.chamber);
 
       return NextResponse.json(
         {
           success: true,
           data: summary,
+          ...(voteFreshness ? { voteFreshness } : {}),
           metadata: {
             bioguideId: upperBioguideId,
             type: 'summary',

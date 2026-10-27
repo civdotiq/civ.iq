@@ -30,6 +30,7 @@ import { NewsSection } from './NewsSection';
 import { ProfileSidebar } from './ProfileSidebar';
 import type { ProfileBatchResponse, ProfileSummaryResponse } from './types';
 import { isSubcommitteeId } from '@/lib/committee-id';
+import { useSenateVoteFreshness } from '@/components/votes/SenateVoteFreshnessClient';
 
 interface ProfileRedesignProps {
   representative: EnhancedRepresentative;
@@ -115,6 +116,8 @@ export function ProfileRedesign({ representative, lede }: ProfileRedesignProps) 
       errorRetryInterval: 2000,
     }
   );
+
+  const senateVoteFreshness = useSenateVoteFreshness(representative.chamber);
 
   // Freshness signal so the Profile drill-down can distinguish "no committees"
   // from "Congress.gov temporarily unreachable" (same contract as classic layout).
@@ -235,6 +238,7 @@ export function ProfileRedesign({ representative, lede }: ProfileRedesignProps) 
                       ? undefined
                       : `/representative/${representative.bioguideId}/record`
                   }
+                  chamber={representative.chamber}
                 />
               </div>
 
@@ -288,6 +292,7 @@ export function ProfileRedesign({ representative, lede }: ProfileRedesignProps) 
                         ...(bills?.cosponsored?.bills ?? []),
                       ].map(b => b.introducedDate),
                       finance: finance?.metadata,
+                      senateVotesCheckedAt: senateVoteFreshness?.checkedAt,
                     })}
                   />
                 </main>

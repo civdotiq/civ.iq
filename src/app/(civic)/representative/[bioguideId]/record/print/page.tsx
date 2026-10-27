@@ -25,6 +25,8 @@ import { PrintButton } from '@/features/record-card/components/PrintButton';
 import { fmtDate, fmtInt, fmtMoney, fmtMoneyCompact, fmtPct } from '@/features/record-card/format';
 import { getStateName } from '@/lib/data/us-states';
 import { partyAdjective } from '@/lib/party-label';
+import { SenateVoteFreshness } from '@/components/votes/SenateVoteFreshness';
+import { getSenateVoteFreshness } from '@/features/representatives/services/senate-vote-freshness';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600;
@@ -82,6 +84,8 @@ export default async function RecordCardPrintPage({
       ? `${member.state}-${(member.district ?? '').padStart(2, '0')} · U.S. House`
       : `${getStateName(member.state) ?? member.state} — U.S. Senate`;
   const recordUrl = `https://civdotiq.org/representative/${member.bioguideId}/record`;
+
+  const senateVoteFreshness = member.chamber === 'Senate' ? await getSenateVoteFreshness() : null;
 
   const asOfParts: string[] = [];
   if (legislation) asOfParts.push(`Bills as of ${fmtDate(legislation.dataAsOf)}`);
@@ -216,6 +220,9 @@ export default async function RecordCardPrintPage({
                 {member.chamber === 'House' ? 'House Clerk' : 'Senate.gov'}
               </span>
             </div>
+            {member.chamber === 'Senate' && (
+              <SenateVoteFreshness freshness={senateVoteFreshness} className="py-1" />
+            )}
             {voting ? (
               <>
                 <div className={ROW}>

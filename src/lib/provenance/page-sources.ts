@@ -176,6 +176,8 @@ export interface ProfileSourceInput {
   /** Introduced dates of the bills the Bills section shows. */
   billIntroducedDates?: string[];
   finance?: { lastUpdated?: string; coverageEndDate?: string } | null;
+  /** Senators: when the stored Senate votes were last confirmed complete. */
+  senateVotesCheckedAt?: string | null;
 }
 
 /**
@@ -196,7 +198,15 @@ export function profilePageSources(input: ProfileSourceInput): DataSource[] {
   ];
 
   if (input.chamber === 'Senate') {
-    sources.push(registrySource('senate', { covers: 'Recent roll-call votes', asOf: voteAsOf }));
+    const checked = input.senateVotesCheckedAt
+      ? `Checked ${fmt(input.senateVotesCheckedAt)}`
+      : undefined;
+    sources.push(
+      registrySource('senate', {
+        covers: 'Recent roll-call votes',
+        asOf: [voteAsOf, checked].filter(Boolean).join(' · ') || undefined,
+      })
+    );
     sources.push(
       registrySource('congressGov', { covers: 'Sponsored and cosponsored bills', asOf: billAsOf })
     );

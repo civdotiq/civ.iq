@@ -18,6 +18,7 @@ import logger from '@/lib/logging/simple-logger';
 import { renderScorecard, renderDistrictCard } from '@/lib/mesh/protocol/embed';
 import { renderRecordEmbed } from '@/features/record-card/embed';
 import { getRecordCardData } from '@/features/record-card/record-card-data';
+import { getSenateVoteFreshness } from '@/features/representatives/services/senate-vote-freshness';
 import { hydrateNeighborhood } from '@/lib/graph/hydrator';
 import { buildDistrictProfile } from '@/lib/mesh/district-profile';
 import { ApiErrors } from '@/lib/api/error-responses';
@@ -87,7 +88,9 @@ async function handleRecord(bioguideId: string): Promise<NextResponse> {
     return ApiErrors.notFound('Representative', bioguideId);
   }
 
-  return new NextResponse(renderRecordEmbed(data), {
+  const senateVoteFreshness =
+    data.member.chamber === 'Senate' ? await getSenateVoteFreshness() : null;
+  return new NextResponse(renderRecordEmbed(data, senateVoteFreshness), {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=1800',

@@ -19,6 +19,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { BreadcrumbsWithContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
 import { RecordCardLabel } from '@/features/record-card/components/RecordCardLabel';
 import { getRecordCardData } from '@/features/record-card/record-card-data';
+import { getSenateVoteFreshness } from '@/features/representatives/services/senate-vote-freshness';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { isFormerMember } from '@/features/representatives/utils/former-member';
 import { getStateName, houseSeatLabel } from '@/lib/data/us-states';
@@ -91,6 +92,7 @@ export default async function RecordCardPage({
   const { bioguideId } = await params;
   const data = await getData(bioguideId);
   const { member } = data;
+  const senateVoteFreshness = member.chamber === 'Senate' ? await getSenateVoteFreshness() : null;
 
   const role = member.chamber === 'Senate' ? 'Senator' : 'Representative';
   const canonicalUrl = `https://civdotiq.org/representative/${member.bioguideId}/record`;
@@ -136,7 +138,7 @@ export default async function RecordCardPage({
         />
 
         <div className="mt-grid-3">
-          <RecordCardLabel data={data} />
+          <RecordCardLabel data={data} senateVoteFreshness={senateVoteFreshness} />
         </div>
 
         <p className="mt-grid-3 text-sm tracking-[0.025em] text-gray-600">
