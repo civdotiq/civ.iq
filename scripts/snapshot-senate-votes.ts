@@ -43,7 +43,7 @@ function argValue(flag: string): string | undefined {
 }
 
 async function main(): Promise<void> {
-  const congress = parseInt(argValue('--congress') ?? '119', 10);
+  const congress = Number.parseInt(argValue('--congress') ?? '119', 10);
   const redis = getRedisCache();
 
   const menu = await redis.get<SenateVoteMenu>(senateMenuKey(congress));
@@ -54,7 +54,7 @@ async function main(): Promise<void> {
   const perSession: Record<string, number> = {};
 
   for (const [session, entries] of Object.entries(menu.sessions)) {
-    const sessionNum = parseInt(session, 10);
+    const sessionNum = Number.parseInt(session, 10);
     perSession[session] = entries.length;
     for (let i = 0; i < entries.length; i += READ_BATCH) {
       const batch = entries.slice(i, i + READ_BATCH);
@@ -78,7 +78,7 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log(`Menu updatedAt ${menu.updatedAt}; menu entries per session:`, perSession);
+  console.log('Menu entries per session:', perSession);
   console.log(`Rolls read: ${rolls.length}`);
   if (problems.length > 0) {
     console.error(`Refusing to write: ${problems.length} problem(s)`);
@@ -88,7 +88,7 @@ async function main(): Promise<void> {
   }
 
   rolls.sort((a, b) => a.session - b.session || a.rollCallNumber - b.rollCallNumber);
-  const dates = rolls.map(r => r.date).sort();
+  const dates = rolls.map(r => r.date).sort((a, b) => a.localeCompare(b));
   const file: SenateVotesSnapshotFile = {
     congress,
     generatedAt: new Date().toISOString(),
@@ -119,7 +119,7 @@ async function main(): Promise<void> {
     rollsPerSession,
     memberVotes,
     firstVoteDate: dates[0] ?? null,
-    lastVoteDate: dates[dates.length - 1] ?? null,
+    lastVoteDate: dates.at(-1) ?? null,
     compressedBytes: compressed.length,
     sha256: createHash('sha256').update(json).digest('hex'),
     source: file.source,
@@ -129,7 +129,10 @@ async function main(): Promise<void> {
   await redis.disconnect();
 }
 
-main().catch(error => {
-  console.error(error);
-  process.exit(1);
-});
+// The Redis client keeps timers open, so end the process explicitly.
+main()
+  .then(() => process.exit(0))
+  .catch(error => {
+    console.error(error);
+    process.exit(1);
+  });
