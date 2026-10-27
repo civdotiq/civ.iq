@@ -89,7 +89,7 @@ Live status for the sources with a health probe is reported at `/api/health`.
 | ---------------------------- | -------------------------- | -------- | -------------------- | ------------------------------------------------- |
 | Members of Congress          | Congress.gov v3            | complete | weekly bioguide sync | `/api/representatives?state=MI&district=12`       |
 | House roll call votes        | House Clerk XML            | complete | per session          | `/api/vote/[voteId]`                              |
-| Senate roll call votes       | Senate.gov XML             | complete | per session          | `/api/senate-votes/[voteNumber]`                  |
+| Senate roll call votes       | Senate.gov XML (stored)    | complete | per session          | `/api/v1/votes/senate-119-2-253`                  |
 | Bills (text, sponsors, etc.) | Congress.gov v3            | complete | continuous           | `/api/v1/bills`                                   |
 | Committee assignments        | Congress.gov v3            | complete | continuous           | `/api/representative/[bioguideId]/committees`     |
 | Hearing transcripts          | GovInfo.gov                | complete | per hearing          | `/api/govinfo/hearings`                           |

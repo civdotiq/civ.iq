@@ -7,16 +7,22 @@
  * Public API v1 — Vote Detail
  *
  * Returns vote data for a specific roll-call vote.
- * Supports formats: "house-119-116", "senate-119-42", or numeric IDs.
+ * Supports formats: "house-119-116", "senate-119-42", and the same with a
+ * session ("senate-119-2-42"). Without a session, the likeliest one is tried
+ * first.
+ *
+ * Senate votes come from the stored copy of senate.gov's roll-call XML (the
+ * same one the vote pages read), because senate.gov blocks requests from
+ * Vercel. House votes are still fetched from clerk.house.gov.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { XMLParser } from 'fast-xml-parser';
 import { v1Success, v1Error } from '@/lib/api/v1-response';
-import { sessionsToTry } from '@/lib/services/vote.service';
+import { lookupVote, sessionsToTry, type UnifiedVoteDetail } from '@/lib/services/vote.service';
 import { isServedCongress } from '@/lib/data/congressional-constants';
 import logger from '@/lib/logging/simple-logger';
-import type { HouseXmlVoteData, SenateXmlVoteData } from '@/types/xml-vote-data';
+import type { HouseXmlVoteData } from '@/types/xml-vote-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,15 +37,18 @@ interface VotePosition {
 function parseVoteId(voteId: string): {
   chamber: 'house' | 'senate';
   congress: string;
+  session?: string;
   rollNumber: string;
 } | null {
-  // Format: "house-119-116" or "senate-119-42"
-  const match = voteId.match(/^(house|senate)-(\d+)-(\d+)$/i);
-  if (match?.[1] && match[2] && match[3]) {
+  // Format: "house-119-116" or "senate-119-42", optionally with a session
+  // ("senate-119-2-42")
+  const match = voteId.match(/^(house|senate)-(\d+)(?:-([12]))?-(\d+)$/i);
+  if (match?.[1] && match[2] && match[4]) {
     return {
       chamber: match[1].toLowerCase() as 'house' | 'senate',
       congress: match[2],
-      rollNumber: match[3],
+      session: match[3],
+      rollNumber: match[4],
     };
   }
   return null;
@@ -59,27 +68,45 @@ export async function GET(
     const parsed = parseVoteId(voteId);
     if (!parsed) {
       return NextResponse.json(
-        v1Error(400, 'Invalid vote ID format. Expected: house-119-116 or senate-119-42'),
+        v1Error(
+          400,
+          'Invalid vote ID format. Expected: house-119-116, senate-119-42 or senate-119-2-42'
+        ),
         { status: 400 }
       );
     }
 
-    const { chamber, congress, rollNumber } = parsed;
+    const { chamber, congress, session, rollNumber } = parsed;
 
     // Older Congresses are out of scope: no vote page, no API answer.
     if (!isServedCongress(Number(congress))) {
       return NextResponse.json(v1Error(404, 'Vote not found'), { status: 404 });
     }
 
+    if (chamber === 'senate') {
+      const lookup = await lookupVote(
+        `senate-${congress}-${session ? `${session}-` : ''}${rollNumber}`
+      );
+      if (lookup.status === 'not_found') {
+        return NextResponse.json(v1Error(404, 'Vote not found'), { status: 404 });
+      }
+      if (lookup.status === 'unavailable') {
+        return NextResponse.json(v1Error(502, 'Failed to fetch vote data'), { status: 502 });
+      }
+      logger.info('v1 vote detail', { voteId, chamber });
+      return NextResponse.json(v1Success(senateVoteToV1(lookup.vote, voteId), 'senate.gov'), {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      });
+    }
+
     // Roll-call numbers restart each session; the vote ID carries no session,
     // so try the likeliest session first and fall back to the other.
     let xmlText: string | null = null;
     let lastStatus = 404;
-    for (const session of sessionsToTry(congress)) {
-      const voteUrl =
-        chamber === 'house'
-          ? `https://clerk.house.gov/evs/${getYearFromCongress(parseInt(congress)) + (session - 1)}/roll${rollNumber.padStart(3, '0')}.xml`
-          : `https://www.senate.gov/legislative/LIS/roll_call_votes/vote${congress}${session}/vote_${congress}_${session}_${rollNumber.padStart(5, '0')}.xml`;
+    for (const trySession of sessionsToTry(congress, session)) {
+      const voteUrl = `https://clerk.house.gov/evs/${getYearFromCongress(parseInt(congress)) + (trySession - 1)}/roll${rollNumber.padStart(3, '0')}.xml`;
 
       const response = await fetch(voteUrl, {
         headers: { 'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)' },
@@ -91,8 +118,8 @@ export async function GET(
       }
 
       const body = await response.text();
-      // Both chambers can serve a 200 HTML error page for missing votes
-      if (body.includes('rollcall-vote') || body.includes('roll_call_vote')) {
+      // The Clerk can serve a 200 HTML error page for missing votes
+      if (body.includes('rollcall-vote')) {
         xmlText = body;
         break;
       }
@@ -107,14 +134,7 @@ export async function GET(
     }
     const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
     const xmlData = parser.parse(xmlText);
-
-    // Parse based on chamber
-    let data;
-    if (chamber === 'house') {
-      data = parseHouseVote(xmlData as HouseXmlVoteData, voteId, congress, rollNumber);
-    } else {
-      data = parseSenateVote(xmlData as SenateXmlVoteData, voteId, congress, rollNumber);
-    }
+    const data = parseHouseVote(xmlData as HouseXmlVoteData, voteId, congress, rollNumber);
 
     if (!data) {
       return NextResponse.json(v1Error(500, 'Failed to parse vote data'), { status: 500 });
@@ -191,47 +211,32 @@ function parseHouseVote(
   };
 }
 
-function parseSenateVote(
-  xmlData: SenateXmlVoteData,
-  voteId: string,
-  congress: string,
-  rollNumber: string
-) {
-  const rollcall = xmlData['roll_call_vote'];
-  if (!rollcall) return null;
-
-  const positions: VotePosition[] = [];
-  const members = rollcall.members?.member;
-  const memberList = Array.isArray(members) ? members : members ? [members] : [];
-
-  for (const member of memberList) {
-    positions.push({
-      name: `${member.first_name ?? ''} ${member.last_name ?? ''}`.trim(),
-      party: member.party ?? '',
-      state: member.state ?? '',
-      vote: member.vote_cast ?? '',
-      bioguideId: member.lis_member_id ?? undefined,
-    });
-  }
-
-  const count = rollcall.count ?? {};
-
+/** Map a stored Senate roll call to the v1 vote shape. */
+function senateVoteToV1(vote: UnifiedVoteDetail, voteId: string) {
+  const session = Number.parseInt(vote.session, 10);
   return {
     voteId,
     chamber: 'Senate',
-    congress: parseInt(congress),
-    rollNumber: parseInt(rollNumber),
-    question: rollcall.vote_question_text ?? rollcall.question ?? null,
-    description: rollcall.vote_document_text ?? rollcall.title ?? null,
-    result: rollcall.vote_result_text ?? rollcall.vote_result ?? null,
-    date: rollcall.vote_date ?? null,
+    congress: Number.parseInt(vote.congress, 10),
+    session,
+    rollNumber: vote.rollNumber,
+    question: vote.question || null,
+    description: vote.description || null,
+    result: vote.result || null,
+    date: vote.date || null,
     totals: {
-      yea: parseInt(count.yeas ?? '0'),
-      nay: parseInt(count.nays ?? '0'),
-      present: parseInt(count.present ?? '0'),
-      notVoting: parseInt(count.absent ?? '0'),
+      yea: vote.yeas,
+      nay: vote.nays,
+      present: vote.present,
+      notVoting: vote.absent,
     },
-    positions,
-    url: `https://civdotiq.org/vote/${voteId}`,
+    positions: vote.members.map((m): VotePosition => ({
+      name: m.fullName,
+      party: m.party,
+      state: m.state,
+      vote: m.position,
+      bioguideId: m.bioguideId,
+    })),
+    url: `https://civdotiq.org/vote/senate-${vote.congress}-${session}-${vote.rollNumber}`,
   };
 }
