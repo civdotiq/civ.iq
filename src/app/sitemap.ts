@@ -6,6 +6,8 @@
  * - Granular priorities based on search intent
  * - Accurate change frequencies
  * - Comprehensive page coverage
+ * - lastModified only where the data gives a real date for the page's facts.
+ *   Never the build or request time: a URL with no known date has none.
  */
 
 import type { MetadataRoute } from 'next';
@@ -98,8 +100,14 @@ interface CommitteeData {
   committeeId: string;
   committeeName: string;
   chamber: string;
-  lastUpdated?: string;
   subcommittees?: Array<{ code: string; name: string }>;
+}
+
+/** A YYYY-MM-DD date from upstream data, or undefined when absent or malformed. */
+function sourceDate(value: unknown): Date | undefined {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}/.test(value)) return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
 // Type the imported data
@@ -107,7 +115,6 @@ const committees = committeesData.committees as Record<string, CommitteeData>;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
-  const now = new Date();
 
   // ===========================================
   // TIER 1: HIGHEST PRIORITY (1.0) - Core Pages
@@ -116,7 +123,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Homepage - Most important
   entries.push({
     url: BASE_URL,
-    lastModified: now,
     changeFrequency: 'daily',
     priority: 1.0,
   });
@@ -144,7 +150,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
           entries.push({
             url: `${BASE_URL}/representative/${rep.bioguideId}`,
-            lastModified: now,
             changeFrequency: 'weekly',
             priority: isSenator ? 0.95 : isHighPopState ? 0.9 : 0.85,
           });
@@ -152,7 +157,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           // Incumbent Record Card
           entries.push({
             url: `${BASE_URL}/representative/${rep.bioguideId}/record`,
-            lastModified: now,
             changeFrequency: 'weekly',
             priority: isSenator ? 0.9 : isHighPopState ? 0.85 : 0.8,
           });
@@ -179,7 +183,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             if (qSlug === 'stock-trades' && !hasTrades(rep)) continue;
             entries.push({
               url: `${BASE_URL}/ask/${qSlug}/${rep.bioguideId}`,
-              lastModified: now,
               changeFrequency: 'weekly',
               priority: 0.75,
             });
@@ -199,7 +202,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (!areaBills?.total) continue;
     entries.push({
       url: `${BASE_URL}/ask/topic-bills/${slugifyPolicyArea(area)}`,
-      lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.7,
     });
@@ -211,7 +213,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const qSlug of committeeSlugs) {
       entries.push({
         url: `${BASE_URL}/ask/${qSlug}/${code}`,
-        lastModified: now,
         changeFrequency: 'weekly',
         priority: 0.7,
       });
@@ -257,7 +258,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const topic of topicPages) {
     entries.push({
       url: `${BASE_URL}/topics/${topic}`,
-      lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.75,
     });
@@ -270,7 +270,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const slug = term.term.toLowerCase().replace(/\s+/g, '-');
     entries.push({
       url: `${BASE_URL}/glossary/${slug}`,
-      lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.6,
     });
@@ -282,7 +281,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const lesson of EDUCATION_CURRICULUM) {
     entries.push({
       url: `${BASE_URL}/education/${lesson.id.toLowerCase()}`,
-      lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.55,
     });
@@ -307,7 +305,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Industry hub page
   entries.push({
     url: `${BASE_URL}/industry`,
-    lastModified: now,
     changeFrequency: 'weekly',
     priority: 0.7,
   });
@@ -315,7 +312,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const sector of industrySectors) {
     entries.push({
       url: `${BASE_URL}/industry/${sector}`,
-      lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.6,
     });
@@ -326,7 +322,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // ===========================================
   entries.push({
     url: `${BASE_URL}/embed-docs`,
-    lastModified: now,
     changeFrequency: 'monthly',
     priority: 0.5,
   });
@@ -365,7 +360,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const page of staticPages) {
     entries.push({
       url: `${BASE_URL}${page.path}`,
-      lastModified: now,
       changeFrequency: page.freq,
       priority: page.priority,
     });
@@ -378,7 +372,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const race of RACES_2026) {
     entries.push({
       url: `${BASE_URL}/elections/${race.raceId}`,
-      lastModified: now,
       changeFrequency: 'weekly',
       priority: race.office === 'S' ? 0.7 : 0.6,
     });
@@ -429,7 +422,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (let roll = 1; roll <= maxSenateRoll; roll++) {
       entries.push({
         url: `${BASE_URL}/vote/senate-${congress}-${session}-${roll}`,
-        lastModified: now,
         changeFrequency: 'monthly',
         priority: 0.55,
       });
@@ -438,7 +430,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (let roll = 1; roll <= maxHouseRoll; roll++) {
       entries.push({
         url: `${BASE_URL}/vote/house-${congress}-${session}-${roll}`,
-        lastModified: now,
         changeFrequency: 'monthly',
         priority: 0.55,
       });
@@ -450,7 +441,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const page of mainPages) {
     entries.push({
       url: `${BASE_URL}${page.path}`,
-      lastModified: now,
       changeFrequency: page.freq,
       priority: page.priority,
     });
@@ -465,7 +455,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const isHighPop = HIGH_POP_STATES.includes(state);
     entries.push({
       url: `${BASE_URL}/delegation/${state}`,
-      lastModified: now,
       changeFrequency: 'weekly',
       priority: isHighPop ? 0.8 : 0.7,
     });
@@ -483,14 +472,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const code = state.toLowerCase();
     entries.push({
       url: `${BASE_URL}/digest/${code}`,
-      lastModified: now,
       changeFrequency: 'weekly',
       priority: isHighPop ? 0.7 : 0.6,
     });
     for (const week of digestWeeks) {
       entries.push({
         url: `${BASE_URL}/digest/${code}/${week}`,
-        lastModified: now,
         changeFrequency: 'monthly',
         priority: isHighPop ? 0.6 : 0.5,
       });
@@ -503,7 +490,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const isHighPop = HIGH_POP_STATES.includes(districtId.slice(0, 2));
     entries.push({
       url: `${BASE_URL}/districts/${districtId}`,
-      lastModified: now,
       changeFrequency: 'monthly',
       priority: isHighPop ? 0.7 : 0.6,
     });
@@ -518,7 +504,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Main committee page
     entries.push({
       url: `${BASE_URL}/committee/${code}`,
-      lastModified: committee.lastUpdated ? new Date(committee.lastUpdated) : now,
       changeFrequency: 'weekly',
       priority: committee.chamber === 'Joint' ? 0.6 : 0.7,
     });
@@ -528,7 +513,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       for (const sub of committee.subcommittees) {
         entries.push({
           url: `${BASE_URL}/committee/${sub.code}`,
-          lastModified: committee.lastUpdated ? new Date(committee.lastUpdated) : now,
           changeFrequency: 'monthly',
           priority: 0.5,
         });
@@ -547,7 +531,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Main state legislature page
     entries.push({
       url: `${BASE_URL}/state-legislature/${stateLower}`,
-      lastModified: now,
       changeFrequency: 'weekly',
       priority: isHighPop ? 0.7 : 0.6,
     });
@@ -555,7 +538,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // State committees page
     entries.push({
       url: `${BASE_URL}/state-legislature/${stateLower}/committees`,
-      lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.4,
     });
@@ -563,7 +545,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Whole-state overview (lowercase is canonical; /states/MI 308s here)
     entries.push({
       url: `${BASE_URL}/states/${stateLower}`,
-      lastModified: now,
       changeFrequency: 'weekly',
       priority: isHighPop ? 0.7 : 0.6,
     });
@@ -576,13 +557,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push(
       {
         url: `${BASE_URL}/state-legislature/${code}`,
-        lastModified: now,
         changeFrequency: 'weekly',
         priority: 0.6,
       },
       {
         url: `${BASE_URL}/states/${code}`,
-        lastModified: now,
         changeFrequency: 'weekly',
         priority: 0.6,
       }
@@ -610,7 +589,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         if (bill.congress && bill.type && bill.number) {
           entries.push({
             url: `${BASE_URL}${buildBillUrl(bill.congress, bill.type, bill.number)}`,
-            lastModified: bill.latestAction?.date ? new Date(bill.latestAction.date) : now,
+            lastModified: sourceDate(bill.latestAction?.actionDate),
             changeFrequency: 'daily',
             priority: 0.6,
           });
@@ -629,7 +608,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // State districts index page
   entries.push({
     url: `${BASE_URL}/state-districts`,
-    lastModified: now,
     changeFrequency: 'monthly',
     priority: 0.6,
   });
@@ -637,7 +615,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // State bills search page
   entries.push({
     url: `${BASE_URL}/state-bills`,
-    lastModified: now,
     changeFrequency: 'daily',
     priority: 0.6,
   });
@@ -649,7 +626,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // State bills by state
     entries.push({
       url: `${BASE_URL}/state-bills/${stateLower}`,
-      lastModified: now,
       changeFrequency: 'daily',
       priority: 0.5,
     });
@@ -660,7 +636,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const { chamber, district } of stateDistricts[i] ?? []) {
       entries.push({
         url: `${BASE_URL}/state-districts/${stateLower}/${chamber}/${encodeURIComponent(district)}`,
-        lastModified: now,
         changeFrequency: 'monthly',
         priority: 0.4,
       });

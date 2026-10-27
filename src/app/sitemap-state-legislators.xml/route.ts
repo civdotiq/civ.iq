@@ -37,13 +37,13 @@ export async function GET() {
     return new NextResponse('State legislator roster unavailable', { status: 503 });
   }
 
-  const lastmod = corpus.upstreamCommittedAt.slice(0, 10);
+  // No <lastmod>: the corpus date is when Open States last committed anything,
+  // not when this legislator's record changed.
   const urls = corpus.people
     .map(person => {
       const loc = `${BASE_URL}${buildStateLegislatorUrl(person.jurisdiction, person.id, person.name)}`;
       return `  <url>
     <loc>${escapeXml(loc)}</loc>
-    <lastmod>${lastmod}</lastmod>
   </url>`;
     })
     .join('\n');
