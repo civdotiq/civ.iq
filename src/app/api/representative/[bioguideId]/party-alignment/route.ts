@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { analyzePartyLineAlignment } from '@/lib/intelligence/analyzers/party-line-analyzer';
+import { senateVoteFreshnessFields } from '@/features/representatives/services/senate-vote-freshness';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -56,6 +57,9 @@ export async function GET(
       votesAnalyzed: insight.votesAnalyzed,
     });
 
+    // Read outside the insight cache, so it is never older than the note.
+    const voteFreshness = await senateVoteFreshnessFields(insight.chamber);
+
     return NextResponse.json(
       {
         overall_alignment: Math.round(insight.alignmentRate * 1000) / 10,
@@ -66,6 +70,7 @@ export async function GET(
         peer_count: insight.peerCount,
         confidence: Math.round(insight.confidence * 100) / 100,
         data_as_of: insight.dataAsOf,
+        ...(voteFreshness ? { vote_freshness: voteFreshness } : {}),
         methodology: insight.methodology,
         disclaimer: insight.disclaimer,
       },

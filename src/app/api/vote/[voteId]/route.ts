@@ -18,6 +18,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { getVoteDetailsService, type UnifiedVoteDetail } from '@/lib/services/vote.service';
 import { summarizeVoteTally } from '@/lib/vote-tally';
+import {
+  senateVoteFreshnessFields,
+  type VoteFreshnessFields,
+} from '@/features/representatives/services/senate-vote-freshness';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +29,8 @@ interface VoteResponse {
   vote: UnifiedVoteDetail | null;
   success: boolean;
   error?: string;
+  /** Senate votes: when the stored Senate votes were last confirmed. */
+  voteFreshness?: VoteFreshnessFields;
   metadata: {
     timestamp: string;
     requestId: string;
@@ -94,9 +100,14 @@ export async function GET(
       );
     }
 
+    const voteFreshness = await senateVoteFreshnessFields(
+      voteDetail.chamber,
+      Number.parseInt(voteDetail.congress, 10) || undefined
+    );
     const successResponse: VoteResponse = {
       vote: voteDetail,
       success: true,
+      ...(voteFreshness ? { voteFreshness } : {}),
       metadata: buildMetadata(startTime),
     };
 

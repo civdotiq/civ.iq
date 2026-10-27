@@ -1,0 +1,138 @@
+name: Senate Vote Freshness Alert
+
+# The app checks the Congressional Record twice a day for Senate votes we
+# don't have (/api/cron/senate-vote-freshness). Vercel has no GitHub token,
+# so this workflow reads that check's entry in /api/health once a day and
+# opens an issue when it is "down" (no successful check for 48 hours, i.e.
+# two days in a row). A comment is added instead if the issue is already
+# open, and the issue auto-closes on the next good day.
+
+on:
+  schedule:
+    - cron: '0 16 * * *'
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Target app base URL'
+        required: false
+        default: 'https://civdotiq.org'
+      force_failure:
+        description: >-
+          Treat the check as down without reading the site, to test that the
+          issue opens (run again without it to test auto-close).
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Read the freshness check from /api/health
+        id: health
+        env:
+          BASE_URL: ${{ inputs.base_url || 'https://civdotiq.org' }}
+          FORCE_FAILURE: ${{ inputs.force_failure && 'true' || 'false' }}
+          # Skips the Vercel Bot Protection challenge (firewall bypass rule).
+          FIREWALL_BYPASS_TOKEN: ${{ secrets.FIREWALL_BYPASS_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ "$FORCE_FAILURE" = "true" ]; then
+            echo 'status=down' >> "$GITHUB_OUTPUT"
+            echo 'error=Forced failure (workflow_dispatch test run)' >> "$GITHUB_OUTPUT"
+            echo 'last_success=n/a (test run)' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          body=$(curl -sS --max-time 60 -H "x-civiq-bypass: $FIREWALL_BYPASS_TOKEN" "$BASE_URL/api/health" || true)
+          entry=$(echo "$body" | jq -c '.sources[] | select(.name == "Senate vote freshness")' 2>/dev/null || true)
+          if [ -z "$entry" ]; then
+            # The site itself didn't answer with the entry; that is a failure too.
+            echo 'status=down' >> "$GITHUB_OUTPUT"
+            echo 'error=/api/health has no "Senate vote freshness" entry' >> "$GITHUB_OUTPUT"
+            echo 'last_success=unknown' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "status=$(echo "$entry" | jq -r '.status')" >> "$GITHUB_OUTPUT"
+          echo "error=$(echo "$entry" | jq -r '.error // "none"' | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+          echo "last_success=$(echo "$entry" | jq -r '.lastSuccessfulFetch // "never"')" >> "$GITHUB_OUTPUT"
+          echo "$entry" | jq .
+
+      - name: Open or update the issue
+        if: steps.health.outputs.status == 'down'
+        uses: actions/github-script@v9
+        env:
+          CHECK_ERROR: ${{ steps.health.outputs.error }}
+          LAST_SUCCESS: ${{ steps.health.outputs.last_success }}
+        with:
+          script: |
+            const title = 'Senate vote freshness check failing';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              'The twice-daily Congressional Record check of our Senate votes has not succeeded for 48 hours.',
+              'Until it does, Senate vote pages keep showing the last "Checked" date and cannot warn about missing votes.',
+              '',
+              `Last success: ${process.env.LAST_SUCCESS}`,
+              `Last error: ${process.env.CHECK_ERROR}`,
+              '',
+              `Run: ${runUrl}`,
+              '',
+              'Details: the "Senate vote freshness" entry in /api/health. This issue auto-closes on the next good day.',
+            ].join('\n');
+
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'sync-failure',
+              per_page: 100,
+            });
+            const match = existing.find((i) => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `Still failing. Last error: ${process.env.CHECK_ERROR} — ${runUrl}`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['sync-failure', 'backbone-freshness'],
+              });
+            }
+
+      - name: Close the issue when the check is healthy
+        if: steps.health.outputs.status != 'down'
+        uses: actions/github-script@v9
+        env:
+          CHECK_STATUS: ${{ steps.health.outputs.status }}
+        with:
+          script: |
+            const title = 'Senate vote freshness check failing';
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'sync-failure',
+              per_page: 100,
+            });
+            const match = existing.find((i) => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `Resolved — the check reports "${process.env.CHECK_STATUS}" (run ${context.runId}). Closing.`,
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                state: 'closed',
+              });
+            }

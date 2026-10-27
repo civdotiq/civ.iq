@@ -14,6 +14,7 @@ import { searchBillsByKeyword } from '@/lib/services/bill-search.service';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
 import logger from '@/lib/logging/simple-logger';
+import { senateVoteFreshnessFields } from '@/features/representatives/services/senate-vote-freshness';
 
 export function registerLegislationTools(server: McpServer): void {
   server.registerTool(
@@ -159,7 +160,7 @@ export function registerLegislationTools(server: McpServer): void {
     {
       title: 'Voting history',
       description:
-        "Get a legislator's recent voting record. Returns vote ID, bill info, position, result, and date.",
+        "Get a legislator's recent voting record. Returns vote ID, bill info, position, result, and date. For senators, a second item gives checkedAt, latestVoteDate and stale (true when the Congressional Record lists Senate votes not yet in this list).",
       inputSchema: {
         bioguideId: z.string().describe('Congress bioguide identifier'),
         chamber: z.enum(['House', 'Senate']).describe('Chamber of the legislator'),
@@ -191,7 +192,15 @@ export function registerLegislationTools(server: McpServer): void {
                 maxVotes
               );
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(votes) }] };
+        const freshness = await senateVoteFreshnessFields(chamber);
+        return {
+          content: [
+            { type: 'text' as const, text: JSON.stringify(votes) },
+            ...(freshness
+              ? [{ type: 'text' as const, text: JSON.stringify({ senateVotes: freshness }) }]
+              : []),
+          ],
+        };
       } catch (error) {
         logger.warn('[MCP] get_voting_history failed', {
           bioguideId,

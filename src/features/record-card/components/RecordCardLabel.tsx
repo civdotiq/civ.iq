@@ -32,6 +32,8 @@ import { termOrdinal } from '../record-card-data';
 import { ProvenancePopover } from './ProvenancePopover';
 import { MONEY_AND_VOTES_CAVEAT, ROLL_CALL_CAVEAT } from '@/lib/constants/standing-caveats';
 import { partyAdjective } from '@/lib/party-label';
+import { SenateVoteFreshness } from '@/components/votes/SenateVoteFreshness';
+import type { SenateVoteFreshness as VoteFreshness } from '@/features/representatives/services/senate-vote-freshness';
 
 // ── Formatting ───────────────────────────────────────────────────────
 
@@ -341,15 +343,26 @@ function LegislationSection({ data }: { data: RecordCardData }) {
 
 // ── Section B: Voting ────────────────────────────────────────────────
 
-function VotingSectionBlock({ data }: { data: RecordCardData }) {
+function VotingSectionBlock({
+  data,
+  senateVoteFreshness,
+}: {
+  data: RecordCardData;
+  senateVoteFreshness?: VoteFreshness | null;
+}) {
   const v = data.voting;
   const source =
     data.member.chamber === 'House' ? 'House Clerk roll calls' : 'Senate.gov roll calls';
+  const freshness =
+    data.member.chamber === 'Senate' ? (
+      <SenateVoteFreshness freshness={senateVoteFreshness} className="pb-grid-1" />
+    ) : null;
 
   if (!v) {
     return (
       <div className="px-grid-3 py-grid-1">
         <SectionTitle title="Voting" source={source} />
+        {freshness}
         <div className={ROW}>
           <div className="text-sm tracking-[0.025em] text-gray-500">
             Chamber-wide voting baselines haven&apos;t been computed yet, so this member&apos;s
@@ -363,6 +376,7 @@ function VotingSectionBlock({ data }: { data: RecordCardData }) {
   return (
     <div className="px-grid-3 py-grid-1">
       <SectionTitle title="Voting" source={source} />
+      {freshness}
       <div className={`${ROW} ${GRID2}`}>
         <div className="text-[15px] tracking-[0.025em]">Votes cast</div>
         <div>
@@ -680,14 +694,21 @@ function CardFooter({ data }: { data: RecordCardData }) {
 
 // ── The card ─────────────────────────────────────────────────────────
 
-export function RecordCardLabel({ data }: { data: RecordCardData }) {
+export function RecordCardLabel({
+  data,
+  senateVoteFreshness,
+}: {
+  data: RecordCardData;
+  /** Senators: how current the stored Senate votes are. */
+  senateVoteFreshness?: VoteFreshness | null;
+}) {
   return (
     <article className="border-[3px] border-black bg-white text-gray-900 tabular-nums">
       <CardHeader data={data} />
       <Bar8 />
       <LegislationSection data={data} />
       <Bar3 />
-      <VotingSectionBlock data={data} />
+      <VotingSectionBlock data={data} senateVoteFreshness={senateVoteFreshness} />
       <Bar3 />
       <MoneySection data={data} />
       <Bar3 />

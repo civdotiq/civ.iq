@@ -14,6 +14,8 @@ import Link from 'next/link';
 
 import { buildBillUrl } from '@/lib/helpers/url-builders';
 import { voteMeasureLabel } from '@/lib/bill-label';
+import { SenateVoteFreshness } from '@/components/votes/SenateVoteFreshness';
+import type { SenateVoteFreshness as VoteFreshness } from '@/features/representatives/services/senate-vote-freshness';
 
 interface Vote {
   voteId: string;
@@ -92,6 +94,8 @@ interface VotingRecordAnswerProps {
   votes: VotesData | null;
   bills: BillsData | null;
   fullRecord: FullRecordLink;
+  /** Senators only: how current the stored Senate votes are. */
+  senateVoteFreshness?: VoteFreshness | null;
 }
 
 function FullRecordCta({ fullRecord }: { fullRecord: FullRecordLink }) {
@@ -114,14 +118,20 @@ const POSITION_STYLES: Record<string, string> = {
 function RecentVotesPod({
   votes,
   fullRecord,
+  senateVoteFreshness,
 }: {
   votes: VotesData | null;
   fullRecord: FullRecordLink;
+  senateVoteFreshness?: VoteFreshness | null;
 }) {
+  const freshness = senateVoteFreshness ? (
+    <SenateVoteFreshness freshness={senateVoteFreshness} className="mb-3" />
+  ) : null;
   if (!votes?.votes?.length) {
     return (
       <div className="border-2 border-black bg-white p-4 sm:p-6 lg:col-span-2">
         <h2 className="type-sm font-semibold text-black mb-3">Recent votes</h2>
+        {freshness}
         <p className="type-sm text-gray-500">
           Voting record data is not yet available for this representative.
         </p>
@@ -145,6 +155,7 @@ function RecentVotesPod({
   return (
     <div className="border-2 border-black bg-white p-4 sm:p-6 lg:col-span-2">
       <h2 className="type-sm font-semibold text-black mb-3">Recent votes</h2>
+      {freshness}
       <ul className="divide-y divide-gray-200">
         {recent.map(vote => {
           const billId = vote.bill?.number
@@ -328,10 +339,19 @@ function SourcesPod() {
   );
 }
 
-export function VotingRecordAnswer({ votes, bills, fullRecord }: VotingRecordAnswerProps) {
+export function VotingRecordAnswer({
+  votes,
+  bills,
+  fullRecord,
+  senateVoteFreshness,
+}: VotingRecordAnswerProps) {
   return (
     <>
-      <RecentVotesPod votes={votes} fullRecord={fullRecord} />
+      <RecentVotesPod
+        votes={votes}
+        fullRecord={fullRecord}
+        senateVoteFreshness={senateVoteFreshness}
+      />
       <LegislationPod bills={bills} />
       <VotingStatsPod votes={votes} />
       <SourcesPod />

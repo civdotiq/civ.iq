@@ -38,6 +38,7 @@ import {
   type SenateMenuEntry,
   type SenateVoteMenu,
 } from '@/features/representatives/services/roll-call-corpus';
+import { refreshSenateFreshnessFromMenu } from '@/features/representatives/services/senate-vote-freshness';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
@@ -157,6 +158,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       updatedAt: new Date().toISOString(),
     };
     await setSenateVoteMenu(menu);
+    // Clears a "votes not shown yet" notice as soon as the votes arrive.
+    await refreshSenateFreshnessFromMenu(menu).catch(error =>
+      logger.warn('Senate freshness refresh failed', { error: (error as Error).message })
+    );
     const missing = await listMissingSenateRolls(payload.congress, menu);
 
     const stored = Object.fromEntries(

@@ -11,6 +11,8 @@ import { CompareRow } from './CompareRow';
 import { SwapButton } from './SwapButton';
 import { fetchSide, formatCount, formatDollars, pacSharePercent, smallDonorPercent } from './data';
 import type { CompareSidePayload } from './types';
+import { formatDateOnly } from '@/lib/utils/date-only';
+import { SenateVoteFreshnessClient } from '@/components/votes/SenateVoteFreshnessClient';
 
 interface ComparePageProps {
   bioguideA: string;
@@ -60,15 +62,18 @@ export function ComparePage({ bioguideA, bioguideB }: ComparePageProps) {
     updatePair(idB, idA);
   }, [idA, idB, updatePair]);
 
-  const dataAsOf = useMemo(
-    () =>
-      new Date().toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      }),
-    []
-  );
+  // The older side's newest roll call (the date both columns are good
+  // through), never today's date. Omitted until a side reports one.
+  const dataAsOf = useMemo(() => {
+    const dates = [a.voting?.votesDataAsOf, b.voting?.votesDataAsOf].filter((d): d is string =>
+      Boolean(d)
+    );
+    if (dates.length === 0) return null;
+    const oldest = dates.slice(1).reduce((x, y) => (y < x ? y : x), dates[0] ?? '');
+    return formatDateOnly(oldest, { month: 'short', day: 'numeric', year: 'numeric' }) || null;
+  }, [a.voting?.votesDataAsOf, b.voting?.votesDataAsOf]);
+  const senateChamber =
+    a.official?.chamber === 'Senate' || b.official?.chamber === 'Senate' ? 'Senate' : null;
 
   const congressLabel = a.official?.chamber === b.official?.chamber ? a.official?.chamber : 'Mixed';
   const headerSummary = (() => {
@@ -167,7 +172,8 @@ export function ComparePage({ bioguideA, bioguideB }: ComparePageProps) {
             fontVariantNumeric: 'tabular-nums',
           }}
         >
-          {headerSummary} · As of {dataAsOf}
+          {headerSummary}
+          {dataAsOf ? ` · Votes as of ${dataAsOf}` : ''}
         </span>
       </div>
 
@@ -225,6 +231,7 @@ export function ComparePage({ bioguideA, bioguideB }: ComparePageProps) {
       </div>
 
       <div style={{ marginTop: 24 }}>
+        <SenateVoteFreshnessClient chamber={senateChamber} className="mb-3" />
         <CompareSection title="Headline record">
           <CompareRow
             label="Bills sponsored"

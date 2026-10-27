@@ -18,6 +18,8 @@ import { applyFilters, uniqueCategories, uniqueYears } from './data';
 import { INITIAL_FILTERS } from './types';
 import type { FilterState, VotesResponse, VotingRecordPageProps } from './types';
 import { houseSeatLabel } from '@/lib/data/us-states';
+import { formatDateOnly } from '@/lib/utils/date-only';
+import { SenateVoteFreshnessClient } from '@/components/votes/SenateVoteFreshnessClient';
 
 const VOTES_LIMIT = 50;
 
@@ -44,17 +46,13 @@ export function VotingRecordPage({ representative: r }: VotingRecordPageProps) {
   const availableYears = useMemo(() => uniqueYears(votes), [votes]);
   const availableCategories = useMemo(() => uniqueCategories(votes), [votes]);
 
-  const dataAsOf = data?.metadata?.timestamp
-    ? new Date(data.metadata.timestamp).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : new Date().toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
+  // The newest roll call shown, never the response time or today's date.
+  const newestVoteDate = votes.reduce<string | null>(
+    (newest, v) => (v.date && (!newest || v.date > newest) ? v.date : newest),
+    null
+  );
+  const dataAsOf =
+    formatDateOnly(newestVoteDate, { month: 'short', day: 'numeric', year: 'numeric' }) || null;
 
   const fetchFailed = !isLoading && (error || data?.success === false);
 
@@ -112,6 +110,8 @@ export function VotingRecordPage({ representative: r }: VotingRecordPageProps) {
         totalVotes={typeof totalReported === 'number' ? totalReported : undefined}
         loading={isLoading}
       />
+
+      <SenateVoteFreshnessClient chamber={r.chamber} className="mb-4" />
 
       <div
         style={{
@@ -185,8 +185,8 @@ export function VotingRecordPage({ representative: r }: VotingRecordPageProps) {
                 lineHeight: 1.55,
               }}
             >
-              Data unavailable — last successful fetch {dataAsOf}. Roll-call votes load directly
-              from Congress.gov; the upstream feed may be temporarily unreachable.
+              Data unavailable. Roll-call votes load directly from Congress.gov; the upstream feed
+              may be temporarily unreachable.
             </div>
           ) : (
             <VotesTable votes={filteredVotes} loading={isLoading} totalLoaded={totalLoaded} />
@@ -225,7 +225,7 @@ export function VotingRecordPage({ representative: r }: VotingRecordPageProps) {
           asof={dataAsOf}
           method={
             r.chamber === 'Senate'
-              ? 'Senate.gov XML feed · ingested daily'
+              ? 'Senate.gov roll-call XML'
               : 'House Clerk roll-call XML · enriched via Congress.gov · ingested daily'
           }
         >

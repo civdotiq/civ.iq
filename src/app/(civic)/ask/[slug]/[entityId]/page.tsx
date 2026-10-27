@@ -74,6 +74,10 @@ import { CommitteeActivityAnswer } from '@/components/questions/CommitteeActivit
 import { CommitteeLobbyingAnswer } from '@/components/questions/CommitteeLobbyingAnswer';
 import { getCommitteeCorpusTotals } from '@/lib/data-sources/lda-corpus/load';
 import { AskResultPage, type AskEntity } from '@/components/ask/AskResultPage';
+import {
+  getSenateVoteFreshness,
+  type SenateVoteFreshness,
+} from '@/features/representatives/services/senate-vote-freshness';
 
 export const revalidate = 3600;
 
@@ -643,6 +647,7 @@ export default async function QuestionPage({ params }: PageProps) {
   // can take 40–55 seconds cold, so the pod streams in via Suspense below.
   let campaign: CampaignContributionsData | undefined;
   let voting: VotingRecordTemplateData | undefined;
+  let senateVoteFreshness: SenateVoteFreshness | null = null;
   let billsSponsored: BillsSponsoredData | undefined;
   let stockTrades: StockTradesData | undefined;
 
@@ -654,7 +659,10 @@ export default async function QuestionPage({ params }: PageProps) {
       }
       break;
     case 'voting-record':
-      voting = await fetchVotingRecordData(id, rep.chamber);
+      [voting, senateVoteFreshness] = await Promise.all([
+        fetchVotingRecordData(id, rep.chamber),
+        rep.chamber === 'Senate' ? getSenateVoteFreshness() : Promise.resolve(null),
+      ]);
       break;
     case 'bills-sponsored':
       billsSponsored = await fetchBillsSponsoredData(id);
@@ -744,6 +752,7 @@ export default async function QuestionPage({ params }: PageProps) {
           votes={voting.votes}
           bills={voting.bills}
           fullRecord={{ href: `/representative/${id}/votes`, name }}
+          senateVoteFreshness={senateVoteFreshness}
         />
       )}
       {slug === 'bills-sponsored' && billsSponsored && (

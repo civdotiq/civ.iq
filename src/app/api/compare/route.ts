@@ -18,6 +18,10 @@ import { ApiErrors } from '@/lib/api/error-responses';
 import { getRecordCardHeadline } from '@/features/record-card/record-card-data';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
+import {
+  senateVoteFreshnessFields,
+  type VoteFreshnessFields,
+} from '@/features/representatives/services/senate-vote-freshness';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +48,8 @@ export interface ComparisonData {
     rollCallsAnalyzed: number;
     fullCoverage: boolean;
     dataAsOf: string;
+    /** Senators: when the stored Senate votes were last confirmed. */
+    voteFreshness?: VoteFreshnessFields;
   } | null;
   /** null when the legislation rollup could not be built. */
   effectiveness: {
@@ -80,7 +86,10 @@ export async function GET(request: NextRequest) {
       return ApiErrors.notFound('Representative', bioguideId);
     }
 
-    const headline = await getRecordCardHeadline(bioguideId, representative);
+    const [headline, voteFreshness] = await Promise.all([
+      getRecordCardHeadline(bioguideId, representative),
+      senateVoteFreshnessFields(representative.chamber),
+    ]);
     const legislation = headline?.legislation ?? null;
     const voting = headline?.voting ?? null;
 
@@ -97,6 +106,7 @@ export async function GET(request: NextRequest) {
             rollCallsAnalyzed: voting.rollCallsAnalyzed,
             fullCoverage: voting.fullCoverage,
             dataAsOf: voting.dataAsOf,
+            ...(voteFreshness ? { voteFreshness } : {}),
           }
         : null,
       effectiveness: legislation

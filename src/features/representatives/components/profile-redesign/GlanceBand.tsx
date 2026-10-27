@@ -9,6 +9,7 @@ import React from 'react';
 import Link from 'next/link';
 import { fmtInt, fmtPct } from '@/features/record-card/format';
 import { formatMoney, type ProfileSummary } from './types';
+import { SenateVoteFreshnessClient } from '@/components/votes/SenateVoteFreshnessClient';
 
 interface GlanceBandProps {
   summary: ProfileSummary | null;
@@ -19,6 +20,8 @@ interface GlanceBandProps {
   subcommitteeCount?: number;
   /** The member's Record Card. Omitted for former members, whose record isn't current. */
   recordCardHref?: string;
+  /** Senators get the stored votes' "Latest record · Checked" line. */
+  chamber?: string;
 }
 
 interface GlanceCellProps {
@@ -81,6 +84,7 @@ export function GlanceBand({
   committeeCount,
   subcommitteeCount = 0,
   recordCardHref,
+  chamber,
 }: GlanceBandProps) {
   // A failed request is not evidence of absence: never tell the citizen
   // "No FEC filings found" because our own endpoint timed out.
@@ -145,6 +149,7 @@ export function GlanceBand({
           loading={false}
         />
       </div>
+      <SenateVoteFreshnessClient chamber={chamber} className="mt-2" />
       {(hasMedian || recordCardHref) && (
         <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
           {/* Standing note: the median is context for the number, not a score. */}

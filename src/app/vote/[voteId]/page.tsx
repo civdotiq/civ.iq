@@ -16,6 +16,7 @@ import logger from '@/lib/logging/simple-logger';
 import { lookupVote, type VoteLookup } from '@/lib/services/vote.service';
 import { voteMetaDescription } from '@/lib/votes/vote-wording';
 import { LegacyVoteDetailPage } from '@/components/votes/LegacyVoteDetail';
+import { getSenateVoteFreshness } from '@/features/representatives/services/senate-vote-freshness';
 import { RollCallDetail, loadRollCallDetailData } from '@/components/votes/RollCallDetail';
 
 interface VoteDetailPageProps {
@@ -127,12 +128,17 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
   }
 
   const voteDetail = await fetchVoteDetails(voteId);
+  const senateVoteFreshness =
+    voteDetail?.chamber === 'Senate'
+      ? await getSenateVoteFreshness(Number.parseInt(voteDetail.congress, 10) || undefined)
+      : null;
   return (
     <LegacyVoteDetailPage
       voteId={voteId}
       voteDetail={voteDetail}
       fromBioguideId={fromBioguideId}
       fromRepName={fromRepName}
+      senateVoteFreshness={senateVoteFreshness}
     />
   );
 }

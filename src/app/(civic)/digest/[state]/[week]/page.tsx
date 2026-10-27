@@ -25,6 +25,29 @@ import { VoteMarginBar, DelegationBreakdown } from '@/components/digest/DigestVi
 import { ArticleSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import type { DigestVote } from '@/lib/digest/types';
+import { SenateVoteFreshness } from '@/components/votes/SenateVoteFreshness';
+import {
+  getSenateVoteFreshness,
+  type SenateVoteFreshness as VoteFreshness,
+} from '@/features/representatives/services/senate-vote-freshness';
+
+/** Only weeks at or after our newest stored Senate vote can be incomplete,
+ *  so only they get the line. The notice belongs only on weeks the missing
+ *  votes could fall in: after our newest vote, up to the Record issue that
+ *  counted them. */
+function freshnessForWeek(
+  freshness: VoteFreshness | null,
+  weekStart: string,
+  weekEnd: string
+): VoteFreshness | null {
+  if (!freshness?.latestVoteDate || weekEnd.slice(0, 10) < freshness.latestVoteDate) return null;
+  const missing = freshness.missing;
+  if (!missing) return freshness;
+  const inWeek =
+    weekEnd.slice(0, 10) > (missing.ourLatestDate ?? '') &&
+    weekStart.slice(0, 10) <= missing.recordIssueDate;
+  return inWeek ? freshness : { ...freshness, stale: false, missing: null };
+}
 
 export const revalidate = 3600;
 // Base assembly only (votes/bills/filings) — AI meanings are read from cache,
@@ -198,6 +221,12 @@ export default async function DigestIssuePage({ params }: PageProps) {
   const range = parseWeekId(issue.weekId);
   const label = range ? formatWeekRange(range) : issue.weekId;
   const congress = getCurrentCongressNumber(new Date(issue.weekStart));
+  const senateVoteFreshness = freshnessForWeek(
+    await getSenateVoteFreshness(congress),
+    issue.weekStart,
+    issue.weekEnd
+  );
+  const senateVotesMissing = Boolean(senateVoteFreshness?.missing);
   const { substantive, procedural } = orderVotes(issue.votes);
   const highlights = issueHighlights(issue.votes, issue.bills);
   // Group stage-ordered bills under their stage label so the "how far did
@@ -326,14 +355,16 @@ export default async function DigestIssuePage({ params }: PageProps) {
             <h2 className="text-xl font-bold tracking-[0.02em]">
               Roll-call votes, with every {issue.stateName} position
             </h2>
+            <SenateVoteFreshness freshness={senateVoteFreshness} className="mt-grid-1" />
             {issue.unavailable.includes('votes') ? (
               <p className="mt-grid-2 border-2 border-gray-200 bg-white p-grid-3 text-sm text-gray-600">
                 Vote data is unavailable for this week — the upstream source could not be reached.
               </p>
             ) : issue.votes.length === 0 ? (
               <p className="mt-grid-2 border-2 border-gray-200 bg-white p-grid-3 text-sm text-gray-600">
-                No roll-call votes were held this week. Congress was likely in recess or in
-                committee work periods.
+                {senateVotesMissing
+                  ? 'No roll-call votes are shown for this week yet.'
+                  : 'No roll-call votes were held this week. Congress was likely in recess or in committee work periods.'}
               </p>
             ) : (
               <div className="mt-grid-2 space-y-grid-2">

@@ -20,6 +20,11 @@ import {
   senateRefillHealth,
   type SenateRefillStatus,
 } from '@/features/representatives/services/senate-votes-snapshot';
+import {
+  freshnessKey,
+  senateFreshnessHealth,
+  type SenateVoteFreshnessNote,
+} from '@/features/representatives/services/senate-vote-freshness';
 
 export const dynamic = 'force-dynamic';
 
@@ -417,7 +422,7 @@ interface SourceResult {
   lastSuccessfulFetch: string | null;
   error: string | null;
   /** The latest saved status note, for checks that read one. */
-  detail?: SenateRefillStatus | null;
+  detail?: SenateRefillStatus | SenateVoteFreshnessNote | null;
 }
 
 const PROBE_TIMEOUT_MS = 8000;
@@ -686,6 +691,26 @@ async function checkSenateVoteRefill(): Promise<SourceResult> {
   };
 }
 
+/**
+ * The twice-daily Congressional Record check of the stored Senate votes,
+ * read from the note it saves. `down` after 48 hours with no success; the
+ * senate-vote-freshness GitHub workflow opens an issue then.
+ */
+async function checkSenateVoteFreshnessNote(): Promise<SourceResult> {
+  const start = Date.now();
+  const note = await getRedisCache().get<SenateVoteFreshnessNote>(
+    freshnessKey(getCurrentCongressNumber())
+  );
+  return {
+    name: 'Senate vote freshness',
+    tier: 'standard',
+    httpStatus: null,
+    responseTimeMs: Date.now() - start,
+    ...senateFreshnessHealth(note),
+    detail: note,
+  };
+}
+
 // ── Overall Health ──────────────────────────────────────────────────
 
 type OverallHealth = 'healthy' | 'degraded' | 'critical';
@@ -747,11 +772,18 @@ export async function GET(_request: NextRequest) {
       skippedResult(s)
     );
 
-    const [ldaCorpusResult, senateRefillResult] = await Promise.all([
+    const [ldaCorpusResult, senateRefillResult, senateFreshnessResult] = await Promise.all([
       checkLdaCorpus(),
       checkSenateVoteRefill(),
+      checkSenateVoteFreshnessNote(),
     ]);
-    const allResults = [...probeResults, ...skippedResults, ldaCorpusResult, senateRefillResult];
+    const allResults = [
+      ...probeResults,
+      ...skippedResults,
+      ldaCorpusResult,
+      senateRefillResult,
+      senateFreshnessResult,
+    ];
 
     // Redis status
     const redis = getRedisCache();
