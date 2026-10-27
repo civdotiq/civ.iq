@@ -14,6 +14,12 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import logger from '@/lib/logging/simple-logger';
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
+import {
+  refillStatusKey,
+  senateRefillHealth,
+  type SenateRefillStatus,
+} from '@/features/representatives/services/senate-votes-snapshot';
 
 export const dynamic = 'force-dynamic';
 
@@ -410,6 +416,8 @@ interface SourceResult {
   httpStatus: number | null;
   lastSuccessfulFetch: string | null;
   error: string | null;
+  /** The latest saved status note, for checks that read one. */
+  detail?: SenateRefillStatus | null;
 }
 
 const PROBE_TIMEOUT_MS = 8000;
@@ -659,6 +667,25 @@ async function checkLdaCorpus(): Promise<SourceResult> {
   }
 }
 
+/**
+ * The daily refill of stored Senate votes from the committed snapshot
+ * (chamber-baselines cron), read from the status note that run saves.
+ */
+async function checkSenateVoteRefill(): Promise<SourceResult> {
+  const start = Date.now();
+  const note = await getRedisCache().get<SenateRefillStatus>(
+    refillStatusKey(getCurrentCongressNumber())
+  );
+  return {
+    name: 'Senate vote refill',
+    tier: 'standard',
+    httpStatus: null,
+    responseTimeMs: Date.now() - start,
+    ...senateRefillHealth(note),
+    detail: note,
+  };
+}
+
 // ── Overall Health ──────────────────────────────────────────────────
 
 type OverallHealth = 'healthy' | 'degraded' | 'critical';
@@ -720,8 +747,11 @@ export async function GET(_request: NextRequest) {
       skippedResult(s)
     );
 
-    const ldaCorpusResult = await checkLdaCorpus();
-    const allResults = [...probeResults, ...skippedResults, ldaCorpusResult];
+    const [ldaCorpusResult, senateRefillResult] = await Promise.all([
+      checkLdaCorpus(),
+      checkSenateVoteRefill(),
+    ]);
+    const allResults = [...probeResults, ...skippedResults, ldaCorpusResult, senateRefillResult];
 
     // Redis status
     const redis = getRedisCache();

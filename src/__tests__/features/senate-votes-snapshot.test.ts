@@ -10,11 +10,14 @@
  */
 
 const store = new Map<string, { value: unknown; ttl: number }>();
+/** Keys whose writes Redis should refuse. */
+const refuseWrites = new Set<string>();
 
 jest.mock('@/lib/cache/redis-client', () => ({
   getRedisCache: () => ({
     get: jest.fn(async (key: string) => store.get(key)?.value ?? null),
     set: jest.fn(async (key: string, value: unknown, ttl: number) => {
+      if (refuseWrites.has(key)) return false;
       store.set(key, { value, ttl });
       return true;
     }),
@@ -33,14 +36,21 @@ import {
   RESTORE_BELOW_TTL_SECONDS,
   loadSenateVotesSnapshot,
   mergeMenus,
+  refillSenateCorpusAndRecord,
+  refillStatusKey,
   restoreSenateCorpusFromSnapshot,
+  senateRefillHealth,
+  type SenateRefillStatus,
 } from '@/features/representatives/services/senate-votes-snapshot';
 
 function entry(n: number, d = '2026-01-05'): SenateMenuEntry {
   return { n, d, q: 'On Passage', r: 'Passed', i: `S. ${n}`, t: 'A bill' };
 }
 
-beforeEach(() => store.clear());
+beforeEach(() => {
+  store.clear();
+  refuseWrites.clear();
+});
 
 describe('committed 119th Congress snapshot', () => {
   it('holds every roll call its menu lists, each with a real member list', async () => {
@@ -84,6 +94,7 @@ describe('restoreSenateCorpusFromSnapshot', () => {
       rollsInSnapshot: 915,
       rollsRestored: 914,
       menuRestored: true,
+      writesFailed: 0,
     });
     expect(store.get(healthyKey)?.value).toBe('healthy');
     expect(store.get(expiringKey)).toEqual({ value: expiring, ttl: ROLL_TTL_SECONDS });
@@ -116,5 +127,79 @@ describe('mergeMenus', () => {
 
   it('is the snapshot when Redis has no menu', () => {
     expect(mergeMenus(snapshot, null)).toBe(snapshot);
+  });
+});
+
+describe('refillSenateCorpusAndRecord', () => {
+  const SEVEN_DAYS = 7 * 24 * 60 * 60;
+
+  it('saves a status note after a successful refill', async () => {
+    const status = await refillSenateCorpusAndRecord(119);
+    expect(status).toMatchObject({
+      congress: 119,
+      ok: true,
+      snapshotFound: true,
+      rollsChecked: 915,
+      rollsRestored: 915,
+      menuRestored: true,
+      error: null,
+    });
+    expect(store.get(refillStatusKey(119))).toEqual({ value: status, ttl: SEVEN_DAYS });
+  });
+
+  it('records a missing snapshot file as a failure', async () => {
+    const status = await refillSenateCorpusAndRecord(118);
+    expect(status).toMatchObject({ ok: false, snapshotFound: false, rollsChecked: 0 });
+    expect(status.error).toContain('data/senate-votes-118.json.br');
+    expect(store.get(refillStatusKey(118))?.value).toEqual(status);
+  });
+
+  it('records rewrites Redis refused as a failure', async () => {
+    const snapshot = await loadSenateVotesSnapshot(119);
+    const [first] = snapshot?.rolls ?? [];
+    if (!first) throw new Error('snapshot missing');
+    refuseWrites.add(rollKey('senate', 119, first.session, first.rollCallNumber));
+
+    const status = await refillSenateCorpusAndRecord(119);
+    expect(status).toMatchObject({ ok: false, snapshotFound: true, rollsRestored: 914 });
+    expect(status.error).toBe('1 rewrite(s) were not accepted by Redis');
+  });
+});
+
+describe('senateRefillHealth', () => {
+  const now = new Date('2026-10-28T12:00:00.000Z');
+  const note: SenateRefillStatus = {
+    congress: 119,
+    ranAt: '2026-10-28T09:00:03.000Z',
+    ok: true,
+    snapshotFound: true,
+    rollsChecked: 915,
+    rollsRestored: 0,
+    menuRestored: false,
+    error: null,
+  };
+
+  it('is ok after a recent successful run', () => {
+    expect(senateRefillHealth(note, now)).toEqual({
+      status: 'ok',
+      lastSuccessfulFetch: note.ranAt,
+      error: null,
+    });
+  });
+
+  it('is down when the last run failed', () => {
+    const failed = { ...note, ok: false, snapshotFound: false, error: 'Snapshot file missing' };
+    expect(senateRefillHealth(failed, now)).toMatchObject({
+      status: 'down',
+      error: 'Snapshot file missing',
+    });
+  });
+
+  it('is stale with no note or a run over 36 hours old', () => {
+    expect(senateRefillHealth(null, now).status).toBe('stale');
+    expect(senateRefillHealth({ ...note, ranAt: '2026-10-26T09:00:00.000Z' }, now)).toMatchObject({
+      status: 'stale',
+      error: 'Last refill ran 2026-10-26T09:00:00.000Z (51 hours ago)',
+    });
   });
 });
