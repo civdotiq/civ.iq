@@ -15,10 +15,12 @@
 import { cache } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { BreadcrumbsWithContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
 import { RecordCardLabel } from '@/features/record-card/components/RecordCardLabel';
 import { getRecordCardData } from '@/features/record-card/record-card-data';
+import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import { isFormerMember } from '@/features/representatives/utils/former-member';
 import { getStateName, houseSeatLabel } from '@/lib/data/us-states';
 import { ProfilePageSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { partyAdjective } from '@/lib/party-label';
@@ -37,6 +39,10 @@ export async function generateStaticParams(): Promise<Array<{ bioguideId: string
 // generateMetadata and the page body share one composition per request
 const getData = cache(async (bioguideId: string) => {
   if (!bioguideId || !/^[A-Za-z]\d{6}$/.test(bioguideId)) notFound();
+  // Former members have no record card; their profile is the short page.
+  const member = await getEnhancedRepresentative(bioguideId.toUpperCase());
+  if (!member) notFound();
+  if (isFormerMember(member.status)) permanentRedirect(`/representative/${member.bioguideId}`);
   const data = await getRecordCardData(bioguideId);
   if (!data) notFound();
   return data;

@@ -3,7 +3,7 @@
  * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ErrorBoundary } from '@/components/shared/common/ErrorBoundary';
 import { ChunkLoadErrorBoundary } from '@/components/shared/common/ChunkLoadErrorBoundary';
@@ -11,6 +11,7 @@ import { getEnhancedRepresentative } from '@/features/representatives/services/c
 import { VotingRecordPage } from '@/components/officials/VotingRecordPage';
 import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 import { commonName } from '@/features/representatives/utils/common-name';
+import { formerMemberFacts, isFormerMember } from '@/features/representatives/utils/former-member';
 import { partyAdjective } from '@/lib/party-label';
 import { houseSeatLabel } from '@/lib/data/us-states';
 
@@ -39,6 +40,10 @@ export default async function RepresentativeVotingRecordPage({
 
   const representative = await getEnhancedRepresentative(bioguideId);
   if (!representative || !representative.name) notFound();
+  // A former member's votes stay only while the site serves a Congress they sat in.
+  if (isFormerMember(representative.status) && !formerMemberFacts(representative).hasRecordOnSite) {
+    permanentRedirect(`/representative/${representative.bioguideId}`);
+  }
 
   return (
     <ErrorBoundary>

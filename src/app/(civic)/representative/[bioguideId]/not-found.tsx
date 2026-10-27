@@ -4,6 +4,14 @@
  */
 
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+// robots: null drops the layout's "index, follow"; Next.js adds noindex to a 404.
+export const metadata: Metadata = {
+  title: 'Member not found',
+  description: 'No member of Congress has this Bioguide ID.',
+  robots: null,
+};
 
 function CiviqLogo() {
   return (

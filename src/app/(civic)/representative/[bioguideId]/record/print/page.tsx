@@ -16,8 +16,10 @@
 import { cache } from 'react';
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { getRecordCardData, termOrdinal } from '@/features/record-card/record-card-data';
+import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import { isFormerMember } from '@/features/representatives/utils/former-member';
 import { PrintQRCode } from '@/features/record-card/components/PrintQRCode';
 import { PrintButton } from '@/features/record-card/components/PrintButton';
 import { fmtDate, fmtInt, fmtMoney, fmtMoneyCompact, fmtPct } from '@/features/record-card/format';
@@ -35,6 +37,10 @@ export async function generateStaticParams(): Promise<Array<{ bioguideId: string
 
 const getData = cache(async (bioguideId: string) => {
   if (!bioguideId || !/^[A-Za-z]\d{6}$/.test(bioguideId)) notFound();
+  // Former members have no record card; their profile is the short page.
+  const member = await getEnhancedRepresentative(bioguideId.toUpperCase());
+  if (!member) notFound();
+  if (isFormerMember(member.status)) permanentRedirect(`/representative/${member.bioguideId}`);
   const data = await getRecordCardData(bioguideId);
   if (!data) notFound();
   return data;
