@@ -66,7 +66,12 @@ async function fetchText(url: string): Promise<string> {
     signal: AbortSignal.timeout(30_000),
   });
   if (!response.ok) {
-    throw new Error(`GET ${url} -> ${response.status}`);
+    // senate.gov's block page carries an Akamai reference ID that the Senate
+    // webmaster needs to look up the block; keep it in the job log.
+    const body = await response.text().catch(() => '');
+    const referenceId = body.match(/Reference ID:\s*([\w.]+)/)?.[1];
+    const reference = referenceId ? ` (block page Reference ID ${referenceId})` : '';
+    throw new Error(`GET ${url} -> ${response.status}${reference} at ${new Date().toISOString()}`);
   }
   return response.text();
 }
