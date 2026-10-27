@@ -16,6 +16,7 @@ Ten states redrew their House maps for the 2026 election, so the 120th lines dif
 
 - **Roster.** `sync-congress-legislators.yml` picks up the new members once the congress-legislators project updates (usually within days of the swearing-in). Check that new members, departed members and the cached roster all refresh, and that profile pages for departed 119th members stop presenting them as sitting.
 - **Vacancies.** `src/lib/data/vacancies.json` tracks 119th seat changes. Start a fresh list for the 120th, and point `sync-vacancies.yml` at the 120th Congress "Changes in membership" page instead of the 119th.
+- **Departing members' pages.** Members who leave on January 3 become former members. Their profile turns into the short former-member page (service years, the date they left, links to their 119th votes and bills), and their record card and other question pages redirect to it. They stay indexable while the site serves the 119th Congress (`isServedCongress`: the sitting Congress plus the one before it), so nothing needs changing by hand. When the 121st Congress convenes on January 3, 2029, the 119th leaves the served range and these pages become `noindex` (`formerMemberFacts` in `src/features/representatives/utils/former-member.ts`). After the roster sync, check a few departing members' pages.
 
 ### District boundaries and maps
 

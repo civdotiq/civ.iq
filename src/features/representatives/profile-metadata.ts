@@ -16,8 +16,11 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getEnhancedRepresentative } from './services/congress.service';
 import { commonName } from './utils/common-name';
+import { chamberName, formerMemberFacts, isFormerMember } from './utils/former-member';
 import { partyAbbreviation, partyAdjective } from '@/lib/party-label';
 import { memberProfileMetaDescription } from '@/lib/seo/meta-descriptions';
+import { getStateName } from '@/lib/data/us-states';
+import { longDate } from '@/lib/seo/answer-first';
 
 export interface RepresentativeDetails {
   bioguideId: string;
@@ -41,6 +44,7 @@ export interface RepresentativeDetails {
     congress: string;
     startYear: string;
     endYear: string;
+    chamber?: string;
   }>;
   committees?: Array<{
     name: string;
@@ -121,6 +125,10 @@ export async function buildProfileMetadata(
 
     // The name the member goes by ("Bernie Sanders"), which is what people search for
     const name = commonName(representative);
+
+    if (isFormerMember(representative.status)) {
+      return formerMemberMetadata(bioguideId, name, representative);
+    }
     const title = `${name} (${partyAbbreviation(representative.party)}-${representative.state})`;
     const chamberLabel =
       representative.chamber === 'Senate'
@@ -190,4 +198,37 @@ export async function buildProfileMetadata(
       description: `View detailed information about federal representative ${bioguideId}`,
     };
   }
+}
+
+/**
+ * Former members: who they were and when they served. Those who served in a
+ * Congress the site still serves stay indexable (their votes and bills are
+ * on the site); everyone else is noindexed.
+ */
+function formerMemberMetadata(
+  bioguideId: string,
+  name: string,
+  representative: RepresentativeDetails
+): Metadata {
+  const facts = formerMemberFacts(representative);
+  const stateName = getStateName(representative.state) || representative.state;
+  const service = facts.service.map(r => `the ${chamberName(r.chamber)} ${r.start}–${r.end}`);
+  const left = facts.leftOffice ? longDate(facts.leftOffice) : null;
+  const description = [
+    `${name} served ${stateName} in ${service.join(' and ')}.`,
+    left ? `Left office ${left}.` : null,
+    'CIV.IQ covers current members of Congress.',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const url = `https://civdotiq.org/representative/${bioguideId.toUpperCase()}`;
+  const title = `${name}, former member of Congress`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, siteName: 'CIV.IQ', type: 'profile' },
+    ...(facts.hasRecordOnSite ? {} : { robots: { index: false, follow: true } }),
+  };
 }

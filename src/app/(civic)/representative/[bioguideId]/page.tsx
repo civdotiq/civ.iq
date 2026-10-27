@@ -34,6 +34,12 @@ import {
   getNextSenateElectionFromTermEnd,
 } from '@/lib/data/congressional-constants';
 import { bioguideUrl, wikidataUrl, wikipediaUrl } from '@/lib/outside-ids';
+import { FormerMemberProfile } from '@/features/representatives/components/FormerMemberProfile';
+import {
+  chamberName,
+  formerMemberFacts,
+  isFormerMember,
+} from '@/features/representatives/utils/former-member';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600; // ISR: revalidate every hour
@@ -313,6 +319,46 @@ export default async function RepresentativeProfilePage({
       ? [{ name: 'Wikidata', value: representative.ids.wikidata }]
       : []),
   ];
+
+  // A former member gets a short page: service years and pointers, nothing
+  // that only applies to a sitting member. Office website and social accounts
+  // belonged to the office, so they stay out of sameAs.
+  if (isFormerMember(representative.status)) {
+    const facts = formerMemberFacts(representative);
+    const name = commonName(representative);
+    const service = facts.service.map(r => `${chamberName(r.chamber)} ${r.start}–${r.end}`);
+    const stateName = getStateName(representative.state) || representative.state;
+    return (
+      <>
+        <ProfilePageSchema
+          url={`https://civdotiq.org/representative/${bioguideId}`}
+          person={{
+            name,
+            alternateName: officialNameIfDifferent(representative),
+            description: `Former member of Congress from ${stateName} (${service.join('; ')})`,
+            image: representative.imageUrl,
+            sameAs,
+            identifier: identifiers,
+            birthDate: representative.bio?.birthday,
+          }}
+        />
+        <BreadcrumbSchema
+          items={[
+            { name: 'Home', url: 'https://civdotiq.org' },
+            { name: 'Representatives', url: 'https://civdotiq.org/representatives' },
+            { name, url: `https://civdotiq.org/representative/${bioguideId}` },
+          ]}
+        />
+        <FormerMemberProfile
+          bioguideId={bioguideId}
+          name={name}
+          state={representative.state}
+          facts={facts}
+        />
+      </>
+    );
+  }
+
   if (representative.socialMedia?.twitter) {
     sameAs.push(`https://twitter.com/${representative.socialMedia.twitter}`);
   }

@@ -900,7 +900,8 @@ interface ProfilePageSchemaProps {
     name: string;
     /** Official full name, when `name` is the name the person goes by. */
     alternateName?: string;
-    jobTitle: string;
+    /** Omitted for a former member, who holds no office. */
+    jobTitle?: string;
     description?: string;
     image?: string;
     sameAs?: string[];
@@ -931,8 +932,8 @@ export function ProfilePageSchema({ person, url }: ProfilePageSchemaProps) {
     // so the Knowledge Graph can disambiguate the person from the page.
     '@id': `${url}#person`,
     name: person.name,
-    jobTitle: person.jobTitle,
   };
+  if (person.jobTitle) personData.jobTitle = person.jobTitle;
 
   // The official full name, when the page uses the name the person goes by.
   if (person.alternateName) personData.alternateName = person.alternateName;

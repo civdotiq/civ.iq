@@ -15,7 +15,7 @@
  * Route: /ask/[slug]/[entityId]
  */
 
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { unstable_cache } from 'next/cache';
 import { Suspense, type ReactNode } from 'react';
 import { getCachedRepresentative } from '@/lib/questions/get-representative';
@@ -43,6 +43,11 @@ import { resolvePolicyAreaSlug } from '@/lib/services/policy-area-search.service
 import { displaySector } from '@/lib/mesh/sector-display';
 import { FAQPageSchema } from '@/components/seo/JsonLd';
 import { commonName } from '@/features/representatives/utils/common-name';
+import {
+  FORMER_MEMBER_RECORD_QUESTIONS,
+  formerMemberFacts,
+  isFormerMember,
+} from '@/features/representatives/utils/former-member';
 import { QuestionLayout } from '@/components/questions/QuestionLayout';
 import { RelatedQuestions } from '@/components/questions/RelatedQuestions';
 import { CampaignContributionsAnswer } from '@/components/questions/CampaignContributionsAnswer';
@@ -618,6 +623,14 @@ export default async function QuestionPage({ params }: PageProps) {
 
   const rep = await getCachedRepresentative(entityId.toUpperCase());
   if (!rep) notFound();
+  // A former member keeps only their votes and bills, and only while the site
+  // serves a Congress they sat in; every other question goes to the short profile.
+  if (
+    isFormerMember(rep.status) &&
+    !(FORMER_MEMBER_RECORD_QUESTIONS.includes(slug) && formerMemberFacts(rep).hasRecordOnSite)
+  ) {
+    permanentRedirect(`/representative/${rep.bioguideId}`);
+  }
 
   const name = commonName(rep);
   const entity = { name, party: rep.party, state: rep.state };
