@@ -60,7 +60,8 @@ export async function GET(request: NextRequest) {
     );
     const fieldsParam = searchParams.get('fields'); // Comma-separated list of fields to include
 
-    const cacheKey = 'districts:all:v2';
+    // v3: ACS 2024 five-year (119th lines); v2 entries hold the older vintage.
+    const cacheKey = 'districts:all:v3';
 
     // Check unified cache first
     if (!bustCache) {
