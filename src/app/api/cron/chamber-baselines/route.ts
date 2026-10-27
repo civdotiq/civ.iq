@@ -17,11 +17,17 @@
  * IPs — MR10 — so production never fetches it directly). Until the mirror's
  * first run, the Senate build returns null and the card renders its
  * designed unavailable state.
+ *
+ * Before the Senate build, missing or expiring Senate rolls are put back from
+ * the committed snapshot (data/senate-votes-{congress}.json.br), because the
+ * mirror has been blocked since 2026-10-23 and nothing else renews them.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { buildChamberBaselines } from '@/lib/intelligence/analyzers/chamber-baselines';
+import { restoreSenateCorpusFromSnapshot } from '@/features/representatives/services/senate-votes-snapshot';
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -44,6 +50,12 @@ async function runBuilds() {
     house = await buildChamberBaselines('House', undefined, {
       fetchBudgetMs: HOUSE_FETCH_BUDGET_MS - (Date.now() - startTime),
     });
+  }
+  let senateRestore = null;
+  try {
+    senateRestore = await restoreSenateCorpusFromSnapshot(getCurrentCongressNumber());
+  } catch (error) {
+    logger.warn('Senate snapshot restore failed', { error });
   }
   let senate = null;
   try {
@@ -68,6 +80,7 @@ async function runBuilds() {
           dataAsOf: senate.dataAsOf,
         }
       : null,
+    senateRestore,
     processingTimeMs: Date.now() - startTime,
   };
 

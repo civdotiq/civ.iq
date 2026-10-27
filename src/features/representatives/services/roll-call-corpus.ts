@@ -37,8 +37,9 @@ import {
 } from '@/lib/senate-vote-fields';
 
 /** Roll calls are immutable once cast — keep them for the 90-day Redis TTL
- *  cap (MAX_TTL_SECONDS; longer values are clamped and logged as errors) and
- *  refresh TTL on rebuilds so an active Congress never ages out. */
+ *  cap (MAX_TTL_SECONDS; longer values are clamped and logged as errors).
+ *  House rolls are rewritten by the baselines rebuild; Senate rolls are
+ *  renewed daily from the committed snapshot (senate-votes-snapshot.ts). */
 export const ROLL_TTL_SECONDS = 90 * 24 * 60 * 60;
 
 /** Batched Redis reads when assembling corpora. */
@@ -173,7 +174,7 @@ export interface SenateVoteMenu {
   updatedAt: string;
 }
 
-function senateMenuKey(congress: number): string {
+export function senateMenuKey(congress: number): string {
   return `record-card:roll:senate:${congress}:menu`;
 }
 
