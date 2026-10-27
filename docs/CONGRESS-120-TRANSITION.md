@@ -35,6 +35,10 @@ Ten states redrew their House maps for the 2026 election, so the 120th lines dif
 - **Data windows.** Stock trades count from the 119th's first day (`STOCK_TRADES_SINCE` in `src/lib/questions/stock-trades.ts`). The record card's party-line and attendance baselines are per Congress. `bill-policy-areas-mirror.yml` defaults to `--congress 119`. Each needs a 120th window, and the first weeks of a new Congress will have little data. Show small counts honestly rather than carrying over 119th numbers.
 - **Old-Congress pages.** The site covers the current Congress only. After the switch, 119th-only pages (votes, bills, members who left) must not present themselves as current.
 
+## Other January deadlines
+
+- **npm publish token expires January 5, 2027.** The `NPM_TOKEN` repo secret that `publish-packages.yml` uses to publish `@civiq/sdk`, `@civiq/civic-statistics` and `@civiq/entity-resolution` stops working that day, and npm is removing bypass-2FA publish tokens in January 2027 anyway. Before then, register the trusted publisher on npmjs.com for each package (owner `civdotiq`, repo `civ.iq`, workflow `publish-packages.yml`) and merge PR #226 (Trusted Publishing). After the first trusted publish succeeds, delete `NPM_TOKEN`. An expired token shows up as `E404 Not Found` on publish, not as an auth error.
+
 ## Unchanged
 
 - **Seat count.** 541 seats: 535 voting members plus 6 non-voting delegates.
