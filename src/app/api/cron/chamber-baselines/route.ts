@@ -26,7 +26,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { buildChamberBaselines } from '@/lib/intelligence/analyzers/chamber-baselines';
-import { restoreSenateCorpusFromSnapshot } from '@/features/representatives/services/senate-votes-snapshot';
+import { refillSenateCorpusAndRecord } from '@/features/representatives/services/senate-votes-snapshot';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 
 export const dynamic = 'force-dynamic';
@@ -51,12 +51,8 @@ async function runBuilds() {
       fetchBudgetMs: HOUSE_FETCH_BUDGET_MS - (Date.now() - startTime),
     });
   }
-  let senateRestore = null;
-  try {
-    senateRestore = await restoreSenateCorpusFromSnapshot(getCurrentCongressNumber());
-  } catch (error) {
-    logger.warn('Senate snapshot restore failed', { error });
-  }
+  // Never throws; saves a status note that /api/health shows.
+  const senateRestore = await refillSenateCorpusAndRecord(getCurrentCongressNumber());
   let senate = null;
   try {
     senate = await buildChamberBaselines('Senate');

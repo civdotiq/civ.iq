@@ -100,6 +100,8 @@ export interface SnapshotRestoreResult {
   rollsInSnapshot: number;
   rollsRestored: number;
   menuRestored: boolean;
+  /** Rewrites (rolls or menu) that Redis did not accept. */
+  writesFailed: number;
 }
 
 /**
@@ -109,13 +111,15 @@ export interface SnapshotRestoreResult {
  * is safe, because the snapshot holds the same immutable roll.
  */
 export async function restoreSenateCorpusFromSnapshot(
-  congress: number
+  congress: number,
+  preloaded?: SenateVotesSnapshotFile
 ): Promise<SnapshotRestoreResult | null> {
-  const snapshot = await loadSenateVotesSnapshot(congress);
+  const snapshot = preloaded ?? (await loadSenateVotesSnapshot(congress));
   if (!snapshot) return null;
   const redis = getRedisCache();
 
   let rollsRestored = 0;
+  let writesFailed = 0;
   for (let i = 0; i < snapshot.rolls.length; i += READ_BATCH) {
     const batch = snapshot.rolls.slice(i, i + READ_BATCH);
     const keys = batch.map(r => rollKey('senate', congress, r.session, r.rollCallNumber));
@@ -128,7 +132,9 @@ export async function restoreSenateCorpusFromSnapshot(
       }
       return [redis.set(key, roll, ROLL_TTL_SECONDS)];
     });
-    rollsRestored += (await Promise.all(writes)).filter(Boolean).length;
+    const written = (await Promise.all(writes)).filter(Boolean).length;
+    rollsRestored += written;
+    writesFailed += writes.length - written;
   }
 
   // The menu can be newer in Redis than in the snapshot, so it is merged,
@@ -139,6 +145,7 @@ export async function restoreSenateCorpusFromSnapshot(
   if (menuTtl === null || menuTtl < RESTORE_BELOW_TTL_SECONDS) {
     const current = await redis.get<SenateVoteMenu>(menuKey);
     menuRestored = await redis.set(menuKey, mergeMenus(snapshot.menu, current), ROLL_TTL_SECONDS);
+    if (!menuRestored) writesFailed += 1;
   }
 
   const result = {
@@ -146,9 +153,104 @@ export async function restoreSenateCorpusFromSnapshot(
     rollsInSnapshot: snapshot.rolls.length,
     rollsRestored,
     menuRestored,
+    writesFailed,
   };
   if (rollsRestored > 0 || menuRestored) {
     logger.info('[SenateSnapshot] Restored Senate corpus from snapshot', result);
   }
   return result;
+}
+
+/**
+ * What the last daily refill did, saved in Redis so it can be checked without
+ * logs (Vercel keeps only the first 256 log lines of a cron run, and the House
+ * build fills them). Shown by /api/health. A missing snapshot file is a
+ * failure: without it, nothing stops the stored votes from expiring.
+ */
+export interface SenateRefillStatus {
+  congress: number;
+  ranAt: string;
+  ok: boolean;
+  snapshotFound: boolean;
+  /** Roll calls in the snapshot, each checked against Redis. */
+  rollsChecked: number;
+  rollsRestored: number;
+  menuRestored: boolean;
+  error: string | null;
+}
+
+/** The refill runs daily at 09:00 UTC; a note older than this means a run was missed. */
+const REFILL_STALE_HOURS = 36;
+
+/** Long enough to outlive a few missed runs. */
+const REFILL_STATUS_TTL_SECONDS = 7 * 24 * 60 * 60;
+
+export function refillStatusKey(congress: number): string {
+  return `senate-votes:refill-status:${congress}`;
+}
+
+/** Run the refill, never throw, and save what happened. */
+export async function refillSenateCorpusAndRecord(congress: number): Promise<SenateRefillStatus> {
+  const snapshot = await loadSenateVotesSnapshot(congress);
+  const status: SenateRefillStatus = {
+    congress,
+    ranAt: new Date().toISOString(),
+    ok: false,
+    snapshotFound: snapshot !== null,
+    rollsChecked: 0,
+    rollsRestored: 0,
+    menuRestored: false,
+    error: snapshot ? null : `Snapshot file missing or unreadable: ${snapshotPath(congress)}`,
+  };
+
+  if (snapshot) {
+    try {
+      const result = await restoreSenateCorpusFromSnapshot(congress, snapshot);
+      if (result) {
+        status.rollsChecked = result.rollsInSnapshot;
+        status.rollsRestored = result.rollsRestored;
+        status.menuRestored = result.menuRestored;
+        status.ok = result.writesFailed === 0;
+        if (result.writesFailed > 0) {
+          status.error = `${result.writesFailed} rewrite(s) were not accepted by Redis`;
+        }
+      }
+    } catch (error) {
+      status.error = (error as Error).message;
+    }
+  }
+
+  if (!status.ok) logger.warn('[SenateSnapshot] Refill failed', { ...status });
+  await getRedisCache().set(refillStatusKey(congress), status, REFILL_STATUS_TTL_SECONDS);
+  return status;
+}
+
+/**
+ * Health status for /api/health from the latest note: `down` when the last
+ * run failed (a missing snapshot file counts), `stale` when there is no note
+ * or the last run is over 36 hours old.
+ */
+export function senateRefillHealth(
+  note: SenateRefillStatus | null,
+  now: Date = new Date()
+): { status: 'ok' | 'down' | 'stale'; lastSuccessfulFetch: string | null; error: string | null } {
+  if (!note) {
+    return {
+      status: 'stale',
+      lastSuccessfulFetch: null,
+      error: 'No refill status note in the last 7 days',
+    };
+  }
+  if (!note.ok) {
+    return { status: 'down', lastSuccessfulFetch: null, error: note.error ?? 'Last refill failed' };
+  }
+  const ageHours = (now.getTime() - new Date(note.ranAt).getTime()) / (1000 * 60 * 60);
+  if (!(ageHours <= REFILL_STALE_HOURS)) {
+    return {
+      status: 'stale',
+      lastSuccessfulFetch: note.ranAt,
+      error: `Last refill ran ${note.ranAt} (${Math.round(ageHours)} hours ago)`,
+    };
+  }
+  return { status: 'ok', lastSuccessfulFetch: note.ranAt, error: null };
 }
