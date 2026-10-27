@@ -94,6 +94,9 @@ const nextConfig = {
     '/api/geocode': ['./data/cd120-districts.json.br'],
     '/api/unified-geocode': ['./data/cd120-districts.json.br'],
     '/api/intelligence/address/representatives': ['./data/cd120-districts.json.br'],
+    // The baselines cron puts expiring Senate rolls back into Redis from the
+    // committed snapshot; the tracer won't infer the fs read.
+    '/api/cron/chamber-baselines': ['./data/senate-votes-*.json.br'],
   },
   // Remove console logs in production for better performance
   compiler: {

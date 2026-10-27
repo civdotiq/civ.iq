@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-10-27T01:20:48.212Z",
+  "congress": 119,
+  "menuUpdatedAt": "2026-10-22T13:50:10.743Z",
+  "rolls": 915,
+  "rollsPerSession": {
+    "1": 659,
+    "2": 256
+  },
+  "memberVotes": 91488,
+  "firstVoteDate": "2025-01-09T14:54:00.000Z",
+  "lastVoteDate": "2026-09-30T21:29:00.000Z",
+  "compressedBytes": 49352,
+  "sha256": "04f2db2dbb03578795547e46957dbb292df8ad92d51c632319c7facd8b98e28d",
+  "source": "senate.gov roll-call vote XML and vote menus, mirrored by the sync-senate-votes workflow into Redis, then copied here"
+}
