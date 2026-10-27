@@ -1724,36 +1724,7 @@ Get comprehensive details about a specific Senate roll call vote, including all 
 
 #### GET /api/senate-votes/[voteNumber]
 
-Proxy endpoint for Senate.gov XML vote data (handles CORS).
-
-**Parameters:**
-
-- `voteNumber`: Senate roll call vote number
-- `session` (optional): Session number (default: current)
-- `congress` (optional): Congress number (default: 119)
-
-**Response:**
-
-```json
-{
-  "voteNumber": "string",
-  "date": "string",
-  "title": "string",
-  "question": "string",
-  "result": "string",
-  "yeas": "number",
-  "nays": "number",
-  "members": [
-    {
-      "bioguideId": "string",
-      "name": "string",
-      "state": "string",
-      "party": "string",
-      "vote": "Yea|Nay|Present|Not Voting"
-    }
-  ]
-}
-```
+Retired. senate.gov blocks requests from our servers, so this senate.gov XML proxy never answered in production. A single vote now redirects (308) to `/api/v1/votes/senate-{congress}-{session}-{voteNumber}` (or `senate-{congress}-{voteNumber}` when no `session` is given), which serves the stored copy of senate.gov's roll-call XML. `?type=list` returns 410 with a message naming the v1 route (there is no Senate vote-list replacement).
 
 ### Intelligence
 

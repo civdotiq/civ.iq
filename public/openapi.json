@@ -414,7 +414,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Vote ID in format: {chamber}-{congress}-{rollNumber}",
+            "description": "Vote ID in format: {chamber}-{congress}-{rollNumber}, or {chamber}-{congress}-{session}-{rollNumber} to name the session (roll-call numbers restart each session)",
             "example": "house-119-116"
           }
         ],
@@ -3107,6 +3107,10 @@
           },
           "congress": {
             "type": "integer"
+          },
+          "session": {
+            "type": "integer",
+            "description": "Session of the Congress (Senate votes)"
           },
           "rollNumber": {
             "type": "integer"
