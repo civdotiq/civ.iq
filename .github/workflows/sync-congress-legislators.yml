@@ -41,14 +41,21 @@ jobs:
       - name: Refresh legislators files
         run: ./node_modules/.bin/tsx scripts/sync-congress-legislators.ts
 
+      # When each member's roster facts last changed upstream: one input to
+      # the profile's "Latest record" date. Walks the new upstream commits.
+      - name: Refresh the member roster history
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./node_modules/.bin/tsx scripts/sync-member-roster-history.ts
+
       - name: Commit updated files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- data/legislators-current.yaml data/legislators-departed.yaml; then
+          if git diff --quiet -- data/legislators-current.yaml data/legislators-departed.yaml src/data/member-roster-history.json; then
             echo "No change to the legislators files"
           else
-            git add data/legislators-current.yaml data/legislators-departed.yaml
+            git add data/legislators-current.yaml data/legislators-departed.yaml src/data/member-roster-history.json
             git commit -m "chore(data): refresh congress legislators [skip ci]"
             # Rebase and retry rather than merge: main-protection enforces
             # linear history. Only data/ files are touched here.

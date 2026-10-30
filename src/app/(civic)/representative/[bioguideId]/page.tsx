@@ -40,6 +40,7 @@ import {
   formerMemberFacts,
   isFormerMember,
 } from '@/features/representatives/utils/former-member';
+import { getProfileDates } from '@/features/representatives/services/profile-dates';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600; // ISR: revalidate every hour
@@ -369,6 +370,13 @@ export default async function RepresentativeProfilePage({
     sameAs.push(representative.website);
   }
 
+  // Latest record and Checked for the Sources line and dateModified, from
+  // dates already stored (no upstream calls). Former members render above.
+  const profileDates =
+    representative.chamber === 'House' || representative.chamber === 'Senate'
+      ? await getProfileDates(bioguideId, representative.chamber)
+      : null;
+
   // Build committee memberships for schema
   const memberOf = representative.committees?.map(c => ({
     name: c.name,
@@ -381,6 +389,7 @@ export default async function RepresentativeProfilePage({
     <>
       <ProfilePageSchema
         url={`https://civdotiq.org/representative/${bioguideId}`}
+        dateModified={profileDates?.latestRecord}
         person={{
           name: commonName(representative),
           alternateName: officialNameIfDifferent(representative),
@@ -481,7 +490,11 @@ export default async function RepresentativeProfilePage({
 
         <ErrorBoundary>
           <ChunkLoadErrorBoundary>
-            <ProfileRedesign representative={representative} lede={lede} />
+            <ProfileRedesign
+              representative={representative}
+              lede={lede}
+              profileDates={profileDates}
+            />
           </ChunkLoadErrorBoundary>
         </ErrorBoundary>
 
