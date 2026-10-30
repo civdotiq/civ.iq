@@ -15,6 +15,10 @@ import { getRedisCache } from '@/lib/cache/redis-client';
 import { cleanAmendmentPurpose } from '@/lib/senate-vote-fields';
 import { isSenateXmlDisabled } from '@/features/representatives/services/batch-voting-service';
 import {
+  getSenateRecordCount,
+  type SenateRecordCount,
+} from '@/features/representatives/services/senate-vote-freshness';
+import {
   expandRoll,
   getSenateVoteMenu,
   measureTitlesFromMenu,
@@ -702,23 +706,33 @@ function congressFirstYear(congress: number): number {
 }
 
 /**
- * Does the mirrored senate.gov vote menu prove this roll call doesn't exist
- * in any of the given sessions? Roll numbers are consecutive within a
- * session, so a number at or below the session's latest that the menu
- * doesn't list was never cast. Above the latest, only numbers beyond what
- * the Senate could have cast since the menu was synced count as absent. A
- * session the menu doesn't carry proves nothing, unless it hasn't started.
+ * Does the stored vote menu prove this roll call doesn't exist in any of the
+ * given sessions? Roll numbers are consecutive within a session, so a number
+ * at or below the menu's latest that the menu doesn't list was never cast.
+ * Above the latest, only numbers beyond what the Senate could have cast
+ * since the count was last known are absent: since the menu was synced, or,
+ * when the Record check has read further, since its newest issue (the
+ * senate.gov mirror stopped syncing 2026-10-23). A number the Record counts
+ * but the menu lacks exists. A session the menu doesn't carry proves
+ * nothing, unless it hasn't started.
  */
 export function senateRollAbsentFromMenu(
   menu: SenateVoteMenu,
   roll: number,
   sessions: number[],
-  now: Date = new Date()
+  now: Date = new Date(),
+  record?: SenateRecordCount | null
 ): boolean {
   const syncedAt = Date.parse(menu.updatedAt);
-  if (!Number.isFinite(syncedAt)) return false;
-  const daysSinceSync = Math.max(1, Math.ceil((now.getTime() - syncedAt) / 86_400_000));
-  const headroom = MAX_SENATE_ROLLS_PER_DAY * daysSinceSync;
+  // The Record issue for a day covers that whole day.
+  const recordThrough = record ? Date.parse(`${record.throughDate}T23:59:59-05:00`) : NaN;
+  const knownAt = Math.max(
+    Number.isFinite(syncedAt) ? syncedAt : -Infinity,
+    Number.isFinite(recordThrough) ? recordThrough : -Infinity
+  );
+  if (!Number.isFinite(knownAt)) return false;
+  const daysSinceKnown = Math.max(1, Math.ceil((now.getTime() - knownAt) / 86_400_000));
+  const headroom = MAX_SENATE_ROLLS_PER_DAY * daysSinceKnown;
 
   return sessions.every(session => {
     if (congressFirstYear(menu.congress) + session - 1 > now.getUTCFullYear()) return true;
@@ -726,7 +740,10 @@ export function senateRollAbsentFromMenu(
     if (entries.length === 0) return false;
     if (entries.some(e => e.n === roll)) return false;
     const latest = entries.reduce((max, e) => Math.max(max, e.n), 0);
-    return roll <= latest || roll > latest + headroom;
+    if (roll <= latest) return true;
+    const counted = record?.totals[String(session)] ?? 0;
+    if (roll <= counted) return false;
+    return roll > Math.max(latest, counted) + headroom;
   });
 }
 
@@ -758,10 +775,19 @@ export async function lookupVote(voteId: string, now: Date = new Date()): Promis
   const senate = await parseSenateVote(parsed.numericId, parsed.congress, parsed.session);
   if (senate) return { status: 'found', vote: await enrichBillData(senate) };
 
-  const menu = await getSenateVoteMenu(congress);
+  const [menu, record] = await Promise.all([
+    getSenateVoteMenu(congress),
+    getSenateRecordCount(congress),
+  ]);
   if (
     menu &&
-    senateRollAbsentFromMenu(menu, roll, sessionsToTry(parsed.congress, parsed.session), now)
+    senateRollAbsentFromMenu(
+      menu,
+      roll,
+      sessionsToTry(parsed.congress, parsed.session),
+      now,
+      record
+    )
   ) {
     return { status: 'not_found' };
   }

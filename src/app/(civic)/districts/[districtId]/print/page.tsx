@@ -17,6 +17,9 @@ import { PrintButton } from './PrintButton';
 import { PrintDistrictPage } from '@/components/embed/PrintDistrictPage';
 import { partyAdjective } from '@/lib/party-label';
 import { ACS_5YR_VINTAGE } from '@/lib/census-vintage';
+import { notFound } from 'next/navigation';
+import { canonicalizeDistrictId } from '@/lib/helpers/url-builders';
+import { checkDistrictId } from '@/lib/districts/known-districts';
 
 interface PageProps {
   params: Promise<{ districtId: string }>;
@@ -130,6 +133,9 @@ function formatReportingPeriod(period: string | null): string | null {
 export default async function PrintCivicPackPage({ params, searchParams }: PageProps) {
   const { districtId } = await params;
   const { v } = await searchParams;
+  // Checked against the seat list before any fetch, so a made-up district 404s.
+  const parsed = canonicalizeDistrictId(districtId);
+  if (!parsed || checkDistrictId(parsed.state, parsed.district).kind === 'unknown') notFound();
   const upper = districtId.toUpperCase();
   const baseUrl = getServerBaseUrl();
   const civiqUrl = `https://civdotiq.org/districts/${districtId}`;
@@ -153,8 +159,8 @@ export default async function PrintCivicPackPage({ params, searchParams }: PageP
   if (!district) {
     return (
       <div className="civic-pack" style={{ padding: '40px', textAlign: 'center' }}>
-        <h1>District Not Found</h1>
-        <p>Could not load data for district {upper}.</p>
+        <h1>District data unavailable</h1>
+        <p>Could not load data for district {upper}. Please try again in a few minutes.</p>
       </div>
     );
   }

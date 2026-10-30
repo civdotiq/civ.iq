@@ -3,7 +3,8 @@
  * Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE files.
  */
 
-import { Suspense } from 'react';
+import { Suspense, cache } from 'react';
+import { notFound } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Metadata } from 'next';
 import Link from 'next/link';
@@ -14,7 +15,12 @@ import type { Committee } from '@/types/committee';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
-import { getCommitteeDataService } from '@/lib/services/committee.service';
+import {
+  getCommitteeDataService,
+  lookupCommittee,
+  resolveCommitteeId,
+  type CommitteeLookup,
+} from '@/lib/services/committee.service';
 import {
   fetchCommitteeActivity,
   type CommitteeActivityResult,
@@ -125,10 +131,30 @@ async function getCommitteeData(committeeId: string, refresh?: boolean): Promise
   }
 }
 
+// Whether the committee exists, once per request for metadata and page. A
+// throw is "couldn't load", never "doesn't exist".
+const getCommitteeLookup = cache(async (committeeId: string): Promise<CommitteeLookup> =>
+  lookupCommittee(committeeId).catch((): CommitteeLookup => ({ status: 'unavailable' }))
+);
+
+function canonicalCommitteeUrl(committeeId: string): string {
+  return `https://civdotiq.org/committee/${resolveCommitteeId(committeeId).toUpperCase()}`;
+}
+
 // Generate metadata for SEO
 export async function generateMetadata({ params }: CommitteePageProps): Promise<Metadata> {
   const { committeeId } = await params;
-  const committee = await getCommitteeData(committeeId);
+  const lookup = await getCommitteeLookup(committeeId);
+  if (lookup.status === 'not_found') {
+    return { title: 'Committee not found', robots: { index: false, follow: true } };
+  }
+  if (lookup.status === 'unavailable') {
+    return {
+      title: 'Committee details unavailable',
+      robots: { index: false, follow: true },
+    };
+  }
+  const committee = lookup.committee;
 
   const title = committee ? committee.name : getCommitteeDisplayName(committeeId);
   const description = committee
@@ -139,6 +165,7 @@ export async function generateMetadata({ params }: CommitteePageProps): Promise<
     title,
     description,
     alternates: {
+      canonical: canonicalCommitteeUrl(committeeId),
       types: {
         'application/atom+xml': `/api/feed/committee/${committeeId}`,
       },
@@ -155,6 +182,27 @@ export async function generateMetadata({ params }: CommitteePageProps): Promise<
       description,
     },
   };
+}
+
+/** The committee list couldn't be read: say so, never "not found". Noindexed by generateMetadata. */
+function CommitteeUnavailable({ committeeId }: { committeeId: string }) {
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <SimpleBreadcrumb />
+        <div className="bg-white border-2 border-black border-l-4 border-l-amber-600 p-4 sm:p-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Committee details unavailable</h1>
+          <p className="text-gray-700">
+            We couldn&apos;t load committee {committeeId.toUpperCase()} from the
+            congress-legislators committee list just now. Please try again in a few minutes.
+          </p>
+          <Link href="/committees" className="inline-block mt-4 text-civiq-blue underline">
+            All committees
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // Loading component for committee data
@@ -477,6 +525,12 @@ async function CommitteeContent({
 export default async function CommitteePage({ params, searchParams }: CommitteePageProps) {
   const { committeeId } = await params;
   const { from: fromBioguideId, name: fromRepName, refresh, v } = await searchParams;
+
+  // Before any Suspense boundary, so a committee that doesn't exist gets a
+  // real 404 status (this segment has no loading.tsx for the same reason).
+  const lookup = await getCommitteeLookup(committeeId);
+  if (lookup.status === 'not_found') notFound();
+  if (lookup.status === 'unavailable') return <CommitteeUnavailable committeeId={committeeId} />;
 
   const isPreviewEnv =
     process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
