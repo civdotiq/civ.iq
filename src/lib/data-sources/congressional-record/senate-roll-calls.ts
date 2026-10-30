@@ -64,6 +64,9 @@ export interface RecordRollCall {
   vicePresident: 'Y' | 'N' | null;
   /** The sentence giving the outcome ("The motion was rejected."), when found. */
   result: string | null;
+  /** Up to 8,000 characters of Record text before the roll call (back to the
+   *  previous one), whitespace collapsed: where the measure is named. */
+  context: string;
 }
 
 const HEADINGS: Record<string, PositionCode> = {
@@ -208,6 +211,10 @@ export function parseSenateRollCalls(text: string): RecordRollCall[] {
       chairTally: null,
       vicePresident: null,
       result: null,
+      context: text
+        .slice(Math.max(headers[i - 1]?.index ?? 0, (header.index ?? 0) - 8000), header.index ?? 0)
+        .replace(/\s+/g, ' ')
+        .trim(),
     };
 
     // The name lists: headings and surnames, until the first line of running

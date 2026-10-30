@@ -14,6 +14,8 @@ import {
   compactRoll,
   expandRoll,
   rollKey,
+  senateEntrySourceUrl,
+  withSenateMenuEntries,
   type SenateMenuEntry,
 } from '@/features/representatives/services/roll-call-corpus';
 import type { StandardizedVote } from '@/features/representatives/services/batch-voting-service';
@@ -105,5 +107,38 @@ describe('rollKey', () => {
   it('builds chamber-scoped corpus keys', () => {
     expect(rollKey('senate', 119, 2, 42)).toBe('record-card:roll:senate:119:2:42');
     expect(rollKey('house', 119, 1, 7)).toBe('record-card:roll:house:119:1:7');
+  });
+});
+
+describe('roll calls read from the Congressional Record', () => {
+  const recordUrl =
+    'https://www.govinfo.gov/content/pkg/CREC-2026-11-09/html/CREC-2026-11-09-pt1-PgS5301.htm';
+
+  it('links the Record section for a Record roll call, senate.gov otherwise', () => {
+    const fromRecord = menuEntry({ n: 257, record: { url: recordUrl, readAt: '2026-11-10' } });
+    expect(senateEntrySourceUrl(119, 2, fromRecord)).toBe(recordUrl);
+    expect(senateEntrySourceUrl(119, 2, menuEntry({ n: 256 }))).toBe(
+      'https://www.senate.gov/legislative/LIS/roll_call_votes/vote1192/vote_119_2_00256.xml'
+    );
+  });
+
+  it('adds or replaces entries in one session, newest first, keeping the rest', () => {
+    const menu = {
+      congress: 119,
+      sessions: {
+        '1': [menuEntry({ n: 659 })],
+        '2': [menuEntry({ n: 256 }), menuEntry({ n: 255 })],
+      },
+      updatedAt: '2026-10-22T13:50:10.743Z',
+    };
+    const merged = withSenateMenuEntries(menu, 2, [
+      menuEntry({ n: 257 }),
+      menuEntry({ n: 256, q: 'On the Nomination' }),
+    ]);
+    expect(merged.sessions['2']?.map(e => e.n)).toEqual([257, 256, 255]);
+    expect(merged.sessions['2']?.[1]?.q).toBe('On the Nomination');
+    expect(merged.sessions['1']).toBe(menu.sessions['1']);
+    expect(merged.updatedAt).toBe(menu.updatedAt);
+    expect(menu.sessions['2']).toHaveLength(2);
   });
 });

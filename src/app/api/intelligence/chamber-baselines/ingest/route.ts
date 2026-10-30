@@ -24,6 +24,14 @@
  *   Parses and persists each roll call. Memberless shells and
  *   congress/vote-number mismatches are rejected per-roll.
  *
+ * POST { kind: 'record-rolls', congress, session, rolls: CompactRollCall[],
+ *        entries: SenateMenuEntry[] }
+ *   Roll calls read from the Congressional Record by the
+ *   sync-senate-votes-from-record workflow, already checked and matched to
+ *   Bioguide IDs (senate.gov has blocked the mirror since 2026-10-23, issue
+ *   #300). Every entry names its Record section; every roll needs an entry.
+ *   Entries are merged into the stored menu, never replacing it.
+ *
  * CRON_SECRET bearer auth. Never called by page rendering.
  */
 
@@ -32,12 +40,17 @@ import logger from '@/lib/logging/simple-logger';
 import { verifyBearerToken } from '@/lib/security/verify-bearer-token';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import {
+  getRawSenateVoteMenu,
   listMissingSenateRolls,
   persistSenateRoll,
+  setSenateCompactRoll,
   setSenateVoteMenu,
+  withSenateMenuEntries,
+  type CompactRollCall,
   type SenateMenuEntry,
   type SenateVoteMenu,
 } from '@/features/representatives/services/roll-call-corpus';
+import { loadSenateVotesSnapshot } from '@/features/representatives/services/senate-votes-snapshot';
 import { refreshSenateFreshnessFromMenu } from '@/features/representatives/services/senate-vote-freshness';
 
 export const dynamic = 'force-dynamic';
@@ -112,6 +125,64 @@ function parseRollsPayload(body: Record<string, unknown>): RollsPayload | null {
   }
 
   return { kind: 'rolls', congress: body.congress, session: body.session, rolls };
+}
+
+interface RecordRollsPayload {
+  kind: 'record-rolls';
+  congress: number;
+  session: number;
+  rolls: CompactRollCall[];
+  entries: SenateMenuEntry[];
+}
+
+const BIOGUIDE_ID = /^[A-Z]\d{6}$/;
+/** Congress.gov's close time, or the vote day at 12:00 UTC when it gives none. */
+const RECORD_ROLL_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
+
+function isRecordRoll(value: unknown, session: number): value is CompactRollCall {
+  if (typeof value !== 'object' || value === null) return false;
+  const r = value as Record<string, unknown>;
+  if (!Number.isInteger(r.rollCallNumber) || r.session !== session) return false;
+  if (typeof r.date !== 'string' || !RECORD_ROLL_DATE.test(r.date)) return false;
+  if (!Array.isArray(r.votes) || r.votes.length < MIN_MEMBERS_PER_ROLL) return false;
+  const seen = new Set<string>();
+  for (const v of r.votes as unknown[]) {
+    if (typeof v !== 'object' || v === null) return false;
+    const vote = v as Record<string, unknown>;
+    if (typeof vote.b !== 'string' || !BIOGUIDE_ID.test(vote.b) || seen.has(vote.b)) return false;
+    if (vote.p !== 'R' && vote.p !== 'D' && vote.p !== 'I') return false;
+    if (vote.v !== 'Y' && vote.v !== 'N' && vote.v !== 'P' && vote.v !== 'X') return false;
+    seen.add(vote.b);
+  }
+  return true;
+}
+
+function isRecordEntry(value: unknown): value is SenateMenuEntry {
+  if (!isMenuEntry(value)) return false;
+  const record = (value as SenateMenuEntry).record;
+  return (
+    typeof record?.url === 'string' &&
+    record.url.startsWith('https://www.govinfo.gov/') &&
+    typeof record.readAt === 'string'
+  );
+}
+
+function parseRecordRollsPayload(body: Record<string, unknown>): RecordRollsPayload | null {
+  if (typeof body.congress !== 'number' || !Number.isInteger(body.congress)) return null;
+  if (body.session !== 1 && body.session !== 2) return null;
+  const session = body.session;
+  if (!Array.isArray(body.rolls) || body.rolls.length > MAX_ROLLS_PER_BATCH) return null;
+  if (!Array.isArray(body.entries)) return null;
+  if (body.rolls.length === 0 && body.entries.length === 0) return null;
+  if (!body.rolls.every(r => isRecordRoll(r, session))) return null;
+  if (!body.entries.every(isRecordEntry)) return null;
+  return {
+    kind: 'record-rolls',
+    congress: body.congress,
+    session,
+    rolls: body.rolls as CompactRollCall[],
+    entries: body.entries as SenateMenuEntry[],
+  };
 }
 
 /** Cross-check the XML's own identifiers against the claimed ones so a
@@ -221,5 +292,59 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ ok: true, persisted, rejected });
   }
 
-  return NextResponse.json({ error: 'kind must be "menu" or "rolls"' }, { status: 400 });
+  if (record.kind === 'record-rolls') {
+    const payload = parseRecordRollsPayload(record);
+    if (!payload) {
+      return NextResponse.json({ error: 'Malformed record-rolls payload' }, { status: 400 });
+    }
+
+    // Merge into the stored menu; if Redis has none, start from the
+    // committed snapshot so no senate.gov entry is dropped.
+    const base = (await getRawSenateVoteMenu(payload.congress)) ??
+      (await loadSenateVotesSnapshot(payload.congress))?.menu ?? {
+        congress: payload.congress,
+        sessions: {},
+        updatedAt: '',
+      };
+    const menu = withSenateMenuEntries(base, payload.session, payload.entries);
+    // Readers list roll calls from the menu: a roll call it doesn't list
+    // would be stored where nobody can find it.
+    const listed = new Set((menu.sessions[String(payload.session)] ?? []).map(e => e.n));
+    const unlisted = payload.rolls.filter(r => !listed.has(r.rollCallNumber));
+    if (unlisted.length) {
+      return NextResponse.json(
+        {
+          error: 'Roll calls without a menu entry',
+          rolls: unlisted.map(r => r.rollCallNumber),
+        },
+        { status: 400 }
+      );
+    }
+
+    let persisted = 0;
+    for (const roll of payload.rolls) {
+      if (await setSenateCompactRoll(payload.congress, roll)) persisted++;
+    }
+    await setSenateVoteMenu(menu);
+    await refreshSenateFreshnessFromMenu(menu).catch(error =>
+      logger.warn('Senate freshness refresh failed', { error: (error as Error).message })
+    );
+
+    logger.info('Senate roll calls ingested from the Congressional Record', {
+      congress: payload.congress,
+      session: payload.session,
+      persisted,
+      entries: payload.entries.length,
+    });
+    return NextResponse.json({
+      ok: persisted === payload.rolls.length,
+      persisted,
+      entries: payload.entries.length,
+    });
+  }
+
+  return NextResponse.json(
+    { error: 'kind must be "menu", "rolls" or "record-rolls"' },
+    { status: 400 }
+  );
 }
