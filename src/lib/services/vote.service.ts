@@ -65,6 +65,10 @@ export interface UnifiedVoteDetail {
     apiUrl?: string;
     /** Senate corpus path: when the senate.gov vote mirror last synced. */
     mirrorSyncedAt?: string;
+    /** Senate roll calls read from the Congressional Record: the Record
+     *  section it is printed in, and when it was read. */
+    recordUrl?: string;
+    recordReadAt?: string;
   };
 }
 
@@ -484,13 +488,21 @@ async function senateVoteFromCorpus(
         ? { number: amendment.number, purpose: amendment.purpose ?? '' }
         : undefined,
       requiredMajority: roll.majorityRequirement,
-      metadata: {
-        source: 'senate-corpus-mirror',
-        confidence: 'high',
-        processingDate: new Date().toISOString(),
-        xmlUrl,
-        mirrorSyncedAt: menu?.updatedAt,
-      },
+      metadata: entry?.record
+        ? {
+            source: 'senate-record',
+            confidence: 'high',
+            processingDate: new Date().toISOString(),
+            recordUrl: entry.record.url,
+            recordReadAt: entry.record.readAt,
+          }
+        : {
+            source: 'senate-corpus-mirror',
+            confidence: 'high',
+            processingDate: new Date().toISOString(),
+            xmlUrl,
+            mirrorSyncedAt: menu?.updatedAt,
+          },
     };
   } catch (error) {
     logger.error('Error building Senate vote from corpus', error as Error, { voteId, congress });
