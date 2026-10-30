@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 import { SectorListingPage } from '@/components/search/SearchVariants';
 import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
+import { PUBLISHED_SECTORS } from '@/lib/industry/published-sectors';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/industry' },
@@ -25,18 +26,7 @@ export const metadata: Metadata = {
   },
 };
 
-const SECTORS = [
-  { name: 'Agribusiness', slug: 'agribusiness' },
-  { name: 'Communications/Electronics', slug: 'communications-electronics' },
-  { name: 'Construction', slug: 'construction' },
-  { name: 'Defense', slug: 'defense' },
-  { name: 'Energy/Natural Resources', slug: 'energy-natural-resources' },
-  { name: 'Finance/Insurance/Real Estate', slug: 'finance-insurance-real-estate' },
-  { name: 'Health', slug: 'health' },
-  { name: 'Transportation', slug: 'transportation' },
-  { name: 'Misc Business', slug: 'misc-business' },
-  { name: 'Labor', slug: 'labor' },
-];
+const SECTORS = PUBLISHED_SECTORS;
 
 interface IndustryPageProps {
   searchParams: Promise<{ v?: string; cycle?: string }>;

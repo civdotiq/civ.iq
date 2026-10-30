@@ -837,6 +837,16 @@ async function fetchCommitteesUncached(): Promise<CongressCommittee[]> {
 }
 
 /**
+ * Whether the current-member list could be read (live, or its cached
+ * fallback). A member lookup that comes back empty means "not a member"
+ * only when this is true.
+ */
+export async function currentLegislatorsAvailable(): Promise<boolean> {
+  const legislators = await fetchCurrentLegislators().catch(() => []);
+  return legislators.length > 0;
+}
+
+/**
  * Get enhanced representative data by bioguide ID
  */
 export async function getEnhancedRepresentative(

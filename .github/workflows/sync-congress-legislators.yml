@@ -41,14 +41,19 @@ jobs:
       - name: Refresh legislators files
         run: ./node_modules/.bin/tsx scripts/sync-congress-legislators.ts
 
+      # The /committees hub and the sitemap list committees from this file;
+      # committee pages 404 any ID committees-current.yaml doesn't list.
+      - name: Refresh the committee list
+        run: ./node_modules/.bin/tsx scripts/sync-committee-list.ts
+
       - name: Commit updated files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- data/legislators-current.yaml data/legislators-departed.yaml; then
-            echo "No change to the legislators files"
+          if git diff --quiet -- data/legislators-current.yaml data/legislators-departed.yaml src/data/committees-with-subcommittees.json; then
+            echo "No change to the legislators or committee files"
           else
-            git add data/legislators-current.yaml data/legislators-departed.yaml
+            git add data/legislators-current.yaml data/legislators-departed.yaml src/data/committees-with-subcommittees.json
             git commit -m "chore(data): refresh congress legislators [skip ci]"
             # Rebase and retry rather than merge: main-protection enforces
             # linear history. Only data/ files are touched here.

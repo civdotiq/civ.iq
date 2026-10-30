@@ -4,13 +4,16 @@
  */
 
 /**
- * Cached committee getter — deduplicates getCommitteeDataService calls
- * across layout.tsx and page.tsx within a single React render.
+ * Cached committee lookup — deduplicates lookupCommittee calls across
+ * layout.tsx and page.tsx within a single React render. Found, not found
+ * (the page 404s) or unavailable (the source failed; noindexed).
  */
 
 import { cache } from 'react';
-import { getCommitteeDataService } from '@/lib/services/committee.service';
+import { lookupCommittee, type CommitteeLookup } from '@/lib/services/committee.service';
 
-export const getCachedCommittee = cache((committeeId: string) =>
-  getCommitteeDataService(committeeId.toUpperCase())
+export const getCachedCommitteeLookup = cache((committeeId: string): Promise<CommitteeLookup> =>
+  lookupCommittee(committeeId.toUpperCase()).catch((): CommitteeLookup => ({
+    status: 'unavailable',
+  }))
 );

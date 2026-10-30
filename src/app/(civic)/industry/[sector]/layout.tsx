@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { isPublishedSectorSlug } from '@/lib/industry/published-sectors';
 import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
@@ -16,6 +18,7 @@ function formatSectorName(sector: string): string {
 
 export async function generateMetadata({ params }: LayoutProps): Promise<Metadata> {
   const { sector } = await params;
+  if (!isPublishedSectorSlug(sector)) return { title: 'Industry sector not found' };
   const sectorName = formatSectorName(sector);
 
   return {
@@ -34,6 +37,7 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
 
 export default async function IndustrySectorLayout({ children, params }: LayoutProps) {
   const { sector } = await params;
+  if (!isPublishedSectorSlug(sector)) notFound();
   const sectorName = formatSectorName(sector);
 
   return (

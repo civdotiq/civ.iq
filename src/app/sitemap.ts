@@ -27,6 +27,8 @@ import { firstDistrictPerChamber } from '@/lib/sitemap/state-district-urls';
 import { houseDistrictIds } from '@/lib/districts/known-districts';
 import { buildBillUrl } from '@/lib/helpers/url-builders';
 import { latestCompleteWeekId, previousWeekIds } from '@/lib/digest/week';
+import { PUBLISHED_SECTORS } from '@/lib/industry/published-sectors';
+import { houseVoteUrls, senateVoteUrls } from '@/lib/sitemap/vote-urls';
 
 const BASE_URL = 'https://civdotiq.org';
 
@@ -289,18 +291,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // ===========================================
   // INDUSTRY SECTOR PAGES
   // ===========================================
-  const industrySectors = [
-    'agribusiness',
-    'communications-electronics',
-    'construction',
-    'defense',
-    'energy-natural-resources',
-    'finance-insurance-real-estate',
-    'health',
-    'transportation',
-    'misc-business',
-    'labor',
-  ];
+  const industrySectors = PUBLISHED_SECTORS.map(s => s.slug);
 
   // Industry hub page
   entries.push({
@@ -378,64 +369,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   // ===========================================
-  // VOTE PAGES - Unclaimed search space
-  // Senate and House roll call votes for 119th Congress
+  // VOTE PAGES: every roll call the real lists hold, dated by the day held
   // ===========================================
-  try {
-    // Generate vote IDs for the current congress session
-    // Senate votes: senate-{congress}-{session}-{rollNumber}
-    // House votes: house-{congress}-{session}-{rollNumber}
-    // Session 1 = odd calendar year, session 2 = even (roll numbers reset
-    // each session, and /api/votes/recent returns current-session rolls).
+  {
     const congress = getCurrentCongressNumber();
-    const session = new Date().getUTCFullYear() % 2 === 1 ? 1 : 2;
-
-    // Fetch recent votes to determine current roll numbers
-    const [senateRes, houseRes] = await Promise.allSettled([
-      fetch(`${BASE_URL}/api/votes/recent?chamber=senate&limit=1`, {
-        next: { revalidate: 86400 },
-      }),
-      fetch(`${BASE_URL}/api/votes/recent?chamber=house&limit=1`, {
-        next: { revalidate: 86400 },
-      }),
+    const now = new Date();
+    const [senateVotes, houseVotes] = await Promise.all([
+      senateVoteUrls(congress, now).catch(() => []),
+      houseVoteUrls(congress, now).catch(() => []),
     ]);
-
-    let maxSenateRoll = 200; // fallback estimate
-    let maxHouseRoll = 300; // fallback estimate
-
-    if (senateRes.status === 'fulfilled' && senateRes.value.ok) {
-      const data = await senateRes.value.json();
-      const votes = data.votes || [];
-      if (votes.length > 0 && votes[0].rollNumber) {
-        maxSenateRoll = votes[0].rollNumber;
-      }
-    }
-
-    if (houseRes.status === 'fulfilled' && houseRes.value.ok) {
-      const data = await houseRes.value.json();
-      const votes = data.votes || [];
-      if (votes.length > 0 && votes[0].rollNumber) {
-        maxHouseRoll = votes[0].rollNumber;
-      }
-    }
-
-    for (let roll = 1; roll <= maxSenateRoll; roll++) {
+    for (const vote of [...senateVotes, ...houseVotes]) {
       entries.push({
-        url: `${BASE_URL}/vote/senate-${congress}-${session}-${roll}`,
+        url: `${BASE_URL}${vote.path}`,
+        lastModified: sourceDate(vote.date),
         changeFrequency: 'monthly',
         priority: 0.55,
       });
     }
-
-    for (let roll = 1; roll <= maxHouseRoll; roll++) {
-      entries.push({
-        url: `${BASE_URL}/vote/house-${congress}-${session}-${roll}`,
-        changeFrequency: 'monthly',
-        priority: 0.55,
-      });
-    }
-  } catch {
-    // Silently fail - other entries will still be generated
   }
 
   for (const page of mainPages) {

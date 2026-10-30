@@ -14,7 +14,10 @@
 import { cache } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getEnhancedRepresentative } from './services/congress.service';
+import {
+  currentLegislatorsAvailable,
+  getEnhancedRepresentative,
+} from './services/congress.service';
 import { commonName } from './utils/common-name';
 import { chamberName, formerMemberFacts, isFormerMember } from './utils/former-member';
 import { partyAbbreviation, partyAdjective } from '@/lib/party-label';
@@ -95,22 +98,19 @@ export interface RepresentativeDetails {
 export const getProfileRepresentative = cache(async function getProfileRepresentative(
   bioguideId: string
 ): Promise<RepresentativeDetails> {
-  try {
-    if (!bioguideId || typeof bioguideId !== 'string') {
-      notFound();
-    }
-
-    // Direct service call - no HTTP networking during SSR
-    const enhancedData = await getEnhancedRepresentative(bioguideId.toUpperCase());
-
-    if (!enhancedData) {
-      notFound();
-    }
-
-    return enhancedData;
-  } catch {
+  if (!bioguideId || typeof bioguideId !== 'string') {
     notFound();
   }
+
+  // Direct service call - no HTTP networking during SSR
+  const enhancedData = await getEnhancedRepresentative(bioguideId.toUpperCase()).catch(() => null);
+  if (enhancedData) return enhancedData;
+
+  // Empty means "no such member" only when the member list was read. If it
+  // couldn't be, error.tsx answers with a server error, which search engines
+  // retry; a 404 would tell them a real member's page is gone.
+  if (await currentLegislatorsAvailable()) notFound();
+  throw new Error(`Member list unavailable; could not look up ${bioguideId}`);
 });
 
 const VALID_CARD_TYPES = ['profile', 'money', 'vote', 'alignment', 'legislation'] as const;

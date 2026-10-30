@@ -19,7 +19,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { unstable_cache } from 'next/cache';
 import { Suspense, type ReactNode } from 'react';
 import { getCachedRepresentative } from '@/lib/questions/get-representative';
-import { getCachedCommittee } from '@/lib/questions/get-committee';
+import { getCachedCommitteeLookup } from '@/lib/questions/get-committee';
 import { getTemplate, fillPattern } from '@/lib/questions/question-registry';
 import { computeRelatedQuestions } from '@/lib/questions/related-questions';
 import {
@@ -473,8 +473,25 @@ export default async function QuestionPage({ params }: PageProps) {
 
   // ── Committee entity resolution ──────────────────────────────
   if (template.entityType === 'committee') {
-    const committee = await getCachedCommittee(entityId);
-    if (!committee?.name) notFound();
+    const lookup = await getCachedCommitteeLookup(entityId);
+    if (lookup.status === 'not_found') notFound();
+    if (lookup.status === 'unavailable') {
+      // The committee list couldn't be read: say so (noindexed by the layout).
+      return (
+        <QuestionLayout
+          question={`Committee ${entityId.toUpperCase()}`}
+          category={template.category}
+          relatedQuestions={null}
+        >
+          <div className="border-2 border-black bg-white p-4 sm:p-6 lg:col-span-2">
+            <p className="type-sm text-gray-500">
+              Committee details are currently unavailable. Try again later.
+            </p>
+          </div>
+        </QuestionLayout>
+      );
+    }
+    const committee = lookup.committee;
 
     const vars = { name: committee.name, chamber: committee.chamber };
     const question = fillPattern(template.questionPattern, vars);

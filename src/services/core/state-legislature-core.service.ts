@@ -56,6 +56,9 @@ import type {
   StateVoteDetail,
 } from '@/types/state-legislature';
 
+export type StateBillLookup =
+  { status: 'found'; bill: StateBill } | { status: 'not_found' } | { status: 'unavailable' };
+
 export class StateLegislatureCoreService {
   /**
    * Transform OpenStates legislator to EnhancedStateLegislator
@@ -957,9 +960,17 @@ export class StateLegislatureCoreService {
   }
 
   /**
-   * Get single state bill by ID - DIRECT lookup, no HTTP
+   * Get single state bill by ID - DIRECT lookup, no HTTP. Null both when
+   * Open States has no such bill and when the lookup fails; pages that must
+   * tell those apart use lookupStateBill.
    */
   static async getStateBillById(state: string, billId: string): Promise<StateBill | null> {
+    const lookup = await this.lookupStateBill(state, billId);
+    return lookup.status === 'found' ? lookup.bill : null;
+  }
+
+  /** One state bill: found, not found (Open States answered 404), or unavailable. */
+  static async lookupStateBill(state: string, billId: string): Promise<StateBillLookup> {
     const cacheKey = `core:state-bill:${state}:${billId}`;
     const startTime = Date.now();
 
@@ -972,7 +983,7 @@ export class StateLegislatureCoreService {
           billId,
           responseTime: Date.now() - startTime,
         });
-        return cached;
+        return { status: 'found', bill: cached };
       }
 
       // Use direct bill lookup API for efficiency
@@ -996,7 +1007,7 @@ export class StateLegislatureCoreService {
           responseTime: Date.now() - startTime,
         });
 
-        return bill;
+        return { status: 'found', bill };
       }
 
       logger.warn('State bill not found', {
@@ -1005,14 +1016,15 @@ export class StateLegislatureCoreService {
         responseTime: Date.now() - startTime,
       });
 
-      return null;
+      return { status: 'not_found' };
     } catch (error) {
+      // Quota, rate limit, timeout or 5xx: never "doesn't exist".
       logger.error('Failed to get state bill by ID', error as Error, {
         state,
         billId,
         responseTime: Date.now() - startTime,
       });
-      return null;
+      return { status: 'unavailable' };
     }
   }
 
