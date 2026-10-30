@@ -329,6 +329,38 @@ export async function getSenateVoteFreshness(
 }
 
 /**
+ * What the Record check last established: every Record issue through
+ * `throughDate` was read, and each session's roll calls run to
+ * `totals[session]`. Used to prove a roll call number doesn't exist.
+ */
+export interface SenateRecordCount {
+  totals: Record<string, number>;
+  throughDate: string;
+}
+
+/** The Record count from the latest successful check, or null when unknown. */
+export async function getSenateRecordCount(
+  congress: number = getCurrentCongressNumber()
+): Promise<SenateRecordCount | null> {
+  try {
+    const note = await getRedisCache().get<SenateVoteFreshnessNote>(freshnessKey(congress));
+    if (!note?.lastSuccessAt || !note.latestIssueRead) return null;
+    return {
+      totals: Object.fromEntries(
+        Object.entries(note.recordTotals ?? {}).map(([session, t]) => [session, t.total])
+      ),
+      throughDate: note.latestIssueRead,
+    };
+  } catch (error) {
+    logger.warn('[SenateFreshness] Record count read failed', {
+      congress,
+      error: (error as Error).message,
+    });
+    return null;
+  }
+}
+
+/**
  * Health status for /api/health: `down` once no check has succeeded for 48
  * hours (a GitHub workflow opens an issue then), `stale` when there is no
  * note yet. A Record that lists votes we lack is not a check failure; it is

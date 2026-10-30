@@ -11,7 +11,8 @@
  * the member list to tag two members as "Chair".
  */
 
-import { getCommitteeDataService } from '@/lib/services/committee.service';
+import { getCommitteeDataService, lookupCommittee } from '@/lib/services/committee.service';
+import { fetchCommittees } from '@/features/representatives/services/congress.service';
 
 jest.mock('@/lib/cache', () => ({
   cachedFetch: jest.fn((_key: string, fetcher: () => Promise<unknown>) => fetcher()),
@@ -106,5 +107,30 @@ describe('committee.service — chair normalization', () => {
     const viceChairs = result!.members.filter(m => m.role === 'Vice Chair');
     expect(viceChairs).toHaveLength(1);
     expect(viceChairs[0]!.representative.bioguideId).toBe('D000628');
+  });
+});
+
+describe('lookupCommittee', () => {
+  it('finds a committee congress-legislators lists', async () => {
+    const lookup = await lookupCommittee('HSIF');
+    expect(lookup.status).toBe('found');
+    if (lookup.status === 'found') expect(lookup.committee.name).toMatch(/Energy and Commerce/);
+  });
+
+  it('is not_found for an ID the committee list lacks (no "Joint Committee ZZZZ99" page)', async () => {
+    expect(await lookupCommittee('ZZZZ99')).toEqual({ status: 'not_found' });
+    expect(await lookupCommittee('JSZZ')).toEqual({ status: 'not_found' });
+    expect(await lookupCommittee('not a committee')).toEqual({ status: 'not_found' });
+  });
+
+  it('is not_found for a subcommittee its parent does not list (not the parent page)', async () => {
+    expect(await lookupCommittee('HSIF99')).toEqual({ status: 'not_found' });
+  });
+
+  it('is unavailable, never not_found, when the committee list fails to load', async () => {
+    (fetchCommittees as jest.Mock).mockResolvedValueOnce([]);
+    expect(await lookupCommittee('JSZZ')).toEqual({ status: 'unavailable' });
+    (fetchCommittees as jest.Mock).mockRejectedValueOnce(new Error('timeout'));
+    expect(await lookupCommittee('HSIF')).toEqual({ status: 'unavailable' });
   });
 });

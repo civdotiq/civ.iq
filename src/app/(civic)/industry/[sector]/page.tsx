@@ -6,6 +6,7 @@
  */
 
 import type { Metadata } from 'next';
+import { isPublishedSectorSlug } from '@/lib/industry/published-sectors';
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 import { IndustrySectorClient } from './IndustrySectorClient';
@@ -125,6 +126,7 @@ export default async function IndustrySectorPageRoute({ params, searchParams }: 
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { sector } = await params;
+  if (!isPublishedSectorSlug(sector)) return { title: 'Industry sector not found' };
   const resolved = parseSector(sector);
   const displayName = resolved ?? formatSectorName(sector);
 

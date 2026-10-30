@@ -40,65 +40,98 @@ const DATE_PATTERN =
 const ENTITY_PATTERN =
   /(?:Department|Agency|Bureau|Commission|Administration|Authority|Office|Board)\s+(?:of\s+)?(?:[A-Z][a-z]+\s*)+/g;
 
+/** A document's metadata: null when the Federal Register has no such
+ *  document (404); throws when the request fails. */
+async function fetchDocumentMetadata(
+  documentNumber: string
+): Promise<FederalRegisterAPIDocument | null> {
+  const fields = [
+    'document_number',
+    'title',
+    'abstract',
+    'type',
+    'publication_date',
+    'html_url',
+    'pdf_url',
+    'agencies',
+    'body_html_url',
+    'raw_text_url',
+    'comment_url',
+    'comments_close_on',
+    'effective_on',
+    'executive_order_number',
+    'regulation_id_numbers',
+  ];
+
+  const params = new URLSearchParams();
+  fields.forEach(f => params.append('fields[]', f));
+
+  const url = `${FR_API}/documents/${encodeURIComponent(documentNumber)}.json?${params.toString()}`;
+
+  logger.info('[FRService] Fetching document metadata', { documentNumber });
+
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
+    },
+    signal: AbortSignal.timeout(15_000),
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) return null;
+    throw new Error(`Federal Register API returned ${response.status}`);
+  }
+
+  return (await response.json()) as FederalRegisterAPIDocument;
+}
+
+function cachedDocumentMetadata(documentNumber: string) {
+  return cachedFetch(
+    `fr-doc-meta:${documentNumber}`,
+    () => fetchDocumentMetadata(documentNumber),
+    3600 // 1 hour
+  );
+}
+
 /**
  * Fetch a single document's metadata including body URLs.
  */
 export async function getDocumentMetadata(
   documentNumber: string
 ): Promise<FederalRegisterAPIDocument | null> {
-  const cacheKey = `fr-doc-meta:${documentNumber}`;
-
   try {
-    return await cachedFetch(
-      cacheKey,
-      async () => {
-        const fields = [
-          'document_number',
-          'title',
-          'abstract',
-          'type',
-          'publication_date',
-          'html_url',
-          'pdf_url',
-          'agencies',
-          'body_html_url',
-          'raw_text_url',
-          'comment_url',
-          'comments_close_on',
-          'effective_on',
-          'executive_order_number',
-          'regulation_id_numbers',
-        ];
-
-        const params = new URLSearchParams();
-        fields.forEach(f => params.append('fields[]', f));
-
-        const url = `${FR_API}/documents/${encodeURIComponent(documentNumber)}.json?${params.toString()}`;
-
-        logger.info('[FRService] Fetching document metadata', { documentNumber });
-
-        const response = await fetch(url, {
-          headers: {
-            Accept: 'application/json',
-            'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
-          },
-          signal: AbortSignal.timeout(15_000),
-        });
-
-        if (!response.ok) {
-          if (response.status === 404) return null;
-          throw new Error(`Federal Register API returned ${response.status}`);
-        }
-
-        return (await response.json()) as FederalRegisterAPIDocument;
-      },
-      3600 // 1 hour
-    );
+    return await cachedDocumentMetadata(documentNumber);
   } catch (error) {
     logger.error('[FRService] Failed to fetch document metadata', error as Error, {
       documentNumber,
     });
     return null;
+  }
+}
+
+export type FederalRegisterDocumentLookup =
+  | { status: 'found'; document: FederalRegisterAPIDocument }
+  | { status: 'not_found' }
+  | { status: 'unavailable' };
+
+/**
+ * Whether the Federal Register has this document: its page 404s only on a
+ * 404 from the API, and is noindexed when the API fails (a well-formed but
+ * made-up number like 2026-99999 used to get an indexable page).
+ */
+export async function lookupFederalRegisterDocument(
+  documentNumber: string
+): Promise<FederalRegisterDocumentLookup> {
+  try {
+    const document = await cachedDocumentMetadata(documentNumber);
+    return document ? { status: 'found', document } : { status: 'not_found' };
+  } catch (error) {
+    logger.warn('[FRService] Document lookup failed', {
+      documentNumber,
+      error: (error as Error).message,
+    });
+    return { status: 'unavailable' };
   }
 }
 

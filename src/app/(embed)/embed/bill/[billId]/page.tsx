@@ -12,7 +12,7 @@
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { fetchBillFromCongress } from '@/lib/services/bill.service';
+import { lookupBill } from '@/lib/services/bill.service';
 import { parseBillSlug } from '@/lib/data/route-slugs';
 import { EmbedBillCard } from '@/components/embed/EmbedBillCard';
 
@@ -70,15 +70,21 @@ export default async function EmbedBillPage({ params, searchParams }: PageProps)
   // Out-of-scope Congresses and malformed ids have no bill page to embed.
   if (parseBillSlug(billId).kind === 'invalid') notFound();
 
-  const bill = await fetchBillFromCongress(billId);
-
-  if (!bill) {
+  // Only Congress.gov saying "no such bill" is a 404; an outage says so instead.
+  const lookup = process.env.CONGRESS_API_KEY
+    ? await lookupBill(billId).catch(() => ({ status: 'unavailable' }) as const)
+    : ({ status: 'unavailable' } as const);
+  if (lookup.status === 'not_found') notFound();
+  if (lookup.status === 'unavailable') {
     return (
       <div style={{ padding: '16px', fontFamily: 'system-ui, sans-serif' }}>
-        <p style={{ color: '#6b7280', fontSize: '14px' }}>Bill {billId.toUpperCase()} not found.</p>
+        <p style={{ color: '#6b7280', fontSize: '14px' }}>
+          Bill {billId.toUpperCase()} is unavailable right now.
+        </p>
       </div>
     );
   }
+  const bill = lookup.bill;
 
   const isPreviewEnv =
     process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';

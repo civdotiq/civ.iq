@@ -14,6 +14,9 @@ import { getAllEnhancedRepresentatives } from '@/features/representatives/servic
 import { EmbedRepsCard } from '@/components/embed/EmbedRepsCard';
 import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
 import { partyAdjective } from '@/lib/party-label';
+import { notFound } from 'next/navigation';
+import { canonicalizeDistrictId } from '@/lib/helpers/url-builders';
+import { checkDistrictId } from '@/lib/districts/known-districts';
 
 interface PageProps {
   params: Promise<{ districtId: string }>;
@@ -37,6 +40,8 @@ function partyColor(party: string): string {
 export default async function EmbedRepsPage({ params, searchParams }: PageProps) {
   const { districtId } = await params;
   const { v } = await searchParams;
+  const parsed = canonicalizeDistrictId(districtId);
+  if (!parsed || checkDistrictId(parsed.state, parsed.district).kind === 'unknown') notFound();
 
   // Parse district ID (e.g., "MI-12", "CA-04")
   const parts = districtId.toUpperCase().split('-');

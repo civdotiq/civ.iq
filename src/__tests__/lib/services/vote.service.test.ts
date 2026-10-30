@@ -169,6 +169,31 @@ describe('senateRollAbsentFromMenu', () => {
   it('is false when the sync time is unreadable', () => {
     expect(senateRollAbsentFromMenu(menu({ '2': [entry(1)] }, 'bad'), 9999, [2], now)).toBe(false);
   });
+
+  describe('with the Congressional Record count (senate.gov mirror stopped 2026-10-23)', () => {
+    // The live case on 2026-10-30: menu last synced Oct 22, newest roll 256;
+    // the Record check read every issue through Oct 29 and counts 256.
+    const oct30 = new Date('2026-10-30T17:00:00Z');
+    const synced = menu({ '2': [entry(255), entry(256)] }, '2026-10-22T13:50:10.743Z');
+    const record = { totals: { '2': 256 }, throughDate: '2026-10-29' };
+
+    it('proves a roll beyond the count plus a day of votes absent', () => {
+      expect(senateRollAbsentFromMenu(synced, 600, [2], oct30, record)).toBe(true);
+      // Without the Record count, eight days since the sync leave room for 800 more.
+      expect(senateRollAbsentFromMenu(synced, 600, [2], oct30)).toBe(false);
+    });
+
+    it('keeps room for votes held since the newest issue read', () => {
+      expect(senateRollAbsentFromMenu(synced, 300, [2], oct30, record)).toBe(false);
+    });
+
+    it('never calls a roll the Record counts absent, even if we lack it', () => {
+      const ahead = { totals: { '2': 258 }, throughDate: '2026-11-09' };
+      const nov10 = new Date('2026-11-10T17:00:00Z');
+      expect(senateRollAbsentFromMenu(synced, 258, [2], nov10, ahead)).toBe(false);
+      expect(senateRollAbsentFromMenu(synced, 9999, [2], nov10, ahead)).toBe(true);
+    });
+  });
 });
 
 describe('lookupVote', () => {
