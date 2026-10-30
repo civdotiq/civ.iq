@@ -127,6 +127,22 @@ export function votePageSources(vote: UnifiedVoteDetail): DataSource[] {
         })
       );
     }
+  } else if (metadata.source === 'senate-record') {
+    // Read from the Congressional Record (senate.gov has blocked our mirror
+    // since 2026-10-23); what the vote was on comes from Congress.gov.
+    const read = metadata.recordReadAt ? `Read ${fmt(metadata.recordReadAt)}` : undefined;
+    sources.push(
+      registrySource('congressionalRecord', {
+        covers: 'Result, totals and how each senator voted',
+        asOf: [heldOn, read].filter(Boolean).join(' · ') || undefined,
+        href: metadata.recordUrl?.startsWith('https://www.govinfo.gov/')
+          ? metadata.recordUrl
+          : undefined,
+      })
+    );
+    if (vote.question) {
+      sources.push(registrySource('congressGov', { covers: 'Question and what was voted on' }));
+    }
   } else if (metadata.source === 'senate-corpus-mirror') {
     // Served from our daily mirror of senate.gov, not fetched on this
     // request: show when the mirror last synced, not a load time.

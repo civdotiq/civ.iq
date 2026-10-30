@@ -751,7 +751,7 @@ List endpoints use offset-based pagination:
 |--------|--------|-----------------|
 | Members of Congress | congress-legislators (GitHub YAML) | Daily |
 | House votes | Congress.gov API v3 | Hourly |
-| Senate votes | senate.gov XML feeds | Hourly |
+| Senate votes | Congressional Record (GovInfo), with Congress.gov for what each vote was on; senate.gov XML through Oct 22, 2026 | Daily (the morning after each vote day) |
 | Bills | Congress.gov API v3 | 6 hours |
 | Campaign finance | FEC.gov API | Daily |
 | Lobbying | Senate LDA API v1 | Daily |
