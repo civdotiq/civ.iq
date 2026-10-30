@@ -31,11 +31,16 @@ import { ProfileSidebar } from './ProfileSidebar';
 import type { ProfileBatchResponse, ProfileSummaryResponse } from './types';
 import { isSubcommitteeId } from '@/lib/committee-id';
 import { useSenateVoteFreshness } from '@/components/votes/SenateVoteFreshnessClient';
+import type { ProfileDates } from '@/features/representatives/services/profile-dates';
+import { profileDatesLine } from '@/lib/provenance/profile-dates-line';
 
 interface ProfileRedesignProps {
   representative: EnhancedRepresentative;
   /** Answer-first opening, built on the server from facts the page shows. */
   lede?: string | null;
+  /** Latest record and Checked, read on the server from stored dates, so
+   *  the line is in the HTML crawlers get (profile-dates.ts). */
+  profileDates?: ProfileDates | null;
 }
 
 interface CommitteesApiResponse {
@@ -86,7 +91,7 @@ async function fetchOverviewBatch(bioguideId: string): Promise<ProfileBatchRespo
  * reference sidebar. Drill-down detail reuses the existing dashboard
  * section panels via the same `?section=` navigation as the classic layout.
  */
-export function ProfileRedesign({ representative, lede }: ProfileRedesignProps) {
+export function ProfileRedesign({ representative, lede, profileDates }: ProfileRedesignProps) {
   const { activeSection, navigateToSection, navigateBack } = useSectionNavigation({
     validSections: [...REPRESENTATIVE_SECTIONS],
   });
@@ -284,6 +289,7 @@ export function ProfileRedesign({ representative, lede }: ProfileRedesignProps) 
                   <DataProvenance
                     variant="block"
                     className="mt-8"
+                    headline={profileDatesLine(profileDates)}
                     sources={profilePageSources({
                       chamber: representative.chamber,
                       voteDates: votesResponse?.votes?.map(v => v.date),

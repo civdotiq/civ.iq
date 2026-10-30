@@ -919,13 +919,15 @@ interface ProfilePageSchemaProps {
     workAddress?: string;
   };
   url: string;
+  /** YYYY-MM-DD of the newest dated fact the page shows (its "Latest record"); omitted when unknown. */
+  dateModified?: string | null;
 }
 
 /**
  * ProfilePage schema wrapping a Person as mainEntity
  * Used on representative and legislator profile pages
  */
-export function ProfilePageSchema({ person, url }: ProfilePageSchemaProps) {
+export function ProfilePageSchema({ person, url, dateModified }: ProfilePageSchemaProps) {
   const personData: Record<string, unknown> = {
     '@type': 'Person',
     // Stable @id distinct from the ProfilePage node @id (which is `url`),
@@ -998,6 +1000,7 @@ export function ProfilePageSchema({ person, url }: ProfilePageSchemaProps) {
     '@type': 'ProfilePage',
     '@id': url,
     url,
+    ...(dateModified ? { dateModified } : {}),
     mainEntity: personData,
   };
 

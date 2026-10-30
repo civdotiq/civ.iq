@@ -1,0 +1,2163 @@
+{
+  "throughCommit": "753b363e003312525174006e93932b11022ee078",
+  "throughDate": "2026-10-05T14:08:50Z",
+  "source": "unitedstates/congress-legislators legislators-current.yaml git history (CC0-1.0)",
+  "members": {
+    "C000127": {
+      "fingerprint": "1359789e0e53dfe2",
+      "changedOn": "2025-01-04"
+    },
+    "K000367": {
+      "fingerprint": "f651b94959428fd2",
+      "changedOn": "2025-01-04"
+    },
+    "S000033": {
+      "fingerprint": "09ad123994d80f40",
+      "changedOn": "2025-01-04"
+    },
+    "W000802": {
+      "fingerprint": "f76b8b7a2e07294c",
+      "changedOn": "2025-01-04"
+    },
+    "B001261": {
+      "fingerprint": "8eb3740f4cd9566c",
+      "changedOn": "2025-01-04"
+    },
+    "W000437": {
+      "fingerprint": "a4cad1f8fe982485",
+      "changedOn": "2025-01-04"
+    },
+    "C001035": {
+      "fingerprint": "5e17e336ac313e52",
+      "changedOn": "2024-12-18"
+    },
+    "C001056": {
+      "fingerprint": "d72309ba1085d00b",
+      "changedOn": "2024-12-18"
+    },
+    "D000563": {
+      "fingerprint": "31d97823f39ba02f",
+      "changedOn": "2024-12-18"
+    },
+    "M000355": {
+      "fingerprint": "8026268a4a444cbe",
+      "changedOn": "2024-12-18"
+    },
+    "M001176": {
+      "fingerprint": "25422d73f37b3f17",
+      "changedOn": "2024-12-18"
+    },
+    "R000122": {
+      "fingerprint": "842d26df5dd19f1c",
+      "changedOn": "2024-12-18"
+    },
+    "R000584": {
+      "fingerprint": "fe2a3ccf50362736",
+      "changedOn": "2024-12-18"
+    },
+    "S001181": {
+      "fingerprint": "5113f39eb7159a4d",
+      "changedOn": "2024-12-18"
+    },
+    "W000805": {
+      "fingerprint": "17799d33690b2dc4",
+      "changedOn": "2024-12-18"
+    },
+    "G000555": {
+      "fingerprint": "04cbd7dfad24e4a7",
+      "changedOn": "2025-01-04"
+    },
+    "C001088": {
+      "fingerprint": "dd4876c3c52501ae",
+      "changedOn": "2025-01-03"
+    },
+    "A000055": {
+      "fingerprint": "9d9cf632b8b93e2e",
+      "changedOn": "2025-01-04"
+    },
+    "B001230": {
+      "fingerprint": "48b11fa78b072c0f",
+      "changedOn": "2025-01-04"
+    },
+    "B001267": {
+      "fingerprint": "4c9798d01f6c5bcc",
+      "changedOn": "2024-12-18"
+    },
+    "B001257": {
+      "fingerprint": "8f6588b30423824a",
+      "changedOn": "2025-01-04"
+    },
+    "B000490": {
+      "fingerprint": "4bafa176880e2d0c",
+      "changedOn": "2025-01-04"
+    },
+    "B001243": {
+      "fingerprint": "49b859a0434084de",
+      "changedOn": "2025-01-04"
+    },
+    "B001277": {
+      "fingerprint": "bc546aac500b557d",
+      "changedOn": "2025-02-02"
+    },
+    "B001236": {
+      "fingerprint": "089214dbeac572ac",
+      "changedOn": "2024-12-18"
+    },
+    "B001260": {
+      "fingerprint": "bd7c8f4a8954994b",
+      "changedOn": "2025-01-04"
+    },
+    "C000059": {
+      "fingerprint": "e15453e29e2becaf",
+      "changedOn": "2025-01-04"
+    },
+    "C001047": {
+      "fingerprint": "259def946369d005",
+      "changedOn": "2025-01-03"
+    },
+    "C001072": {
+      "fingerprint": "db649aea54ddba41",
+      "changedOn": "2025-01-04"
+    },
+    "C001051": {
+      "fingerprint": "2b5eb7733e1e3e80",
+      "changedOn": "2025-01-04"
+    },
+    "C001075": {
+      "fingerprint": "1b2ec75071bfb46a",
+      "changedOn": "2024-12-18"
+    },
+    "C001066": {
+      "fingerprint": "29da530a81d33200",
+      "changedOn": "2025-01-04"
+    },
+    "C001080": {
+      "fingerprint": "f9b7c7e9f1b564ce",
+      "changedOn": "2025-01-04"
+    },
+    "C001067": {
+      "fingerprint": "1c8e8a0a6a29ea00",
+      "changedOn": "2025-01-04"
+    },
+    "C001061": {
+      "fingerprint": "1e402a2b5d0ffa48",
+      "changedOn": "2025-01-04"
+    },
+    "C000537": {
+      "fingerprint": "09efa0411bc2b065",
+      "changedOn": "2025-01-04"
+    },
+    "C001068": {
+      "fingerprint": "8b7ea12dc01e7be5",
+      "changedOn": "2025-01-04"
+    },
+    "C001053": {
+      "fingerprint": "d346255cc141d737",
+      "changedOn": "2025-01-04"
+    },
+    "C001059": {
+      "fingerprint": "45778e545703637f",
+      "changedOn": "2025-01-04"
+    },
+    "C001069": {
+      "fingerprint": "3cc87a6ee747da29",
+      "changedOn": "2025-01-04"
+    },
+    "C000880": {
+      "fingerprint": "ad43122f666bc1fa",
+      "changedOn": "2024-12-18"
+    },
+    "C001087": {
+      "fingerprint": "c6629394668eff31",
+      "changedOn": "2025-01-04"
+    },
+    "C001063": {
+      "fingerprint": "107970e39b201bfc",
+      "changedOn": "2025-01-04"
+    },
+    "D000096": {
+      "fingerprint": "efb64eb0222c5d49",
+      "changedOn": "2025-01-04"
+    },
+    "D000197": {
+      "fingerprint": "63814e50bec1f0e9",
+      "changedOn": "2025-01-04"
+    },
+    "D000216": {
+      "fingerprint": "c7548184733e5c4c",
+      "changedOn": "2025-01-04"
+    },
+    "D000616": {
+      "fingerprint": "33a175a632c5f93a",
+      "changedOn": "2025-01-04"
+    },
+    "D000600": {
+      "fingerprint": "52759407d3ea9880",
+      "changedOn": "2025-01-04"
+    },
+    "D000399": {
+      "fingerprint": "83a202cfe8702544",
+      "changedOn": "2025-01-04"
+    },
+    "F000459": {
+      "fingerprint": "7ea4f74a26dbfa6e",
+      "changedOn": "2025-01-04"
+    },
+    "F000450": {
+      "fingerprint": "7dcb2f8cde401e47",
+      "changedOn": "2025-01-04"
+    },
+    "G000559": {
+      "fingerprint": "a86b5eef330590b7",
+      "changedOn": "2025-01-04"
+    },
+    "G000565": {
+      "fingerprint": "47c37ba6f8046686",
+      "changedOn": "2025-01-04"
+    },
+    "G000386": {
+      "fingerprint": "8fca0dbc367a5a25",
+      "changedOn": "2024-12-18"
+    },
+    "G000546": {
+      "fingerprint": "32460d966e204cdb",
+      "changedOn": "2025-01-04"
+    },
+    "G000553": {
+      "fingerprint": "94df13c2df44ce6f",
+      "changedOn": "2025-01-04"
+    },
+    "G000568": {
+      "fingerprint": "4bc66cc2b9bf2438",
+      "changedOn": "2025-01-04"
+    },
+    "G000558": {
+      "fingerprint": "f6b309b6749bdab4",
+      "changedOn": "2025-01-04"
+    },
+    "H001052": {
+      "fingerprint": "3be71fc232d254c5",
+      "changedOn": "2025-01-04"
+    },
+    "H001046": {
+      "fingerprint": "1929fbd4360849cc",
+      "changedOn": "2025-01-04"
+    },
+    "H001047": {
+      "fingerprint": "fddcf55b2fccecb2",
+      "changedOn": "2025-01-04"
+    },
+    "H001042": {
+      "fingerprint": "25db790ecdb4242a",
+      "changedOn": "2025-01-04"
+    },
+    "H001061": {
+      "fingerprint": "8b9b47ce9922abfc",
+      "changedOn": "2024-12-18"
+    },
+    "H000874": {
+      "fingerprint": "d32ec0502154df6a",
+      "changedOn": "2025-01-04"
+    },
+    "H001058": {
+      "fingerprint": "2823de200fc77958",
+      "changedOn": "2025-01-04"
+    },
+    "J000288": {
+      "fingerprint": "7077f05c6089477d",
+      "changedOn": "2025-01-04"
+    },
+    "J000293": {
+      "fingerprint": "f6d3182fa0e52deb",
+      "changedOn": "2024-12-18"
+    },
+    "J000289": {
+      "fingerprint": "3137f4a4a8b2c183",
+      "changedOn": "2025-01-04"
+    },
+    "K000009": {
+      "fingerprint": "122f09b66e4886ef",
+      "changedOn": "2025-01-04"
+    },
+    "K000375": {
+      "fingerprint": "198c91f4b78bde59",
+      "changedOn": "2025-01-04"
+    },
+    "K000376": {
+      "fingerprint": "02333d5588a0a248",
+      "changedOn": "2025-01-04"
+    },
+    "L000575": {
+      "fingerprint": "2d1ff577b5925f21",
+      "changedOn": "2025-03-04"
+    },
+    "L000560": {
+      "fingerprint": "9dd5e21be0eb2f0c",
+      "changedOn": "2025-01-04"
+    },
+    "L000557": {
+      "fingerprint": "6af6ddbfcf84f4d4",
+      "changedOn": "2025-01-04"
+    },
+    "L000566": {
+      "fingerprint": "4469bda0c17f3074",
+      "changedOn": "2025-01-04"
+    },
+    "L000577": {
+      "fingerprint": "9cf13c4eaab34006",
+      "changedOn": "2024-12-18"
+    },
+    "L000397": {
+      "fingerprint": "e845fc687f050169",
+      "changedOn": "2025-01-04"
+    },
+    "L000491": {
+      "fingerprint": "a43d401f197df7fe",
+      "changedOn": "2025-01-04"
+    },
+    "L000570": {
+      "fingerprint": "8ca757a5fe404980",
+      "changedOn": "2024-12-18"
+    },
+    "L000562": {
+      "fingerprint": "6653877228b97f12",
+      "changedOn": "2025-01-04"
+    },
+    "M000133": {
+      "fingerprint": "cfde6be37a1e93fd",
+      "changedOn": "2025-02-23"
+    },
+    "M001163": {
+      "fingerprint": "56915ea769894e01",
+      "changedOn": "2025-01-04"
+    },
+    "M001157": {
+      "fingerprint": "e3a0c05d92aa78ee",
+      "changedOn": "2025-01-04"
+    },
+    "M001177": {
+      "fingerprint": "1b11f321bc2f42a9",
+      "changedOn": "2025-01-04"
+    },
+    "M001143": {
+      "fingerprint": "04e85dd0f321cdfd",
+      "changedOn": "2025-01-04"
+    },
+    "M000312": {
+      "fingerprint": "ed32bbd9bc9494b6",
+      "changedOn": "2025-01-04"
+    },
+    "M001137": {
+      "fingerprint": "7550bf8756e25373",
+      "changedOn": "2025-01-04"
+    },
+    "M001160": {
+      "fingerprint": "ab85b958f3839f69",
+      "changedOn": "2025-01-04"
+    },
+    "M000934": {
+      "fingerprint": "03fba593b36addce",
+      "changedOn": "2024-12-18"
+    },
+    "M001153": {
+      "fingerprint": "6af51f1723e9a19a",
+      "changedOn": "2024-12-18"
+    },
+    "M001169": {
+      "fingerprint": "85f9b93701ffa0ed",
+      "changedOn": "2025-01-04"
+    },
+    "M001111": {
+      "fingerprint": "46d9b6ce1a6c11f5",
+      "changedOn": "2024-12-18"
+    },
+    "N000002": {
+      "fingerprint": "0f5330492b9b3dd2",
+      "changedOn": "2025-01-04"
+    },
+    "N000015": {
+      "fingerprint": "5787ace59e26607d",
+      "changedOn": "2025-01-04"
+    },
+    "N000147": {
+      "fingerprint": "a2d0453fd23a1d9b",
+      "changedOn": "2025-01-04"
+    },
+    "P000034": {
+      "fingerprint": "668effbc88c933e7",
+      "changedOn": "2025-01-04"
+    },
+    "P000603": {
+      "fingerprint": "398fd0fc08f4e17c",
+      "changedOn": "2024-12-18"
+    },
+    "P000197": {
+      "fingerprint": "e113f2a083a6872d",
+      "changedOn": "2025-01-04"
+    },
+    "P000595": {
+      "fingerprint": "d0229cfe85f0b74d",
+      "changedOn": "2025-01-03"
+    },
+    "P000597": {
+      "fingerprint": "283f0721bb50bd26",
+      "changedOn": "2025-01-04"
+    },
+    "Q000023": {
+      "fingerprint": "18854e5b55fc3fb1",
+      "changedOn": "2025-01-04"
+    },
+    "R000395": {
+      "fingerprint": "37904e162a9ac88b",
+      "changedOn": "2025-01-04"
+    },
+    "R000575": {
+      "fingerprint": "ae41cec30a50da38",
+      "changedOn": "2025-01-04"
+    },
+    "S001176": {
+      "fingerprint": "433598a146993c28",
+      "changedOn": "2025-01-04"
+    },
+    "S001145": {
+      "fingerprint": "0cc20aceb2196a5d",
+      "changedOn": "2025-01-04"
+    },
+    "S001150": {
+      "fingerprint": "8e997519a5904999",
+      "changedOn": "2025-03-26"
+    },
+    "S000148": {
+      "fingerprint": "8c9e6b13e4458949",
+      "changedOn": "2024-12-18"
+    },
+    "S001183": {
+      "fingerprint": "885e4330b81db1ed",
+      "changedOn": "2025-01-04"
+    },
+    "S001189": {
+      "fingerprint": "22b85458651134a1",
+      "changedOn": "2025-01-04"
+    },
+    "S000185": {
+      "fingerprint": "5f0f7c60b91d6e70",
+      "changedOn": "2025-01-04"
+    },
+    "S001184": {
+      "fingerprint": "bff227833a7995ae",
+      "changedOn": "2026-07-15"
+    },
+    "S001185": {
+      "fingerprint": "ba5980c2e767293d",
+      "changedOn": "2025-01-04"
+    },
+    "S000344": {
+      "fingerprint": "b83bc5d601b819a6",
+      "changedOn": "2025-01-04"
+    },
+    "S001148": {
+      "fingerprint": "b1ed9f943d505e93",
+      "changedOn": "2025-01-04"
+    },
+    "S000510": {
+      "fingerprint": "ef5a67cd1888db25",
+      "changedOn": "2025-01-04"
+    },
+    "S001172": {
+      "fingerprint": "96117bfdb22f39f4",
+      "changedOn": "2025-01-04"
+    },
+    "S000522": {
+      "fingerprint": "4d937ea52ef64116",
+      "changedOn": "2025-03-26"
+    },
+    "S001156": {
+      "fingerprint": "015fa9803b422a7c",
+      "changedOn": "2025-01-04"
+    },
+    "T000193": {
+      "fingerprint": "b551a4a3a0393dd0",
+      "changedOn": "2025-01-04"
+    },
+    "T000460": {
+      "fingerprint": "4f7035cb03905883",
+      "changedOn": "2025-01-04"
+    },
+    "T000467": {
+      "fingerprint": "953c0a0b449c09a8",
+      "changedOn": "2025-01-04"
+    },
+    "T000250": {
+      "fingerprint": "8253fdb29d9b9dd1",
+      "changedOn": "2024-12-18"
+    },
+    "T000469": {
+      "fingerprint": "e3d9ad6f367b1414",
+      "changedOn": "2025-01-04"
+    },
+    "T000463": {
+      "fingerprint": "13ff6f7f378babc9",
+      "changedOn": "2025-01-04"
+    },
+    "V000128": {
+      "fingerprint": "d7ba6fc9b5d28ec9",
+      "changedOn": "2025-01-03"
+    },
+    "V000081": {
+      "fingerprint": "caa8a49cb339c90f",
+      "changedOn": "2025-01-04"
+    },
+    "W000798": {
+      "fingerprint": "81c42ba7e72f8b94",
+      "changedOn": "2025-01-04"
+    },
+    "W000797": {
+      "fingerprint": "c7ac3c25b503098c",
+      "changedOn": "2025-01-04"
+    },
+    "W000187": {
+      "fingerprint": "d7f05b5f0dc1ab69",
+      "changedOn": "2025-01-04"
+    },
+    "W000806": {
+      "fingerprint": "39008a55049d1c4b",
+      "changedOn": "2025-01-04"
+    },
+    "W000800": {
+      "fingerprint": "49063201734da893",
+      "changedOn": "2025-09-11"
+    },
+    "W000795": {
+      "fingerprint": "ada93a73ead124d3",
+      "changedOn": "2025-01-04"
+    },
+    "W000808": {
+      "fingerprint": "13ea99ec6729b3d6",
+      "changedOn": "2025-01-04"
+    },
+    "W000804": {
+      "fingerprint": "c51045f51711372d",
+      "changedOn": "2025-01-04"
+    },
+    "W000809": {
+      "fingerprint": "8ff86074bc946f0c",
+      "changedOn": "2025-01-04"
+    },
+    "W000779": {
+      "fingerprint": "9568d3af4bb8e13f",
+      "changedOn": "2024-12-18"
+    },
+    "Y000064": {
+      "fingerprint": "5b13c5bd8d4224a3",
+      "changedOn": "2024-12-18"
+    },
+    "A000369": {
+      "fingerprint": "18916f9c6ce7c9b6",
+      "changedOn": "2025-01-04"
+    },
+    "B001278": {
+      "fingerprint": "57b98ef217da26b2",
+      "changedOn": "2025-01-04"
+    },
+    "D000617": {
+      "fingerprint": "41316b302ebf9e89",
+      "changedOn": "2025-01-04"
+    },
+    "M001184": {
+      "fingerprint": "7835c5b907c595d2",
+      "changedOn": "2025-01-04"
+    },
+    "S001194": {
+      "fingerprint": "b69f5cb8d77ce765",
+      "changedOn": "2024-12-18"
+    },
+    "F000454": {
+      "fingerprint": "e5fd9e4fd4a48e81",
+      "changedOn": "2025-01-04"
+    },
+    "T000468": {
+      "fingerprint": "ecdc1a9643d24d38",
+      "changedOn": "2025-01-04"
+    },
+    "C001095": {
+      "fingerprint": "9809cbd796b2d21b",
+      "changedOn": "2024-12-18"
+    },
+    "H001068": {
+      "fingerprint": "fd778f3de80b4d4a",
+      "changedOn": "2025-01-04"
+    },
+    "B001287": {
+      "fingerprint": "0f523418abf0d3c9",
+      "changedOn": "2025-01-04"
+    },
+    "B001285": {
+      "fingerprint": "76dfa4ef38bc0010",
+      "changedOn": "2025-01-04"
+    },
+    "R000599": {
+      "fingerprint": "70b02356041a108d",
+      "changedOn": "2025-01-04"
+    },
+    "T000472": {
+      "fingerprint": "ed3fbdba3c966bbc",
+      "changedOn": "2025-01-04"
+    },
+    "V000130": {
+      "fingerprint": "a9e7dbd2fc70d2da",
+      "changedOn": "2025-01-04"
+    },
+    "P000608": {
+      "fingerprint": "4d92fad1de2a72c3",
+      "changedOn": "2025-01-04"
+    },
+    "F000462": {
+      "fingerprint": "39403840cd0ce907",
+      "changedOn": "2025-01-04"
+    },
+    "D000622": {
+      "fingerprint": "c5560a12f8729a5b",
+      "changedOn": "2024-12-18"
+    },
+    "B001282": {
+      "fingerprint": "3fc13d2a239b4d50",
+      "changedOn": "2025-01-04"
+    },
+    "W000817": {
+      "fingerprint": "0d26fe492a55eb7b",
+      "changedOn": "2025-02-02"
+    },
+    "K000383": {
+      "fingerprint": "b0fd4c51acd2cadf",
+      "changedOn": "2025-01-04"
+    },
+    "W000812": {
+      "fingerprint": "3f27086bc7de9f23",
+      "changedOn": "2025-01-04"
+    },
+    "D000618": {
+      "fingerprint": "3c6e5885c554d567",
+      "changedOn": "2025-01-03"
+    },
+    "H001067": {
+      "fingerprint": "e35d29ae6c38afa2",
+      "changedOn": "2025-07-29"
+    },
+    "C001096": {
+      "fingerprint": "99e76adce63ab822",
+      "changedOn": "2025-01-04"
+    },
+    "F000463": {
+      "fingerprint": "7402be6e2a6b874a",
+      "changedOn": "2025-01-04"
+    },
+    "M001188": {
+      "fingerprint": "86dd7d75014949c6",
+      "changedOn": "2025-01-04"
+    },
+    "J000294": {
+      "fingerprint": "9c721c6e1908813b",
+      "changedOn": "2025-01-04"
+    },
+    "B001281": {
+      "fingerprint": "601cb1e253d5477f",
+      "changedOn": "2025-01-04"
+    },
+    "J000295": {
+      "fingerprint": "1a396e81b63907b6",
+      "changedOn": "2025-01-04"
+    },
+    "P000605": {
+      "fingerprint": "b4ae04322e902510",
+      "changedOn": "2025-01-04"
+    },
+    "C001098": {
+      "fingerprint": "2d678a69683c1610",
+      "changedOn": "2025-01-04"
+    },
+    "W000814": {
+      "fingerprint": "7ceeeae50ac37da0",
+      "changedOn": "2025-01-04"
+    },
+    "C001091": {
+      "fingerprint": "3744e2a7e14f3805",
+      "changedOn": "2025-01-04"
+    },
+    "W000816": {
+      "fingerprint": "0e450963b731f596",
+      "changedOn": "2025-01-04"
+    },
+    "V000131": {
+      "fingerprint": "3548a307f360c120",
+      "changedOn": "2025-01-04"
+    },
+    "K000384": {
+      "fingerprint": "5b45c64aa5330bb6",
+      "changedOn": "2025-01-04"
+    },
+    "P000607": {
+      "fingerprint": "e73943a5a116ffe7",
+      "changedOn": "2025-01-04"
+    },
+    "K000385": {
+      "fingerprint": "66c480b795f4c637",
+      "changedOn": "2025-01-04"
+    },
+    "S001195": {
+      "fingerprint": "29559dffb1ec6da5",
+      "changedOn": "2025-01-04"
+    },
+    "B001288": {
+      "fingerprint": "7e0ac01b87cbd8a1",
+      "changedOn": "2025-02-02"
+    },
+    "C001101": {
+      "fingerprint": "9563dc26962287b6",
+      "changedOn": "2025-01-04"
+    },
+    "N000188": {
+      "fingerprint": "0140b00b6472e93e",
+      "changedOn": "2025-01-04"
+    },
+    "A000370": {
+      "fingerprint": "51227e8a259d42fb",
+      "changedOn": "2025-01-04"
+    },
+    "P000609": {
+      "fingerprint": "ca257c951d211a94",
+      "changedOn": "2025-01-04"
+    },
+    "H001072": {
+      "fingerprint": "76d1037d7915e39a",
+      "changedOn": "2025-01-04"
+    },
+    "W000821": {
+      "fingerprint": "b09abd56a502ce55",
+      "changedOn": "2025-01-04"
+    },
+    "G000574": {
+      "fingerprint": "fa204d9333f0d357",
+      "changedOn": "2025-04-04"
+    },
+    "D000623": {
+      "fingerprint": "66b85eda515e60bf",
+      "changedOn": "2025-01-04"
+    },
+    "A000371": {
+      "fingerprint": "3ed093db709f34c2",
+      "changedOn": "2025-01-04"
+    },
+    "L000582": {
+      "fingerprint": "8d867063a926206c",
+      "changedOn": "2025-01-04"
+    },
+    "T000474": {
+      "fingerprint": "f6d8b64459ef3d54",
+      "changedOn": "2025-01-04"
+    },
+    "C001103": {
+      "fingerprint": "72193f6436f31326",
+      "changedOn": "2025-01-04"
+    },
+    "L000583": {
+      "fingerprint": "202418acc160ff4b",
+      "changedOn": "2025-01-04"
+    },
+    "A000372": {
+      "fingerprint": "7197d42a6d11cd4a",
+      "changedOn": "2025-01-04"
+    },
+    "B001295": {
+      "fingerprint": "f8a5ca506f34b4ed",
+      "changedOn": "2025-01-04"
+    },
+    "M001196": {
+      "fingerprint": "9c18c1a28bd358ca",
+      "changedOn": "2025-01-04"
+    },
+    "M001194": {
+      "fingerprint": "26dbcaa0faa50589",
+      "changedOn": "2025-01-04"
+    },
+    "D000624": {
+      "fingerprint": "d05565964ee4a1b6",
+      "changedOn": "2025-01-04"
+    },
+    "E000294": {
+      "fingerprint": "88f92344f7466daf",
+      "changedOn": "2025-01-04"
+    },
+    "R000603": {
+      "fingerprint": "ea5f8a7754c5328d",
+      "changedOn": "2025-01-04"
+    },
+    "W000822": {
+      "fingerprint": "31309cac01b709bc",
+      "changedOn": "2025-01-04"
+    },
+    "S001196": {
+      "fingerprint": "0b1d3a7048a3db02",
+      "changedOn": "2025-01-04"
+    },
+    "B001296": {
+      "fingerprint": "b426dd8c83e44cf0",
+      "changedOn": "2025-01-04"
+    },
+    "B001291": {
+      "fingerprint": "345a9614548b32d0",
+      "changedOn": "2025-01-04"
+    },
+    "B001292": {
+      "fingerprint": "61b71220cef018e9",
+      "changedOn": "2025-01-04"
+    },
+    "P000610": {
+      "fingerprint": "449ca47b097aca89",
+      "changedOn": "2025-01-04"
+    },
+    "N000189": {
+      "fingerprint": "b96024b90d555236",
+      "changedOn": "2025-01-04"
+    },
+    "G000576": {
+      "fingerprint": "f79b84c84795e3b1",
+      "changedOn": "2025-01-04"
+    },
+    "R000600": {
+      "fingerprint": "e7fb6ea606c135d0",
+      "changedOn": "2025-01-04"
+    },
+    "S001198": {
+      "fingerprint": "7bf291f102b48565",
+      "changedOn": "2025-03-04"
+    },
+    "E000295": {
+      "fingerprint": "eba04ba4eb3f1e6e",
+      "changedOn": "2024-12-18"
+    },
+    "T000476": {
+      "fingerprint": "87532603222d9f48",
+      "changedOn": "2025-07-29"
+    },
+    "R000605": {
+      "fingerprint": "d02f93849443b72a",
+      "changedOn": "2024-12-18"
+    },
+    "K000388": {
+      "fingerprint": "0cc0f4760106c866",
+      "changedOn": "2025-01-04"
+    },
+    "L000585": {
+      "fingerprint": "6b782a03511c72f4",
+      "changedOn": "2025-01-04"
+    },
+    "D000626": {
+      "fingerprint": "d04f15f625138056",
+      "changedOn": "2025-01-04"
+    },
+    "C001108": {
+      "fingerprint": "849f7d823311bbd1",
+      "changedOn": "2025-01-04"
+    },
+    "E000296": {
+      "fingerprint": "f7fc8fb0a1865dac",
+      "changedOn": "2025-01-04"
+    },
+    "K000393": {
+      "fingerprint": "d5386bb961d513ff",
+      "changedOn": "2024-12-18"
+    },
+    "H001076": {
+      "fingerprint": "8639a8f46fd4fa57",
+      "changedOn": "2024-12-18"
+    },
+    "C001113": {
+      "fingerprint": "89a1f61a10a8e9d2",
+      "changedOn": "2025-03-04"
+    },
+    "S001190": {
+      "fingerprint": "5fc47b4d2cf4f149",
+      "changedOn": "2025-01-04"
+    },
+    "B001302": {
+      "fingerprint": "ed7e8995fe5c7087",
+      "changedOn": "2025-01-04"
+    },
+    "K000389": {
+      "fingerprint": "a746c220c198dd99",
+      "changedOn": "2025-01-04"
+    },
+    "P000613": {
+      "fingerprint": "60da7614f7930d85",
+      "changedOn": "2025-01-04"
+    },
+    "C001112": {
+      "fingerprint": "836e5bf88b2b995c",
+      "changedOn": "2025-01-04"
+    },
+    "B001300": {
+      "fingerprint": "94ac20a447ae7171",
+      "changedOn": "2025-01-04"
+    },
+    "C001110": {
+      "fingerprint": "c582d0d98e27788b",
+      "changedOn": "2025-01-04"
+    },
+    "B001303": {
+      "fingerprint": "a42d82e8be3cfca4",
+      "changedOn": "2025-03-04"
+    },
+    "D000628": {
+      "fingerprint": "7736463a449fb70e",
+      "changedOn": "2025-01-04"
+    },
+    "R000609": {
+      "fingerprint": "b063c793c254acdf",
+      "changedOn": "2025-01-04"
+    },
+    "S001200": {
+      "fingerprint": "94368ae5660e67f7",
+      "changedOn": "2025-01-04"
+    },
+    "M001199": {
+      "fingerprint": "4101fa7036816bc2",
+      "changedOn": "2025-01-04"
+    },
+    "K000391": {
+      "fingerprint": "d155f6a1524c76a7",
+      "changedOn": "2025-01-04"
+    },
+    "B001299": {
+      "fingerprint": "2888a60818191331",
+      "changedOn": "2025-04-04"
+    },
+    "M001198": {
+      "fingerprint": "f31048a272633a3c",
+      "changedOn": "2024-12-18"
+    },
+    "H001077": {
+      "fingerprint": "c3705df43d237223",
+      "changedOn": "2025-01-04"
+    },
+    "J000299": {
+      "fingerprint": "6c44344765101622",
+      "changedOn": "2025-07-29"
+    },
+    "R000606": {
+      "fingerprint": "1628c917b41032e9",
+      "changedOn": "2025-01-04"
+    },
+    "B001301": {
+      "fingerprint": "4ffed280c3d047e9",
+      "changedOn": "2025-01-04"
+    },
+    "B001305": {
+      "fingerprint": "5a07fcb3d1b926df",
+      "changedOn": "2025-04-04"
+    },
+    "B001298": {
+      "fingerprint": "6fae511aa59d19b0",
+      "changedOn": "2025-01-04"
+    },
+    "G000583": {
+      "fingerprint": "33e198f778f41c88",
+      "changedOn": "2025-01-04"
+    },
+    "R000608": {
+      "fingerprint": "7833ebe9d90bcbe3",
+      "changedOn": "2025-01-04"
+    },
+    "E000297": {
+      "fingerprint": "94b1850c7fc19e35",
+      "changedOn": "2025-01-04"
+    },
+    "F000466": {
+      "fingerprint": "fa8a57e3e2b4fada",
+      "changedOn": "2025-01-04"
+    },
+    "S001199": {
+      "fingerprint": "c395140e04e067ec",
+      "changedOn": "2025-01-04"
+    },
+    "K000392": {
+      "fingerprint": "b374362f20c9a25b",
+      "changedOn": "2025-01-04"
+    },
+    "G000581": {
+      "fingerprint": "d337793e96aa222d",
+      "changedOn": "2025-01-04"
+    },
+    "A000375": {
+      "fingerprint": "8868bb12baea660d",
+      "changedOn": "2025-01-04"
+    },
+    "J000298": {
+      "fingerprint": "da1a962266643045",
+      "changedOn": "2025-01-04"
+    },
+    "E000298": {
+      "fingerprint": "b1ae37b36af4ee5a",
+      "changedOn": "2025-01-04"
+    },
+    "N000190": {
+      "fingerprint": "ed4f2b466a7d13d8",
+      "changedOn": "2025-01-04"
+    },
+    "G000585": {
+      "fingerprint": "c5021c74ef52e5a7",
+      "changedOn": "2025-01-04"
+    },
+    "C001114": {
+      "fingerprint": "cfefc56aed4ca5a1",
+      "changedOn": "2025-07-29"
+    },
+    "S001203": {
+      "fingerprint": "e6db1db234d901f8",
+      "changedOn": "2024-12-18"
+    },
+    "H001079": {
+      "fingerprint": "ccb2255b12a8266f",
+      "changedOn": "2025-03-04"
+    },
+    "C001115": {
+      "fingerprint": "7030a35970ae8f9b",
+      "changedOn": "2025-01-04"
+    },
+    "B001306": {
+      "fingerprint": "ccc2820263af5c01",
+      "changedOn": "2025-01-04"
+    },
+    "H001082": {
+      "fingerprint": "34a81a5992130ac3",
+      "changedOn": "2025-01-04"
+    },
+    "M001206": {
+      "fingerprint": "b100a9a9ebab9aa8",
+      "changedOn": "2025-01-04"
+    },
+    "S001205": {
+      "fingerprint": "620b35110072912d",
+      "changedOn": "2025-01-04"
+    },
+    "C001055": {
+      "fingerprint": "b755012482dfeef2",
+      "changedOn": "2025-01-04"
+    },
+    "H001066": {
+      "fingerprint": "0b4e92a3816f538d",
+      "changedOn": "2025-01-04"
+    },
+    "S001211": {
+      "fingerprint": "c9da2a9650566807",
+      "changedOn": "2025-01-04"
+    },
+    "H001090": {
+      "fingerprint": "6b65f79848dae72d",
+      "changedOn": "2025-01-04"
+    },
+    "L000593": {
+      "fingerprint": "19329cea8f17258c",
+      "changedOn": "2025-01-04"
+    },
+    "N000191": {
+      "fingerprint": "ac162b25c76c4351",
+      "changedOn": "2025-01-04"
+    },
+    "C001121": {
+      "fingerprint": "6307482c47dd2a8a",
+      "changedOn": "2025-01-04"
+    },
+    "H001081": {
+      "fingerprint": "a39b9a68d32a5871",
+      "changedOn": "2025-01-04"
+    },
+    "S001214": {
+      "fingerprint": "cdef53f158832812",
+      "changedOn": "2025-01-04"
+    },
+    "M001208": {
+      "fingerprint": "7a1a55cc8b408722",
+      "changedOn": "2025-01-04"
+    },
+    "F000469": {
+      "fingerprint": "76ee8160d66e0688",
+      "changedOn": "2026-07-10"
+    },
+    "G000586": {
+      "fingerprint": "f613719d46a5d623",
+      "changedOn": "2025-01-04"
+    },
+    "C001117": {
+      "fingerprint": "099eb80a74e7a12d",
+      "changedOn": "2025-01-04"
+    },
+    "U000040": {
+      "fingerprint": "5add44a390e89461",
+      "changedOn": "2025-01-04"
+    },
+    "B001307": {
+      "fingerprint": "f8f62e2d9443985b",
+      "changedOn": "2025-01-04"
+    },
+    "D000629": {
+      "fingerprint": "260e78c879943a3c",
+      "changedOn": "2025-01-04"
+    },
+    "T000482": {
+      "fingerprint": "bf1f44a32cffbcb1",
+      "changedOn": "2025-01-04"
+    },
+    "P000617": {
+      "fingerprint": "100fd5eacc6e541e",
+      "changedOn": "2025-01-04"
+    },
+    "S001208": {
+      "fingerprint": "fdd470f552b60713",
+      "changedOn": "2025-04-04"
+    },
+    "S001215": {
+      "fingerprint": "b5dd528f1a53712a",
+      "changedOn": "2025-01-04"
+    },
+    "T000481": {
+      "fingerprint": "5443b09ca0c02bd4",
+      "changedOn": "2025-01-04"
+    },
+    "C001119": {
+      "fingerprint": "def9493b80f359ff",
+      "changedOn": "2025-01-04"
+    },
+    "O000173": {
+      "fingerprint": "281b89cb7fe42fd4",
+      "changedOn": "2025-01-04"
+    },
+    "S001212": {
+      "fingerprint": "ff26c7a413cf11e0",
+      "changedOn": "2025-01-04"
+    },
+    "G000591": {
+      "fingerprint": "bf8f48b69ee87c34",
+      "changedOn": "2025-01-04"
+    },
+    "P000614": {
+      "fingerprint": "0a35f91e16641baa",
+      "changedOn": "2025-01-04"
+    },
+    "V000133": {
+      "fingerprint": "ea6018be621ce30a",
+      "changedOn": "2025-01-04"
+    },
+    "K000394": {
+      "fingerprint": "0f5af6d75c502d6d",
+      "changedOn": "2025-04-04"
+    },
+    "L000590": {
+      "fingerprint": "adaaeac62916ed50",
+      "changedOn": "2025-01-04"
+    },
+    "O000172": {
+      "fingerprint": "9838b7ff1c1c18ab",
+      "changedOn": "2025-01-04"
+    },
+    "D000631": {
+      "fingerprint": "36ed86e4ed77d5d9",
+      "changedOn": "2025-01-04"
+    },
+    "H001085": {
+      "fingerprint": "ce1a874ab5efafa0",
+      "changedOn": "2025-01-04"
+    },
+    "M001204": {
+      "fingerprint": "69e9fdf2ce64bbbb",
+      "changedOn": "2025-01-04"
+    },
+    "J000302": {
+      "fingerprint": "8496672c3ed1deff",
+      "changedOn": "2025-01-04"
+    },
+    "R000610": {
+      "fingerprint": "768e1ee289ae1dc0",
+      "changedOn": "2025-01-04"
+    },
+    "T000480": {
+      "fingerprint": "56f2794e61b1b826",
+      "changedOn": "2025-01-04"
+    },
+    "J000301": {
+      "fingerprint": "6b7686427759eade",
+      "changedOn": "2025-01-04"
+    },
+    "B001309": {
+      "fingerprint": "b759a70647dc3f0d",
+      "changedOn": "2025-01-04"
+    },
+    "R000612": {
+      "fingerprint": "99014da3e3695b13",
+      "changedOn": "2025-01-04"
+    },
+    "C001120": {
+      "fingerprint": "80113d7973ca6810",
+      "changedOn": "2025-01-04"
+    },
+    "G000589": {
+      "fingerprint": "724d251f0b1e0807",
+      "changedOn": "2025-01-04"
+    },
+    "F000468": {
+      "fingerprint": "f9a71ca9e961c398",
+      "changedOn": "2025-01-04"
+    },
+    "E000299": {
+      "fingerprint": "4a1c6de02d9221bf",
+      "changedOn": "2025-01-04"
+    },
+    "R000614": {
+      "fingerprint": "651cbb997f902bbb",
+      "changedOn": "2025-01-04"
+    },
+    "G000587": {
+      "fingerprint": "1e75c9c45e142584",
+      "changedOn": "2025-01-04"
+    },
+    "C001118": {
+      "fingerprint": "98e1041dbc076eb2",
+      "changedOn": "2025-01-04"
+    },
+    "S001216": {
+      "fingerprint": "b9c8ad3c70446764",
+      "changedOn": "2025-01-04"
+    },
+    "S001213": {
+      "fingerprint": "b4a21db308ac4128",
+      "changedOn": "2025-01-04"
+    },
+    "M001205": {
+      "fingerprint": "31a5c32a9e8e68ea",
+      "changedOn": "2025-01-04"
+    },
+    "S001217": {
+      "fingerprint": "7a08a6fa9384e66b",
+      "changedOn": "2025-02-23"
+    },
+    "H001089": {
+      "fingerprint": "0c3f44c42ec0660b",
+      "changedOn": "2025-09-11"
+    },
+    "G000592": {
+      "fingerprint": "46c0e2ac03d16dd6",
+      "changedOn": "2025-01-04"
+    },
+    "M001210": {
+      "fingerprint": "48dfad1123e47400",
+      "changedOn": "2025-01-04"
+    },
+    "M000687": {
+      "fingerprint": "7fd773b4340ac6d3",
+      "changedOn": "2025-01-04"
+    },
+    "T000165": {
+      "fingerprint": "277dca2ec29d45e3",
+      "changedOn": "2025-01-04"
+    },
+    "K000377": {
+      "fingerprint": "326294b9c244d8ca",
+      "changedOn": "2025-01-03"
+    },
+    "L000571": {
+      "fingerprint": "b86209e3871bb5aa",
+      "changedOn": "2024-12-18"
+    },
+    "I000056": {
+      "fingerprint": "c2d5feab1b8b5c04",
+      "changedOn": "2025-01-04"
+    },
+    "S000250": {
+      "fingerprint": "3fa504e13673ff03",
+      "changedOn": "2025-01-04"
+    },
+    "V000129": {
+      "fingerprint": "a8290d7d8151fc10",
+      "changedOn": "2025-01-04"
+    },
+    "T000278": {
+      "fingerprint": "67450dbe9ba74a13",
+      "changedOn": "2025-07-29"
+    },
+    "H000273": {
+      "fingerprint": "386780aae26a9899",
+      "changedOn": "2025-07-29"
+    },
+    "H000601": {
+      "fingerprint": "1140cbe84e0d6c4b",
+      "changedOn": "2024-12-18"
+    },
+    "M001212": {
+      "fingerprint": "37aab450d65052ad",
+      "changedOn": "2025-01-04"
+    },
+    "O000019": {
+      "fingerprint": "7d25002d8045302c",
+      "changedOn": "2025-01-04"
+    },
+    "K000397": {
+      "fingerprint": "be88af402fc68a53",
+      "changedOn": "2025-01-04"
+    },
+    "J000305": {
+      "fingerprint": "8cd731ba81f38846",
+      "changedOn": "2025-01-04"
+    },
+    "B000825": {
+      "fingerprint": "c8397d54be312f0f",
+      "changedOn": "2025-01-04"
+    },
+    "C001039": {
+      "fingerprint": "bae2ee331cba4e36",
+      "changedOn": "2025-01-04"
+    },
+    "F000472": {
+      "fingerprint": "71f6c5c8f11f7074",
+      "changedOn": "2025-01-04"
+    },
+    "D000032": {
+      "fingerprint": "03806e7f8d7affcc",
+      "changedOn": "2025-01-04"
+    },
+    "G000593": {
+      "fingerprint": "cdf015be46b69146",
+      "changedOn": "2025-01-04"
+    },
+    "S000168": {
+      "fingerprint": "ef8ad769cf6fd569",
+      "changedOn": "2025-01-04"
+    },
+    "W000788": {
+      "fingerprint": "6d9a93e251895ea6",
+      "changedOn": "2025-01-04"
+    },
+    "C001116": {
+      "fingerprint": "16155e0f84eaaeab",
+      "changedOn": "2025-01-04"
+    },
+    "H001091": {
+      "fingerprint": "9c17c500e745aa4f",
+      "changedOn": "2025-01-04"
+    },
+    "M001215": {
+      "fingerprint": "c8d9717f3668d9a3",
+      "changedOn": "2025-01-04"
+    },
+    "F000446": {
+      "fingerprint": "b5c3ed0e35ef9f66",
+      "changedOn": "2025-01-04"
+    },
+    "M001211": {
+      "fingerprint": "0af387038fa8bd1b",
+      "changedOn": "2025-01-04"
+    },
+    "M001214": {
+      "fingerprint": "785f8b128440f72f",
+      "changedOn": "2025-01-04"
+    },
+    "S000929": {
+      "fingerprint": "245cdc18fde5ee25",
+      "changedOn": "2025-01-04"
+    },
+    "M000871": {
+      "fingerprint": "18b69ceb25605b5c",
+      "changedOn": "2025-01-04"
+    },
+    "A000148": {
+      "fingerprint": "2e7cbb39790101b6",
+      "changedOn": "2025-01-04"
+    },
+    "M001136": {
+      "fingerprint": "d2dd1e50d871825b",
+      "changedOn": "2025-01-04"
+    },
+    "F000470": {
+      "fingerprint": "cbcc2647fc6f48a2",
+      "changedOn": "2025-01-04"
+    },
+    "R000305": {
+      "fingerprint": "8581a916e2349263",
+      "changedOn": "2025-01-04"
+    },
+    "L000273": {
+      "fingerprint": "ef558bdaef99f48d",
+      "changedOn": "2025-01-04"
+    },
+    "G000597": {
+      "fingerprint": "07aa378c95234920",
+      "changedOn": "2025-01-04"
+    },
+    "M000317": {
+      "fingerprint": "0a60a8794e4586ee",
+      "changedOn": "2025-01-04"
+    },
+    "T000486": {
+      "fingerprint": "4dfe61f221444956",
+      "changedOn": "2025-01-04"
+    },
+    "B000740": {
+      "fingerprint": "0e6ca1f246772db1",
+      "changedOn": "2025-01-04"
+    },
+    "B000668": {
+      "fingerprint": "3cc4894946f131c6",
+      "changedOn": "2025-03-26"
+    },
+    "M000194": {
+      "fingerprint": "fe8d5e2cc775860c",
+      "changedOn": "2025-01-04"
+    },
+    "H001086": {
+      "fingerprint": "cfeb1aa1a79eacb1",
+      "changedOn": "2025-01-04"
+    },
+    "F000246": {
+      "fingerprint": "836b07a1e15b7267",
+      "changedOn": "2025-01-04"
+    },
+    "P000048": {
+      "fingerprint": "1653b74aab3795ce",
+      "changedOn": "2025-01-04"
+    },
+    "J000304": {
+      "fingerprint": "fe0b9f96b75091f7",
+      "changedOn": "2025-01-04"
+    },
+    "N000026": {
+      "fingerprint": "2d5f51f1beb81961",
+      "changedOn": "2025-01-04"
+    },
+    "V000134": {
+      "fingerprint": "4003e5ec6a1c02c4",
+      "changedOn": "2025-01-04"
+    },
+    "M001213": {
+      "fingerprint": "a23822bdd2a20245",
+      "changedOn": "2025-01-04"
+    },
+    "O000086": {
+      "fingerprint": "845c380da4eba235",
+      "changedOn": "2025-01-04"
+    },
+    "S001159": {
+      "fingerprint": "3603ac509ccba0e4",
+      "changedOn": "2025-01-04"
+    },
+    "F000471": {
+      "fingerprint": "66b2c5a75955fec6",
+      "changedOn": "2025-01-04"
+    },
+    "P000145": {
+      "fingerprint": "91418d2e707c9b30",
+      "changedOn": "2024-12-18"
+    },
+    "O000174": {
+      "fingerprint": "b1de1a2586800e30",
+      "changedOn": "2025-03-04"
+    },
+    "W000790": {
+      "fingerprint": "e760681e22fb43bb",
+      "changedOn": "2025-07-29"
+    },
+    "T000478": {
+      "fingerprint": "52bceb9f08c2f19c",
+      "changedOn": "2025-01-04"
+    },
+    "L000595": {
+      "fingerprint": "6ea12b8900a690be",
+      "changedOn": "2025-01-04"
+    },
+    "C001125": {
+      "fingerprint": "bb614b81a856d52a",
+      "changedOn": "2025-01-04"
+    },
+    "S001218": {
+      "fingerprint": "0a73419a54faf092",
+      "changedOn": "2025-01-04"
+    },
+    "E000071": {
+      "fingerprint": "889cba77e858d578",
+      "changedOn": "2025-01-04"
+    },
+    "B001313": {
+      "fingerprint": "78332fe1ca201260",
+      "changedOn": "2025-01-04"
+    },
+    "C001126": {
+      "fingerprint": "a7bee937300d0dee",
+      "changedOn": "2025-01-04"
+    },
+    "F000474": {
+      "fingerprint": "ada3bdba262f21a1",
+      "changedOn": "2025-01-04"
+    },
+    "F000475": {
+      "fingerprint": "734194aed5561d73",
+      "changedOn": "2025-01-04"
+    },
+    "R000579": {
+      "fingerprint": "aaafbf06d0fa7f27",
+      "changedOn": "2025-01-04"
+    },
+    "Y000067": {
+      "fingerprint": "ea19a67b212da8c5",
+      "changedOn": "2025-01-04"
+    },
+    "Z000018": {
+      "fingerprint": "a81b70588db0f0e7",
+      "changedOn": "2025-01-04"
+    },
+    "B001319": {
+      "fingerprint": "b6763572f46435a1",
+      "changedOn": "2025-04-04"
+    },
+    "S001227": {
+      "fingerprint": "c90f4f9355af3171",
+      "changedOn": "2025-07-29"
+    },
+    "F000479": {
+      "fingerprint": "06a3171b5eefe0f2",
+      "changedOn": "2025-01-03"
+    },
+    "S001220": {
+      "fingerprint": "c272cfe1993841d4",
+      "changedOn": "2025-01-04"
+    },
+    "C001132": {
+      "fingerprint": "87a89000b17507f7",
+      "changedOn": "2025-01-04"
+    },
+    "C001133": {
+      "fingerprint": "9267463917c9cf2d",
+      "changedOn": "2025-01-04"
+    },
+    "K000401": {
+      "fingerprint": "eb65b1d966052aef",
+      "changedOn": "2026-03-25"
+    },
+    "M001225": {
+      "fingerprint": "7aa6dcc08640b082",
+      "changedOn": "2025-01-04"
+    },
+    "K000400": {
+      "fingerprint": "8cb294fb9846b892",
+      "changedOn": "2025-01-04"
+    },
+    "G000598": {
+      "fingerprint": "2a3438bf39d37f20",
+      "changedOn": "2025-01-04"
+    },
+    "P000620": {
+      "fingerprint": "60237ae41aa66858",
+      "changedOn": "2025-01-04"
+    },
+    "B001314": {
+      "fingerprint": "19d00de3e069f65d",
+      "changedOn": "2025-01-04"
+    },
+    "M001216": {
+      "fingerprint": "d90a6f51cae776b2",
+      "changedOn": "2025-01-04"
+    },
+    "F000476": {
+      "fingerprint": "bba0e3e26c276af6",
+      "changedOn": "2025-01-04"
+    },
+    "L000596": {
+      "fingerprint": "f0122e7bcec10a67",
+      "changedOn": "2025-01-04"
+    },
+    "L000597": {
+      "fingerprint": "8a3919417c289c38",
+      "changedOn": "2025-01-04"
+    },
+    "M001217": {
+      "fingerprint": "17d96f99b62a72d1",
+      "changedOn": "2025-01-04"
+    },
+    "M001218": {
+      "fingerprint": "15fac397ddd8a255",
+      "changedOn": "2025-01-04"
+    },
+    "C001129": {
+      "fingerprint": "c3fb7b11691bad86",
+      "changedOn": "2025-01-04"
+    },
+    "M001219": {
+      "fingerprint": "988681332843c5c2",
+      "changedOn": "2025-01-04"
+    },
+    "T000487": {
+      "fingerprint": "41f4c98541b13eae",
+      "changedOn": "2025-01-04"
+    },
+    "N000193": {
+      "fingerprint": "5e2a7d284c20ccaf",
+      "changedOn": "2025-01-04"
+    },
+    "J000309": {
+      "fingerprint": "258dad5ad9fffb84",
+      "changedOn": "2025-01-04"
+    },
+    "R000617": {
+      "fingerprint": "401f554af4bebffc",
+      "changedOn": "2025-01-04"
+    },
+    "B001315": {
+      "fingerprint": "0a30b680eb6acaa1",
+      "changedOn": "2025-01-04"
+    },
+    "S001225": {
+      "fingerprint": "2991e3da01da6687",
+      "changedOn": "2025-01-04"
+    },
+    "H001093": {
+      "fingerprint": "412a5de1dd311421",
+      "changedOn": "2025-01-04"
+    },
+    "M001220": {
+      "fingerprint": "80c2139db138c9e2",
+      "changedOn": "2025-01-04"
+    },
+    "I000058": {
+      "fingerprint": "fe211333672bf625",
+      "changedOn": "2025-01-04"
+    },
+    "S001221": {
+      "fingerprint": "1e65760e7896b4e8",
+      "changedOn": "2025-01-04"
+    },
+    "J000307": {
+      "fingerprint": "8a7be6e16fe93823",
+      "changedOn": "2025-01-04"
+    },
+    "T000488": {
+      "fingerprint": "96e2bd2e4791dff3",
+      "changedOn": "2025-01-04"
+    },
+    "A000379": {
+      "fingerprint": "83cb582fac1b41ba",
+      "changedOn": "2025-01-04"
+    },
+    "B001316": {
+      "fingerprint": "cc56382fced50b26",
+      "changedOn": "2025-01-04"
+    },
+    "E000235": {
+      "fingerprint": "338f2d61c05481a2",
+      "changedOn": "2025-01-04"
+    },
+    "D000230": {
+      "fingerprint": "fef0e67fb827e01a",
+      "changedOn": "2025-01-04"
+    },
+    "F000477": {
+      "fingerprint": "a80d33c717ee87d0",
+      "changedOn": "2025-01-04"
+    },
+    "E000246": {
+      "fingerprint": "173cbd2d6e9d8bd5",
+      "changedOn": "2025-01-04"
+    },
+    "K000398": {
+      "fingerprint": "b092e0e6bea0e422",
+      "changedOn": "2025-01-04"
+    },
+    "M001226": {
+      "fingerprint": "c256cbffe2f0c098",
+      "changedOn": "2025-01-04"
+    },
+    "V000136": {
+      "fingerprint": "8079c621b4fdb9fd",
+      "changedOn": "2025-01-04"
+    },
+    "L000598": {
+      "fingerprint": "2baf8a49c46533b3",
+      "changedOn": "2025-01-04"
+    },
+    "G000599": {
+      "fingerprint": "ca287d4b3b90c5e8",
+      "changedOn": "2025-01-04"
+    },
+    "L000599": {
+      "fingerprint": "0820c6aace4b7b90",
+      "changedOn": "2025-01-04"
+    },
+    "L000600": {
+      "fingerprint": "eb74e98dba2c18da",
+      "changedOn": "2025-01-04"
+    },
+    "L000601": {
+      "fingerprint": "28c667a6cb5c10dc",
+      "changedOn": "2025-01-04"
+    },
+    "M001222": {
+      "fingerprint": "0710db4fd5e1ef50",
+      "changedOn": "2025-01-04"
+    },
+    "S001223": {
+      "fingerprint": "d55a58eaf1d99203",
+      "changedOn": "2025-01-04"
+    },
+    "B001317": {
+      "fingerprint": "48d89aaf59ce953d",
+      "changedOn": "2025-01-04"
+    },
+    "H001094": {
+      "fingerprint": "23c23261ee6cefd9",
+      "changedOn": "2025-01-04"
+    },
+    "S001226": {
+      "fingerprint": "59686f54b829b77d",
+      "changedOn": "2025-01-04"
+    },
+    "L000602": {
+      "fingerprint": "5f90e28d7bbd70bd",
+      "changedOn": "2025-01-04"
+    },
+    "D000530": {
+      "fingerprint": "3b1f138bcfac7595",
+      "changedOn": "2025-01-04"
+    },
+    "M001223": {
+      "fingerprint": "fc25e7c11f601953",
+      "changedOn": "2025-01-04"
+    },
+    "F000478": {
+      "fingerprint": "0914c69669608882",
+      "changedOn": "2025-01-04"
+    },
+    "O000175": {
+      "fingerprint": "a2a4b4bc85293510",
+      "changedOn": "2025-01-04"
+    },
+    "M001224": {
+      "fingerprint": "19d67258ad74d833",
+      "changedOn": "2025-01-04"
+    },
+    "S001224": {
+      "fingerprint": "533c71988318f30e",
+      "changedOn": "2025-01-04"
+    },
+    "L000603": {
+      "fingerprint": "9f5138113b19121d",
+      "changedOn": "2025-01-04"
+    },
+    "D000594": {
+      "fingerprint": "e30a88635d2358cc",
+      "changedOn": "2025-01-04"
+    },
+    "C001130": {
+      "fingerprint": "4650ac05812b1533",
+      "changedOn": "2025-01-04"
+    },
+    "C001131": {
+      "fingerprint": "7b54a6533d6b281b",
+      "changedOn": "2025-01-04"
+    },
+    "H001095": {
+      "fingerprint": "a8033aa38ca5508e",
+      "changedOn": "2025-01-04"
+    },
+    "K000399": {
+      "fingerprint": "2146fffa1910093e",
+      "changedOn": "2025-01-04"
+    },
+    "B001318": {
+      "fingerprint": "62e67f07ea136202",
+      "changedOn": "2025-01-04"
+    },
+    "G000600": {
+      "fingerprint": "8b6d0832c2b4b150",
+      "changedOn": "2025-01-04"
+    },
+    "V000135": {
+      "fingerprint": "624ff7b1fe2218ec",
+      "changedOn": "2025-01-04"
+    },
+    "H001096": {
+      "fingerprint": "3c05dd102652c75b",
+      "changedOn": "2025-01-04"
+    },
+    "R000618": {
+      "fingerprint": "8651232b2b2d0ffa",
+      "changedOn": "2024-12-18"
+    },
+    "M001227": {
+      "fingerprint": "f96d2330f640d330",
+      "changedOn": "2025-01-04"
+    },
+    "A000380": {
+      "fingerprint": "8d8a7a88e1f1d430",
+      "changedOn": "2025-01-04"
+    },
+    "M001228": {
+      "fingerprint": "b251a3815a28e779",
+      "changedOn": "2025-01-04"
+    },
+    "S001201": {
+      "fingerprint": "0784ac6d29e70812",
+      "changedOn": "2025-01-04"
+    },
+    "K000402": {
+      "fingerprint": "c2e751ba8499d237",
+      "changedOn": "2025-01-04"
+    },
+    "F000480": {
+      "fingerprint": "fc840a448db122f0",
+      "changedOn": "2025-01-04"
+    },
+    "R000619": {
+      "fingerprint": "c682c28ded088997",
+      "changedOn": "2025-01-04"
+    },
+    "M001229": {
+      "fingerprint": "7c7f5eebed3a171a",
+      "changedOn": "2025-01-04"
+    },
+    "W000829": {
+      "fingerprint": "77b63f2cab79c930",
+      "changedOn": "2025-01-05"
+    },
+    "F000110": {
+      "fingerprint": "fe52de5c83336afd",
+      "changedOn": "2025-01-05"
+    },
+    "S001188": {
+      "fingerprint": "a6b079f2fc69cab4",
+      "changedOn": "2025-01-21"
+    },
+    "C001123": {
+      "fingerprint": "713cae20ac9e3f2e",
+      "changedOn": "2025-01-04"
+    },
+    "A000382": {
+      "fingerprint": "18e954910074853f",
+      "changedOn": "2025-07-29"
+    },
+    "S001232": {
+      "fingerprint": "df8fe153a128aef6",
+      "changedOn": "2025-09-11"
+    },
+    "M001242": {
+      "fingerprint": "b090c4211b3fad9b",
+      "changedOn": "2025-09-11"
+    },
+    "M001243": {
+      "fingerprint": "fa0df6f6133da852",
+      "changedOn": "2025-04-04"
+    },
+    "B001323": {
+      "fingerprint": "8906bc4b459ddc2e",
+      "changedOn": "2025-01-05"
+    },
+    "F000481": {
+      "fingerprint": "2c83dba3c0dae092",
+      "changedOn": "2025-01-05"
+    },
+    "A000381": {
+      "fingerprint": "02dc2a4c75b20208",
+      "changedOn": "2025-01-05"
+    },
+    "H001098": {
+      "fingerprint": "0d64747ba13584e5",
+      "changedOn": "2025-01-21"
+    },
+    "S001231": {
+      "fingerprint": "1a998ba9bea5694c",
+      "changedOn": "2025-01-05"
+    },
+    "G000605": {
+      "fingerprint": "d275710fb639734f",
+      "changedOn": "2025-01-05"
+    },
+    "L000607": {
+      "fingerprint": "8185f97e0b159390",
+      "changedOn": "2025-01-05"
+    },
+    "W000830": {
+      "fingerprint": "610b36af2ea992dc",
+      "changedOn": "2025-01-05"
+    },
+    "R000620": {
+      "fingerprint": "bd297b1c3e4337b3",
+      "changedOn": "2025-01-05"
+    },
+    "F000483": {
+      "fingerprint": "06b7fdda24069831",
+      "changedOn": "2025-01-05"
+    },
+    "T000491": {
+      "fingerprint": "da9a2e08783b3a56",
+      "changedOn": "2025-01-05"
+    },
+    "M001241": {
+      "fingerprint": "79d8e0470db27675",
+      "changedOn": "2025-01-05"
+    },
+    "H001100": {
+      "fingerprint": "6d662e617d9529cf",
+      "changedOn": "2025-01-05"
+    },
+    "C001137": {
+      "fingerprint": "e00494fa0ec690c9",
+      "changedOn": "2025-01-05"
+    },
+    "E000300": {
+      "fingerprint": "c45711a92ac61178",
+      "changedOn": "2025-01-05"
+    },
+    "M001238": {
+      "fingerprint": "522c268f67c4533a",
+      "changedOn": "2025-01-05"
+    },
+    "H001099": {
+      "fingerprint": "6efaa1411cebe411",
+      "changedOn": "2025-01-05"
+    },
+    "J000311": {
+      "fingerprint": "1aeddd1b4583df6e",
+      "changedOn": "2025-01-05"
+    },
+    "S001229": {
+      "fingerprint": "5ec11b7cc1c51be1",
+      "changedOn": "2025-01-05"
+    },
+    "M001233": {
+      "fingerprint": "0d613f5033606512",
+      "changedOn": "2025-01-05"
+    },
+    "S001228": {
+      "fingerprint": "70726cdb79f71ae3",
+      "changedOn": "2025-01-05"
+    },
+    "O000176": {
+      "fingerprint": "2ffba76759456ceb",
+      "changedOn": "2025-01-05"
+    },
+    "E000301": {
+      "fingerprint": "f995317d367c99d8",
+      "changedOn": "2025-01-05"
+    },
+    "M001232": {
+      "fingerprint": "90ee2555bd5b3fd1",
+      "changedOn": "2025-01-05"
+    },
+    "B001321": {
+      "fingerprint": "0e0c4156c00df8d4",
+      "changedOn": "2025-01-05"
+    },
+    "M001237": {
+      "fingerprint": "0f2775642999c95d",
+      "changedOn": "2025-01-05"
+    },
+    "M001234": {
+      "fingerprint": "e7933c7794446ad5",
+      "changedOn": "2025-01-05"
+    },
+    "B001324": {
+      "fingerprint": "acff5e680dca8bc5",
+      "changedOn": "2025-01-21"
+    },
+    "O000177": {
+      "fingerprint": "e0d250eb0f39cf5d",
+      "changedOn": "2025-01-05"
+    },
+    "K000404": {
+      "fingerprint": "cb93091b0a0ef53b",
+      "changedOn": "2025-04-04"
+    },
+    "D000634": {
+      "fingerprint": "54553d19235b2766",
+      "changedOn": "2025-01-05"
+    },
+    "M001240": {
+      "fingerprint": "cb41427239817ce6",
+      "changedOn": "2025-01-05"
+    },
+    "H001102": {
+      "fingerprint": "e4c0f2867f5d131a",
+      "changedOn": "2025-01-05"
+    },
+    "H001101": {
+      "fingerprint": "937b372d0b97ec6c",
+      "changedOn": "2025-01-05"
+    },
+    "K000405": {
+      "fingerprint": "c66a22c26696f259",
+      "changedOn": "2025-01-05"
+    },
+    "M001236": {
+      "fingerprint": "3ce5892626f4ed38",
+      "changedOn": "2025-01-05"
+    },
+    "F000482": {
+      "fingerprint": "23c5fded02e7c28a",
+      "changedOn": "2025-01-05"
+    },
+    "G000604": {
+      "fingerprint": "5cc915ddbb78e80c",
+      "changedOn": "2025-01-05"
+    },
+    "C001136": {
+      "fingerprint": "69c78b364634dd04",
+      "changedOn": "2025-01-05"
+    },
+    "P000621": {
+      "fingerprint": "09e24d64560f3929",
+      "changedOn": "2025-01-05"
+    },
+    "G000602": {
+      "fingerprint": "ee116b81c9995b1c",
+      "changedOn": "2025-01-05"
+    },
+    "L000606": {
+      "fingerprint": "c577a02439e42905",
+      "changedOn": "2025-01-05"
+    },
+    "R000622": {
+      "fingerprint": "b524d32eb23501a6",
+      "changedOn": "2025-01-05"
+    },
+    "M001231": {
+      "fingerprint": "9c76bf1713b80237",
+      "changedOn": "2025-01-05"
+    },
+    "T000490": {
+      "fingerprint": "987e341c73d9342a",
+      "changedOn": "2025-01-05"
+    },
+    "D000635": {
+      "fingerprint": "e56ed5ca1ba23619",
+      "changedOn": "2025-01-05"
+    },
+    "B001326": {
+      "fingerprint": "273fa004680c32ea",
+      "changedOn": "2025-01-05"
+    },
+    "M001230": {
+      "fingerprint": "dce3be8bdea7fca2",
+      "changedOn": "2025-01-05"
+    },
+    "B001327": {
+      "fingerprint": "0b1451ec6f9f0574",
+      "changedOn": "2025-01-05"
+    },
+    "H001103": {
+      "fingerprint": "ccee186e6ec2c6cd",
+      "changedOn": "2025-01-05"
+    },
+    "B001325": {
+      "fingerprint": "9f1f684aaca77562",
+      "changedOn": "2025-01-21"
+    },
+    "G000601": {
+      "fingerprint": "0797f398d0720fe3",
+      "changedOn": "2025-01-05"
+    },
+    "G000603": {
+      "fingerprint": "8a619bfd83d18efb",
+      "changedOn": "2025-01-05"
+    },
+    "J000310": {
+      "fingerprint": "502ad6aafa88bfe8",
+      "changedOn": "2025-01-05"
+    },
+    "K000403": {
+      "fingerprint": "b729ab17e37c6f71",
+      "changedOn": "2025-01-05"
+    },
+    "M001239": {
+      "fingerprint": "36050329d92d804a",
+      "changedOn": "2025-01-05"
+    },
+    "V000138": {
+      "fingerprint": "78f0ec239f3d0107",
+      "changedOn": "2025-01-05"
+    },
+    "S001230": {
+      "fingerprint": "104f170478a25c17",
+      "changedOn": "2025-01-05"
+    },
+    "B001322": {
+      "fingerprint": "c7bc533dc879f23c",
+      "changedOn": "2025-01-05"
+    },
+    "R000621": {
+      "fingerprint": "d0c019cea21867ec",
+      "changedOn": "2025-01-05"
+    },
+    "M001235": {
+      "fingerprint": "149daccf8edd7ec6",
+      "changedOn": "2025-01-05"
+    },
+    "J000312": {
+      "fingerprint": "2ee4a147d6d820c5",
+      "changedOn": "2026-02-03"
+    },
+    "H001104": {
+      "fingerprint": "fd2940761e842482",
+      "changedOn": "2026-01-13"
+    },
+    "M001244": {
+      "fingerprint": "313d8c744cc16e6f",
+      "changedOn": "2026-01-13"
+    },
+    "P000622": {
+      "fingerprint": "41c83c3df6ec95e6",
+      "changedOn": "2025-07-29"
+    },
+    "F000484": {
+      "fingerprint": "4b7f62abbb27d001",
+      "changedOn": "2025-07-29"
+    },
+    "W000831": {
+      "fingerprint": "45f0ecc40a152cb2",
+      "changedOn": "2026-04-21"
+    },
+    "G000606": {
+      "fingerprint": "2b252208fc62dd28",
+      "changedOn": "2026-04-21"
+    },
+    "V000139": {
+      "fingerprint": "705bbd68237184a0",
+      "changedOn": "2026-04-21"
+    },
+    "M001245": {
+      "fingerprint": "b4d2bf900c369560",
+      "changedOn": "2026-04-21"
+    },
+    "A000383": {
+      "fingerprint": "87ab1f9d07db97d9",
+      "changedOn": "2026-07-15"
+    },
+    "F000485": {
+      "fingerprint": "b608a4511a1a8a9b",
+      "changedOn": "2026-04-21"
+    },
+    "M001246": {
+      "fingerprint": "5f296b1fc70fe050",
+      "changedOn": "2026-07-15"
+    },
+    "G000607": {
+      "fingerprint": "43dc2a7957046ffd",
+      "changedOn": "2026-09-24"
+    },
+    "G000608": {
+      "fingerprint": "cfb5e0adb61e22c0",
+      "changedOn": "2026-09-02"
+    },
+    "B001328": {
+      "fingerprint": "30d938dd6df17cf3",
+      "changedOn": "2026-09-24"
+    },
+    "W000832": {
+      "fingerprint": "440ef186e9c0ff5e",
+      "changedOn": "2026-09-24"
+    }
+  }
+}
