@@ -560,6 +560,8 @@ interface AdministrativeAreaSchemaProps {
   };
   population?: number;
   mainEntityOfPage?: string;
+  /** YYYY-MM-DD the page's newest record dates from; set on mainEntityOfPage. */
+  dateModified?: string | null;
 }
 
 /**
@@ -574,6 +576,7 @@ export function AdministrativeAreaSchema({
   geo,
   population,
   mainEntityOfPage,
+  dateModified,
 }: AdministrativeAreaSchemaProps) {
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -582,7 +585,11 @@ export function AdministrativeAreaSchema({
   };
 
   if (mainEntityOfPage) {
-    schema.mainEntityOfPage = { '@type': 'WebPage', '@id': mainEntityOfPage };
+    schema.mainEntityOfPage = {
+      '@type': 'WebPage',
+      '@id': mainEntityOfPage,
+      ...(dateModified ? { dateModified } : {}),
+    };
   }
   if (description) schema.description = description;
   if (url) schema.url = url;
