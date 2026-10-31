@@ -13,6 +13,9 @@ import { getStateName } from '@/lib/data/us-states';
 import { partyAdjective } from '@/lib/party-label';
 import { congressionalDistrictLede } from '@/lib/seo/answer-first';
 import { ACS_5YR_VINTAGE } from '@/lib/census-vintage';
+import { getDistrictDates } from '@/lib/districts/district-dates';
+import { profileDatesLine } from '@/lib/provenance/profile-dates-line';
+import { AdministrativeAreaSchema } from '@/components/seo/JsonLd';
 import DistrictPageClient from './DistrictPageClient';
 import { SeatWithoutMember } from './SeatWithoutMember';
 
@@ -58,6 +61,33 @@ function districtLede(district: DistrictDetails): string | null {
   });
 }
 
+/** The district's JSON-LD; dateModified only when the page has the record it comes from. */
+function DistrictSchema({
+  state,
+  district,
+  canonical,
+  dateModified,
+}: {
+  state: string;
+  district: string;
+  canonical: string;
+  dateModified?: string | null;
+}) {
+  const stateName = getStateName(state) || state;
+  const districtLabel = district === 'AL' ? 'At-Large' : `District ${district}`;
+  const url = `https://civdotiq.org/districts/${canonical}`;
+  return (
+    <AdministrativeAreaSchema
+      name={`${stateName} ${districtLabel} Congressional District`}
+      description={`${districtLabel} congressional district in ${stateName}. View current representative, demographics, voting history, and federal spending data.`}
+      url={url}
+      mainEntityOfPage={url}
+      containedInPlace={stateName}
+      dateModified={dateModified}
+    />
+  );
+}
+
 interface DistrictPageProps {
   params: Promise<{ districtId: string }>;
   searchParams: Promise<{ v?: string }>;
@@ -80,20 +110,41 @@ export default async function DistrictPage({ params, searchParams }: DistrictPag
   // outside production). Old design path stays the default.
   const isPreviewEnv =
     process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
+  const schemaProps = {
+    state: parsed.state,
+    district: parsed.district,
+    canonical: parsed.canonical,
+  };
   if (v === 'new' || isPreviewEnv) {
-    return <RedesignedDistrictPage districtId={parsed.canonical} />;
+    return (
+      <>
+        <DistrictSchema {...schemaProps} />
+        <RedesignedDistrictPage districtId={parsed.canonical} />
+      </>
+    );
   }
 
   const data = await loadDistrictPage(parsed.canonical);
   if (data.status === 'no-member') {
-    return <SeatWithoutMember state={parsed.state} district={parsed.district} />;
+    return (
+      <>
+        <DistrictSchema {...schemaProps} />
+        <SeatWithoutMember state={parsed.state} district={parsed.district} />
+      </>
+    );
   }
 
+  // Unavailable: the browser fetches the record, and the page carries no dates.
+  const dates = data.status === 'found' ? getDistrictDates(data.district) : null;
   return (
-    <DistrictPageClient
-      districtId={parsed.canonical}
-      initialDistrict={data.status === 'found' ? data.district : null}
-      lede={data.status === 'found' ? districtLede(data.district) : null}
-    />
+    <>
+      <DistrictSchema {...schemaProps} dateModified={dates?.latestRecord} />
+      <DistrictPageClient
+        districtId={parsed.canonical}
+        initialDistrict={data.status === 'found' ? data.district : null}
+        lede={data.status === 'found' ? districtLede(data.district) : null}
+        datesLine={profileDatesLine(dates)}
+      />
+    </>
   );
 }

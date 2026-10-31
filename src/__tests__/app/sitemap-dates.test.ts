@@ -9,7 +9,8 @@
  * their Wikipedia text, and bills fell back to "now" because the code read
  * `latestAction.date` where Congress.gov sends `latestAction.actionDate`.
  * A date is only listed when the data gives one for the page's facts.
- * Profiles are dated since 2026-10-30 (real-dates PR 3).
+ * Profiles are dated since 2026-10-30 (real-dates PR 3), district pages by
+ * their member's roster change (PR 4).
  */
 
 jest.mock('@/lib/questions/stock-trades', () => ({
@@ -44,7 +45,10 @@ beforeEach(() => {
     const url = String(input);
     if (url.includes('/api/representatives/all')) {
       return jsonResponse({
-        representatives: [{ bioguideId: 'S001208', chamber: 'Senate', state: 'MI' }],
+        representatives: [
+          { bioguideId: 'S001208', chamber: 'Senate', state: 'MI' },
+          { bioguideId: 'D000624', chamber: 'House', state: 'MI', district: '6' },
+        ],
       });
     }
     if (url.includes('/api/bills/latest')) {
@@ -94,9 +98,18 @@ describe('sitemap lastModified', () => {
     expect(profile?.lastModified).toEqual(new Date('2026-09-30'));
   });
 
-  it('lists committees and districts without a date', async () => {
+  it("dates a district by its member's roster change, and leaves an empty seat undated", async () => {
     const entries = await sitemap();
-    for (const path of ['/committee/SSJU', '/districts/MI-06']) {
+    const district = entries.find(e => e.url.endsWith('/districts/MI-06'));
+    // Dingell's roster entry last changed 2025-01-04 (the new term's entry).
+    expect(district?.lastModified).toEqual(new Date('2025-01-04'));
+    // No MI-07 member in this roster.
+    expect(entries.find(e => e.url.endsWith('/districts/MI-07'))?.lastModified).toBeUndefined();
+  });
+
+  it('lists committees without a date', async () => {
+    const entries = await sitemap();
+    for (const path of ['/committee/SSJU']) {
       const entry = entries.find(e => e.url.endsWith(path));
       expect(entry).toBeDefined();
       expect(entry?.lastModified).toBeUndefined();
