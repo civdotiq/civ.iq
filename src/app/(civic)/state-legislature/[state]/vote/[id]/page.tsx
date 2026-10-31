@@ -112,7 +112,7 @@ export default async function StateVotePage({ params, searchParams }: PageProps)
   const yesCount = vote.counts.find(c => c.option === 'yes')?.value ?? 0;
   const noCount = vote.counts.find(c => c.option === 'no')?.value ?? 0;
   // Self-references keep the bill: the page does not resolve without it.
-  const votePath = `/state-legislature/${state}/vote/${id}?bill=${billParam ?? ''}`;
+  const votePath = `/state-legislature/${state.toLowerCase()}/vote/${id}?bill=${billParam ?? ''}`;
   const voteUrl = `https://civdotiq.org${votePath}`;
 
   return (
@@ -130,7 +130,7 @@ export default async function StateVotePage({ params, searchParams }: PageProps)
         items={[
           { name: 'Home', url: 'https://civdotiq.org' },
           { name: 'States', url: 'https://civdotiq.org/states' },
-          { name: stateName, url: `https://civdotiq.org/state-legislature/${state}` },
+          { name: stateName, url: `https://civdotiq.org/state-legislature/${state.toLowerCase()}` },
           { name: motionLabel, url: voteUrl },
         ]}
       />
@@ -139,7 +139,7 @@ export default async function StateVotePage({ params, searchParams }: PageProps)
         items={[
           { label: 'Home', href: '/' },
           { label: 'States', href: '/states' },
-          { label: state.toUpperCase(), href: `/state-legislature/${state}` },
+          { label: state.toUpperCase(), href: `/state-legislature/${state.toLowerCase()}` },
           { label: motionLabel, href: votePath },
         ]}
         className="mb-6"

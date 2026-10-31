@@ -76,7 +76,7 @@ export default async function StateBillLayout({ children, params }: LayoutProps)
 
   const stateName = getStateName(state.toUpperCase()) || state.toUpperCase();
   const { identifier } = lookup.bill;
-  const url = `https://civdotiq.org/state-bills/${state}/${billId}`;
+  const url = `https://civdotiq.org/state-bills/${state.toLowerCase()}/${billId}`;
 
   return (
     <>
@@ -90,7 +90,7 @@ export default async function StateBillLayout({ children, params }: LayoutProps)
         items={[
           { name: 'Home', url: 'https://civdotiq.org' },
           { name: stateName, url: `https://civdotiq.org/states/${state}` },
-          { name: 'Bills', url: `https://civdotiq.org/state-bills/${state}` },
+          { name: 'Bills', url: `https://civdotiq.org/state-bills/${state.toLowerCase()}` },
           { name: identifier, url },
         ]}
       />

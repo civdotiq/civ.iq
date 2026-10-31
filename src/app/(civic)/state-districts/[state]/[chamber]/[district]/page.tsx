@@ -29,6 +29,7 @@ import UnifiedDistrictSidebar from '@/components/districts/shared/UnifiedDistric
 import { fetchDistrictBiography } from '@/lib/api/wikipedia';
 import type { WikipediaBiography } from '@/lib/api/wikipedia';
 import DistrictBackLink from './DistrictBackLink';
+import { buildStateLegislatureUrl, buildStatePageUrl } from '@/lib/helpers/url-builders';
 
 // On-demand ISR: rendered once per district, then served from the CDN.
 // Rosters come from the committed corpus; Census/Wikipedia change rarely.
@@ -196,7 +197,7 @@ export default async function StateDistrictPage({ params }: PageProps) {
           <Suspense
             fallback={
               <Link
-                href={`/state-legislature/${stateCode}`}
+                href={buildStateLegislatureUrl(stateCode)}
                 className="inline-flex items-center gap-2 text-civiq-blue"
               >
                 Back to {stateName} Legislature
@@ -295,9 +296,10 @@ export default async function StateDistrictPage({ params }: PageProps) {
               }}
               quickLinks={[
                 {
-                  href: `/state-legislature/${stateCode}`,
+                  href: buildStateLegislatureUrl(stateCode),
                   label: `← Back to ${stateName} Legislature`,
                 },
+                { href: buildStatePageUrl(stateCode), label: `${stateName} overview` },
               ]}
             />
           </div>

@@ -38,6 +38,7 @@ import type {
   ZipsResponse,
 } from './types';
 import type { ServicesHealthProfile } from '@/types/district-enhancements';
+import { buildStatePageUrl } from '@/lib/helpers/url-builders';
 
 interface ServicesHealthResponse {
   services: ServicesHealthProfile;
@@ -155,7 +156,7 @@ export function DistrictPage({ districtId }: DistrictPageProps) {
         items={[
           { name: 'Home', url: 'https://civdotiq.org' },
           { name: 'Districts', url: 'https://civdotiq.org/districts' },
-          { name: stateName, url: `https://civdotiq.org/states/${parsed.state}` },
+          { name: stateName, url: `https://civdotiq.org${buildStatePageUrl(parsed.state)}` },
           { name: label, url: `https://civdotiq.org/districts/${districtId}` },
         ]}
       />

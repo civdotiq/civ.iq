@@ -90,7 +90,7 @@ export const StateLegislatorActivityFeed: React.FC<StateLegislatorActivityFeedPr
           date: bill.first_action_date,
           title: bill.identifier,
           description: bill.title,
-          link: `/state-bills/${state}/${encodeBase64Url(bill.id)}`,
+          link: `/state-bills/${state.toLowerCase()}/${encodeBase64Url(bill.id)}`,
           metadata: { billIdentifier: bill.identifier },
         });
       }
@@ -105,7 +105,9 @@ export const StateLegislatorActivityFeed: React.FC<StateLegislatorActivityFeedPr
         date: vote.start_date,
         title: vote.bill_identifier || 'Floor Vote',
         description: vote.motion_text,
-        link: vote.bill_id ? `/state-bills/${state}/${encodeBase64Url(vote.bill_id)}` : undefined,
+        link: vote.bill_id
+          ? `/state-bills/${state.toLowerCase()}/${encodeBase64Url(vote.bill_id)}`
+          : undefined,
         metadata: {
           voteOption: vote.option,
           voteResult: vote.result,

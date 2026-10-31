@@ -14,6 +14,7 @@ import { getStateName, houseSeatLabel } from '@/lib/data/us-states';
 import { isSubcommitteeId } from '@/lib/committee-id';
 import type { ProfileCommittee } from './types';
 import { bioguideUrl, wikidataUrl, wikipediaUrl } from '@/lib/outside-ids';
+import { buildDistrictUrl, buildStatePageUrl } from '@/lib/helpers/url-builders';
 
 interface SidebarCardProps {
   title: string;
@@ -159,7 +160,7 @@ export function ProfileSidebar({
         >
           <p>
             <Link
-              href={`/districts/${r.state}-${r.district}`}
+              href={buildDistrictUrl(r.state, r.district)}
               className="text-civiq-blue hover:underline font-medium"
             >
               Full district profile →
@@ -186,7 +187,7 @@ export function ProfileSidebar({
 
       <SidebarCard title={`${stateName} delegation`}>
         <p>
-          <Link href={`/states/${r.state}`} className="text-civiq-blue hover:underline">
+          <Link href={buildStatePageUrl(r.state)} className="text-civiq-blue hover:underline">
             All {stateName} representatives →
           </Link>
         </p>

@@ -179,8 +179,11 @@ export default async function StateCommitteesPage({ params, searchParams }: Page
       <BreadcrumbSchema
         items={[
           { name: 'Home', url: 'https://civdotiq.org' },
-          { name: stateName, url: `https://civdotiq.org/state-legislature/${state}` },
-          { name: 'Committees', url: `https://civdotiq.org/state-legislature/${state}/committees` },
+          { name: stateName, url: `https://civdotiq.org/state-legislature/${state.toLowerCase()}` },
+          {
+            name: 'Committees',
+            url: `https://civdotiq.org/state-legislature/${state.toLowerCase()}/committees`,
+          },
         ]}
       />
 
@@ -191,9 +194,9 @@ export default async function StateCommitteesPage({ params, searchParams }: Page
           { label: 'States', href: '/states' },
           {
             label: `${state.toUpperCase()} ${legislatureType}`,
-            href: `/state-legislature/${state}`,
+            href: `/state-legislature/${state.toLowerCase()}`,
           },
-          { label: 'Committees', href: `/state-legislature/${state}/committees` },
+          { label: 'Committees', href: `/state-legislature/${state.toLowerCase()}/committees` },
         ]}
         className="mb-6"
       />
@@ -222,7 +225,7 @@ export default async function StateCommitteesPage({ params, searchParams }: Page
             <span className="text-sm font-bold text-gray-700">FILTER BY CHAMBER:</span>
             <div className="flex gap-2">
               <Link
-                href={`/state-legislature/${state}/committees`}
+                href={`/state-legislature/${state.toLowerCase()}/committees`}
                 className={`px-4 py-2 border-2 font-bold text-sm transition-colors ${
                   !chamber
                     ? 'bg-civiq-blue text-white border-civiq-blue'
@@ -232,7 +235,7 @@ export default async function StateCommitteesPage({ params, searchParams }: Page
                 ALL
               </Link>
               <Link
-                href={`/state-legislature/${state}/committees?chamber=upper`}
+                href={`/state-legislature/${state.toLowerCase()}/committees?chamber=upper`}
                 className={`px-4 py-2 border-2 font-bold text-sm transition-colors ${
                   chamber === 'upper'
                     ? 'bg-civiq-blue text-white border-civiq-blue'
@@ -242,7 +245,7 @@ export default async function StateCommitteesPage({ params, searchParams }: Page
                 {getChamberName(state, 'upper').toUpperCase()}
               </Link>
               <Link
-                href={`/state-legislature/${state}/committees?chamber=lower`}
+                href={`/state-legislature/${state.toLowerCase()}/committees?chamber=lower`}
                 className={`px-4 py-2 border-2 font-bold text-sm transition-colors ${
                   chamber === 'lower'
                     ? 'bg-civiq-blue text-white border-civiq-blue'

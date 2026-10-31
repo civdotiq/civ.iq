@@ -276,7 +276,7 @@ export function createStateBillsFeedConfig(state: string, stateName: string): At
     id: `${baseUrl}/feeds/state/${state}/bills`,
     title: `${stateName} Legislature Bills | CIV.IQ`,
     subtitle: `Recent bills in the ${stateName} state legislature`,
-    link: `${baseUrl}/state-bills/${state}`,
+    link: `${baseUrl}/state-bills/${state.toLowerCase()}`,
     selfLink: `${baseUrl}/api/feed/state/${state}/bills`,
     updated: new Date(),
     author: {
@@ -303,7 +303,7 @@ export function createStateLegislatorFeedConfig(
     id: `${baseUrl}/feeds/state/${state}/legislator/${legislatorId}`,
     title: `${name} — ${state.toUpperCase()} Legislature Activity | CIV.IQ`,
     subtitle: `Legislative activity for ${name}`,
-    link: `${baseUrl}/state-legislature/${state}`,
+    link: `${baseUrl}/state-legislature/${state.toLowerCase()}`,
     selfLink: `${baseUrl}/api/feed/state/${state}/legislator/${legislatorId}`,
     updated: new Date(),
     author: {

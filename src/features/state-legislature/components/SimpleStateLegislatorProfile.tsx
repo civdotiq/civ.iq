@@ -495,7 +495,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           {committee.id ? (
                             <Link
-                              href={`/state-legislature/${legislator.state}/committee/${encodeBase64Url(committee.id)}`}
+                              href={`/state-legislature/${legislator.state.toLowerCase()}/committee/${encodeBase64Url(committee.id)}`}
                               className="font-bold text-civiq-blue hover:underline"
                             >
                               {committee.name}

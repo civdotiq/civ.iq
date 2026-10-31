@@ -15,7 +15,11 @@ import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { SimpleStateLegislatorProfile } from '@/features/state-legislature/components/SimpleStateLegislatorProfile';
 import { StateLegislatorProfile } from '@/components/state-officials/StateLegislatorProfile';
-import { buildStateLegislatorUrl, buildStateLegislatureUrl } from '@/lib/helpers/url-builders';
+import {
+  buildStateLegislatorUrl,
+  buildStateLegislatureUrl,
+  buildStatePageUrl,
+} from '@/lib/helpers/url-builders';
 import { encodeBase64Url } from '@/lib/url-encoding';
 import { ProfilePageSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { getStateName } from '@/lib/data/us-states';
@@ -168,6 +172,7 @@ export default async function StateLegislatorPage({ params, searchParams }: Page
       <BreadcrumbSchema
         items={[
           { name: 'Home', url: BASE_URL },
+          { name: stateName, url: `${BASE_URL}${buildStatePageUrl(legislator.state)}` },
           { name: `${stateName} Legislature`, url: hubUrl },
           { name: legislator.name, url },
         ]}
@@ -180,6 +185,12 @@ export default async function StateLegislatorPage({ params, searchParams }: Page
         >
           <Link href="/" className="hover:text-civiq-blue">
             Home
+          </Link>
+          <span className="mx-2" aria-hidden="true">
+            &rsaquo;
+          </span>
+          <Link href={buildStatePageUrl(legislator.state)} className="hover:text-civiq-blue">
+            {stateName}
           </Link>
           <span className="mx-2" aria-hidden="true">
             &rsaquo;

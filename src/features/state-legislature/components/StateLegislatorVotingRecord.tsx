@@ -503,7 +503,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
                       {vote.bill_identifier ? (
                         vote.bill_id ? (
                           <Link
-                            href={`/state-bills/${state}/${encodeBase64Url(vote.bill_id)}`}
+                            href={`/state-bills/${state.toLowerCase()}/${encodeBase64Url(vote.bill_id)}`}
                             className="text-civiq-blue hover:underline font-medium text-sm"
                           >
                             {vote.bill_identifier}

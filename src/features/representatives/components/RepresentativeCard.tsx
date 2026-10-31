@@ -11,6 +11,7 @@ import { memo, useState } from 'react';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { getCommitteeName } from '@/lib/data/committee-names';
 import { partyAdjective } from '@/lib/party-label';
+import { buildDistrictUrl, buildStatePageUrl } from '@/lib/helpers/url-builders';
 
 interface Representative {
   bioguideId: string;
@@ -101,7 +102,7 @@ export const RepresentativeCard = memo(function RepresentativeCard({
               </span>
               {representative.chamber === 'House' && representative.district && (
                 <Link
-                  href={`/districts/${representative.state}-${representative.district}`}
+                  href={buildDistrictUrl(representative.state, representative.district)}
                   className="px-2 py-0.5 bg-white border border-gray-300 text-gray-700 hover:text-civiq-blue hover:border-civiq-blue text-xs font-medium transition-colors"
                   onClick={e => e.stopPropagation()}
                 >
@@ -110,7 +111,7 @@ export const RepresentativeCard = memo(function RepresentativeCard({
               )}
               {representative.chamber === 'Senate' && (
                 <Link
-                  href={`/states/${representative.state}`}
+                  href={buildStatePageUrl(representative.state)}
                   className="px-2 py-0.5 bg-white border border-gray-300 text-gray-700 hover:text-civiq-blue hover:border-civiq-blue text-xs font-medium transition-colors"
                   onClick={e => e.stopPropagation()}
                 >
