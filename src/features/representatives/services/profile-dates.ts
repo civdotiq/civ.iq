@@ -37,7 +37,7 @@ import { govCache } from '@/services/cache';
 import rosterHistory from '@/data/member-roster-history.json';
 import { getSenateVoteFreshness } from './senate-vote-freshness';
 
-export type ProfileDateSource = 'votes' | 'roster' | 'fec';
+export type ProfileDateSource = 'votes' | 'roster' | 'fec' | 'census';
 
 export interface ProfileDatePart {
   source: ProfileDateSource;

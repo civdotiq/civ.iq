@@ -1,7 +1,6 @@
 import { Metadata } from 'next';
 import { ReactNode } from 'react';
 import { getStateName } from '@/lib/data/us-states';
-import { AdministrativeAreaSchema } from '@/components/seo/JsonLd';
 import { canonicalizeDistrictId } from '@/lib/helpers/url-builders';
 
 // Parse district ID - supports multiple formats:
@@ -77,37 +76,8 @@ export async function generateMetadata({
   };
 }
 
-export default async function DistrictLayout({
-  children,
-  params,
-}: {
-  children: ReactNode;
-  params: Promise<{ districtId: string }>;
-}) {
-  const { districtId } = await params;
-  const parsed = parseDistrictId(districtId);
-
-  if (!parsed) {
-    return <>{children}</>;
-  }
-
-  const stateName = getStateName(parsed.state) || parsed.state;
-  const districtLabel = parsed.district === 'AL' ? 'At-Large' : `District ${parsed.district}`;
-  const areaName = `${stateName} ${districtLabel} Congressional District`;
-  const feedDistrictId = `${parsed.state}-${parsed.district}`;
-
-  return (
-    <>
-      <AdministrativeAreaSchema
-        name={areaName}
-        description={`${districtLabel} congressional district in ${stateName}. View current representative, demographics, voting history, and federal spending data.`}
-        url={`https://civdotiq.org/districts/${feedDistrictId}`}
-        mainEntityOfPage={`https://civdotiq.org/districts/${feedDistrictId}`}
-        containedInPlace={stateName}
-      />
-      {/* BreadcrumbList lives in DistrictPage (4-item trail incl. state) —
-          a second, shorter trail here would conflict with it. */}
-      {children}
-    </>
-  );
+// The AdministrativeArea JSON-LD is rendered by the page, which has the
+// district record its dateModified comes from.
+export default function DistrictLayout({ children }: { children: ReactNode }) {
+  return <>{children}</>;
 }

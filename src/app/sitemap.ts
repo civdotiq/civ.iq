@@ -25,6 +25,8 @@ import { getBillsByPolicyArea } from '@/lib/data-sources/bill-policy-areas/load'
 import { getMembersWithStockTrades } from '@/lib/questions/stock-trades';
 import { firstDistrictPerChamber } from '@/lib/sitemap/state-district-urls';
 import { houseDistrictIds } from '@/lib/districts/known-districts';
+import { resolveSeatId } from '@/lib/districts/district-details';
+import { districtLatestRecord } from '@/lib/districts/district-dates';
 import { buildBillUrl } from '@/lib/helpers/url-builders';
 import { latestCompleteWeekId, previousWeekIds } from '@/lib/digest/week';
 import {
@@ -136,6 +138,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // These are the most searched pages
   // ===========================================
 
+  // Seat id → its House member, for the district pages' dates.
+  const seatMembers = new Map<string, string>();
+
   // Fetch representatives - these are the money pages
   try {
     const res = await fetch(`${BASE_URL}/api/representatives/all`, {
@@ -153,6 +158,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ]);
 
       for (const rep of representatives) {
+        if (rep.bioguideId && rep.chamber === 'House' && rep.state) {
+          const seat = resolveSeatId(rep.state, String(rep.district ?? ''));
+          if (seat) seatMembers.set(seat, rep.bioguideId);
+        }
         if (rep.bioguideId) {
           const voteDate = (rep.chamber === 'Senate' ? senateVotes : houseVotes).date;
           const rosterDate = rosterChangedOn(rep.bioguideId);
@@ -509,6 +518,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const isHighPop = HIGH_POP_STATES.includes(districtId.slice(0, 2));
     entries.push({
       url: `${BASE_URL}/districts/${districtId}`,
+      // The page's Latest record (district-dates.ts); none for an empty seat.
+      lastModified: sourceDate(districtLatestRecord(seatMembers.get(districtId))),
       changeFrequency: 'monthly',
       priority: isHighPop ? 0.7 : 0.6,
     });
