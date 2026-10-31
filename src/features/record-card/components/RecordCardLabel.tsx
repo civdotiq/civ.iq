@@ -34,6 +34,7 @@ import { MONEY_AND_VOTES_CAVEAT, ROLL_CALL_CAVEAT } from '@/lib/constants/standi
 import { partyAdjective } from '@/lib/party-label';
 import { SenateVoteFreshness } from '@/components/votes/SenateVoteFreshness';
 import type { SenateVoteFreshness as VoteFreshness } from '@/features/representatives/services/senate-vote-freshness';
+import { buildDistrictUrl, buildStatePageUrl } from '@/lib/helpers/url-builders';
 
 // ── Formatting ───────────────────────────────────────────────────────
 
@@ -556,7 +557,10 @@ function DistrictMoneySection({ data }: { data: RecordCardData }) {
                 info={{
                   source: 'USASpending.gov',
                   asOf: `Fiscal year ${d.fiscalYear} to date`,
-                  href: d.scope === 'state' ? `/states/${d.areaId}` : `/districts/${d.areaId}`,
+                  href:
+                    d.scope === 'state'
+                      ? buildStatePageUrl(d.areaId)
+                      : buildDistrictUrl(d.areaId.slice(0, 2), d.areaId.slice(3)),
                   linkLabel: d.scope === 'state' ? 'State detail' : 'District spending detail',
                 }}
               >

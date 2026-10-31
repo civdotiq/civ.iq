@@ -429,7 +429,7 @@ function RecentBillsSection({
           <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}>Bills moving</div>
         </div>
         <Link
-          href={`/state-bills/${stateCode}`}
+          href={`/state-bills/${stateCode.toLowerCase()}`}
           style={{
             fontSize: 11,
             color: 'var(--civiq-blue-active)',

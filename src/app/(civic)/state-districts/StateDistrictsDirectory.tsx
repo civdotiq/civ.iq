@@ -21,7 +21,7 @@ import { ExploreFooter } from '@/components/seo/ExploreFooter';
 export type FirstDistricts = Record<string, Partial<Record<'upper' | 'lower', string>>>;
 
 function districtHref(state: string, chamber: 'upper' | 'lower', district: string): string {
-  return `/state-districts/${state}/${chamber}/${encodeURIComponent(district)}`;
+  return `/state-districts/${state.toLowerCase()}/${chamber}/${encodeURIComponent(district)}`;
 }
 
 export function StateDistrictsDirectory({ firstDistricts }: { firstDistricts: FirstDistricts }) {

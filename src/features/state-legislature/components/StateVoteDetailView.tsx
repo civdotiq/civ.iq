@@ -99,7 +99,7 @@ export const StateVoteDetailView: React.FC<StateVoteDetailViewProps> = ({ vote, 
               <span className="font-semibold text-civiq-blue">Related Bill:</span>
               <div>
                 <Link
-                  href={`/state-legislature/${state}/bill/${encodeBase64Url(vote.bill.id)}`}
+                  href={`/state-legislature/${state.toLowerCase()}/bill/${encodeBase64Url(vote.bill.id)}`}
                   className="text-civiq-blue hover:text-civiq-blue hover:underline font-medium"
                 >
                   {vote.bill.identifier}

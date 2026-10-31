@@ -145,7 +145,7 @@ export const BillSearchResults: React.FC<BillSearchResultsProps> = ({
           return (
             <Link
               key={bill.id}
-              href={`/state-bills/${bill.state ?? 'unknown'}/${encodeBase64Url(bill.id)}`}
+              href={`/state-bills/${(bill.state ?? 'unknown').toLowerCase()}/${encodeBase64Url(bill.id)}`}
               className="block bg-white border-2 border-black hover:border-civiq-blue transition-all group"
             >
               <div className="p-6">

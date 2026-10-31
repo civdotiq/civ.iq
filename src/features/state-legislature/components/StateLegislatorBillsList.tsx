@@ -402,7 +402,7 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
                         </span>
                       )}
                       <Link
-                        href={`/state-bills/${state}/${base64BillId}`}
+                        href={`/state-bills/${state.toLowerCase()}/${base64BillId}`}
                         className="text-civiq-blue hover:text-civiq-blue hover:underline"
                       >
                         {bill.identifier}

@@ -206,7 +206,7 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
             key={vote.vote_id || index}
             href={
               vote.bill_id
-                ? `/state-legislature/${state}/vote/${encodeBase64Url(
+                ? `/state-legislature/${state.toLowerCase()}/vote/${encodeBase64Url(
                     vote.vote_id
                   )}?bill=${encodeBase64Url(vote.bill_id)}`
                 : undefined

@@ -6,6 +6,8 @@
  */
 
 import {
+  buildDistrictUrl,
+  buildStatePageUrl,
   canonicalCasePath,
   canonicalizeDistrictId,
   isRetiredLookupUrl,
@@ -131,5 +133,38 @@ describe('canonicalCasePath', () => {
     expect(canonicalCasePath('/states')).toBeNull();
     expect(canonicalCasePath('/bill/119-HR-1')).toBeNull();
     expect(canonicalCasePath('/districts/mi-12')).toBeNull();
+  });
+});
+
+describe('buildDistrictUrl', () => {
+  it('pads district numbers to the canonical form', () => {
+    expect(buildDistrictUrl('MI', '6')).toBe('/districts/MI-06');
+    expect(buildDistrictUrl('mi', '12')).toBe('/districts/MI-12');
+  });
+
+  it("links a state's only seat at XX-AL, however the data numbers it", () => {
+    for (const district of ['AL', '0', '00', '1', '01']) {
+      expect(buildDistrictUrl('AK', district)).toBe('/districts/AK-AL');
+    }
+    expect(buildDistrictUrl('DC', '0')).toBe('/districts/DC-AL');
+  });
+
+  it('every link it builds is already canonical', () => {
+    for (const [state, district] of [
+      ['MI', '6'],
+      ['AK', '1'],
+      ['TX', '23'],
+      ['WY', '0'],
+    ] as const) {
+      const id = buildDistrictUrl(state, district).replace('/districts/', '');
+      expect(canonicalizeDistrictId(id)?.canonical).toBe(id);
+    }
+  });
+});
+
+describe('buildStatePageUrl', () => {
+  it('links the lowercase state page, which never redirects', () => {
+    expect(buildStatePageUrl('MI')).toBe('/states/mi');
+    expect(canonicalCasePath(buildStatePageUrl('MI'))).toBeNull();
   });
 });
