@@ -45,7 +45,7 @@ export const StateCommitteeCard: React.FC<StateCommitteeCardProps> = ({ committe
         {/* Committee Name and Chamber */}
         <div className="mb-3">
           <Link
-            href={`/state-legislature/${state}/committee/${encodedId}`}
+            href={`/state-legislature/${state.toLowerCase()}/committee/${encodedId}`}
             className="text-lg font-bold hover:text-civiq-blue transition-colors"
           >
             {committee.name}
@@ -103,7 +103,7 @@ export const StateCommitteeCard: React.FC<StateCommitteeCardProps> = ({ committe
               </span>
             </div>
             <Link
-              href={`/state-legislature/${state}/committee/${encodedId}`}
+              href={`/state-legislature/${state.toLowerCase()}/committee/${encodedId}`}
               className="flex items-center gap-1 text-civiq-blue hover:underline text-sm font-semibold"
             >
               View

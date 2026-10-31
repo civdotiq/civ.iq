@@ -141,7 +141,7 @@ export default function StateBillDetailPage() {
               The bill you&apos;re looking for could not be found or has been removed.
             </p>
             <Link
-              href={`/state-legislature/${state}`}
+              href={`/state-legislature/${state.toLowerCase()}`}
               className="inline-block px-6 py-3 bg-civiq-blue text-white font-medium hover:bg-civiq-blue transition-colors"
             >
               View All Legislators

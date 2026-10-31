@@ -43,17 +43,17 @@ export default async function StateBillLayout({ children, params }: LayoutProps)
       <LegislationSchema
         name={`${billId.toUpperCase()} — ${stateName} bill`}
         legislationIdentifier={billId.toUpperCase()}
-        url={`https://civdotiq.org/state-bills/${state}/${billId}`}
+        url={`https://civdotiq.org/state-bills/${state.toLowerCase()}/${billId}`}
         jurisdiction={{ name: stateName, type: 'State' }}
       />
       <BreadcrumbSchema
         items={[
           { name: 'Home', url: 'https://civdotiq.org' },
           { name: stateName, url: `https://civdotiq.org/states/${state}` },
-          { name: 'Bills', url: `https://civdotiq.org/state-bills/${state}` },
+          { name: 'Bills', url: `https://civdotiq.org/state-bills/${state.toLowerCase()}` },
           {
             name: billId.toUpperCase(),
-            url: `https://civdotiq.org/state-bills/${state}/${billId}`,
+            url: `https://civdotiq.org/state-bills/${state.toLowerCase()}/${billId}`,
           },
         ]}
       />

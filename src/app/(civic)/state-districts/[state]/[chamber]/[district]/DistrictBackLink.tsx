@@ -8,6 +8,7 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Home } from 'lucide-react';
+import { buildStateLegislatureUrl } from '@/lib/helpers/url-builders';
 
 /**
  * Breadcrumb back link. Reads ?address= / ?from= on the client so the page
@@ -26,7 +27,7 @@ export default function DistrictBackLink({
 
   return (
     <Link
-      href={fromAddress ? '/your-reps' : `/state-legislature/${stateCode}`}
+      href={fromAddress ? '/your-reps' : buildStateLegislatureUrl(stateCode)}
       className="inline-flex items-center gap-2 text-civiq-blue hover:text-civiq-blue transition-colors"
     >
       <Home className="w-4 h-4" />

@@ -34,6 +34,7 @@ import { METHOD_AI } from '@/lib/provenance/source-registry';
 import { getVacancyInfo, formatVacancyMessage } from '@/lib/data/congressional-vacancies';
 import type { DistrictDetails } from '@/lib/districts/district-details';
 import { getStateName } from '@/lib/data/us-states';
+import { buildStatePageUrl } from '@/lib/helpers/url-builders';
 
 const DistrictIntelligenceCard = dynamic(
   () => import('@/components/intelligence/DistrictIntelligenceCard'),
@@ -195,6 +196,10 @@ export default function DistrictPageClient({
           <span className="mx-2">›</span>
           <Link href="/districts" className="hover:text-civiq-blue">
             Districts
+          </Link>
+          <span className="mx-2">›</span>
+          <Link href={buildStatePageUrl(district.state)} className="hover:text-civiq-blue">
+            {getStateName(district.state) ?? district.state}
           </Link>
           <span className="mx-2">›</span>
           <span className="font-medium text-gray-900">{districtId}</span>

@@ -75,8 +75,11 @@ export default async function StateCommitteePage({ params }: PageProps) {
           items={[
             { label: 'Home', href: '/' },
             { label: 'States', href: '/states' },
-            { label: `${state.toUpperCase()} Legislature`, href: `/state-legislature/${state}` },
-            { label: 'Committees', href: `/state-legislature/${state}/committees` },
+            {
+              label: `${state.toUpperCase()} Legislature`,
+              href: `/state-legislature/${state.toLowerCase()}`,
+            },
+            { label: 'Committees', href: `/state-legislature/${state.toLowerCase()}/committees` },
           ]}
           className="mb-6"
         />
@@ -99,7 +102,7 @@ export default async function StateCommitteePage({ params }: PageProps) {
       <GovernmentOrganizationSchema
         name={committee.name}
         description={`${committee.chamber === 'upper' ? 'Senate' : 'House'} committee in the ${stateName} state legislature`}
-        url={`https://civdotiq.org/state-legislature/${state}/committee/${id}`}
+        url={`https://civdotiq.org/state-legislature/${state.toLowerCase()}/committee/${id}`}
         parentOrganization={`${stateName} State Legislature`}
         member={committee.members?.map(m => ({
           name: m.legislator_name,
@@ -112,12 +115,15 @@ export default async function StateCommitteePage({ params }: PageProps) {
           { name: 'States', url: 'https://civdotiq.org/states' },
           {
             name: `${stateName} Legislature`,
-            url: `https://civdotiq.org/state-legislature/${state}`,
+            url: `https://civdotiq.org/state-legislature/${state.toLowerCase()}`,
           },
-          { name: 'Committees', url: `https://civdotiq.org/state-legislature/${state}/committees` },
+          {
+            name: 'Committees',
+            url: `https://civdotiq.org/state-legislature/${state.toLowerCase()}/committees`,
+          },
           {
             name: committee.name,
-            url: `https://civdotiq.org/state-legislature/${state}/committee/${id}`,
+            url: `https://civdotiq.org/state-legislature/${state.toLowerCase()}/committee/${id}`,
           },
         ]}
       />
@@ -126,9 +132,15 @@ export default async function StateCommitteePage({ params }: PageProps) {
         items={[
           { label: 'Home', href: '/' },
           { label: 'States', href: '/states' },
-          { label: `${state.toUpperCase()} Legislature`, href: `/state-legislature/${state}` },
-          { label: 'Committees', href: `/state-legislature/${state}/committees` },
-          { label: committee.name, href: `/state-legislature/${state}/committee/${id}` },
+          {
+            label: `${state.toUpperCase()} Legislature`,
+            href: `/state-legislature/${state.toLowerCase()}`,
+          },
+          { label: 'Committees', href: `/state-legislature/${state.toLowerCase()}/committees` },
+          {
+            label: committee.name,
+            href: `/state-legislature/${state.toLowerCase()}/committee/${id}`,
+          },
         ]}
         className="mb-6"
       />

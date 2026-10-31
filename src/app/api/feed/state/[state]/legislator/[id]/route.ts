@@ -64,9 +64,9 @@ export async function GET(
 
     const baseUrl = 'https://civdotiq.org';
     const entries: AtomEntry[] = bills.map(bill => ({
-      id: `${baseUrl}/state-bills/${stateUpper}/${bill.identifier}`,
+      id: `${baseUrl}/state-bills/${stateUpper.toLowerCase()}/${bill.identifier}`,
       title: `${bill.identifier}: ${bill.title}`,
-      link: bill.openstates_url || `${baseUrl}/state-bills/${stateUpper}`,
+      link: bill.openstates_url || `${baseUrl}/state-bills/${stateUpper.toLowerCase()}`,
       updated: new Date(bill.updated_at || bill.latest_action_date || new Date().toISOString()),
       published: bill.first_action_date ? new Date(bill.first_action_date) : undefined,
       author: { name: legislatorName },

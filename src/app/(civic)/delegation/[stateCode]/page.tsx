@@ -14,6 +14,7 @@ import { DelegationExportButton } from './DelegationExportButton';
 import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 import { partyAdjective } from '@/lib/party-label';
+import { buildDistrictUrl } from '@/lib/helpers/url-builders';
 
 // ISR: Revalidate daily
 export const revalidate = 86400;
@@ -114,7 +115,7 @@ function DelegationCard({ member }: { member: DelegationMember }) {
             )}
             {member.chamber === 'House' && member.district && (
               <Link
-                href={`/districts/${member.state}-${member.district}`}
+                href={buildDistrictUrl(member.state, member.district)}
                 className="px-2 py-0.5 text-xs font-medium bg-amber-50 text-amber-700 hover:text-civiq-blue border border-amber-200 hover:border-civiq-blue transition-colors"
               >
                 {member.state}-{member.district}

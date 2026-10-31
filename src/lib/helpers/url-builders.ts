@@ -20,6 +20,7 @@ import {
   personIdSuffix,
 } from '@/lib/data-sources/openstates-people/people-corpus';
 import { decodeBase64Url } from '@/lib/url-encoding';
+import { HOUSE_SEATS_PER_STATE } from '@/lib/districts/known-districts';
 
 // ============================================================================
 // DISTRICT URLs
@@ -81,6 +82,7 @@ export function canonicalizeDistrictId(districtId: string): ParsedDistrictId | n
  * buildDistrictUrl("MI", "1")   // "/districts/MI-01"
  * buildDistrictUrl("MI", "12")  // "/districts/MI-12"
  * buildDistrictUrl("AK", "AL")  // "/districts/AK-AL"
+ * buildDistrictUrl("AK", "1")   // "/districts/AK-AL" (a state's only seat)
  * buildDistrictUrl("CA")        // "/districts/CA-AL" (defaults to at-large)
  * buildDistrictUrl("NY", "STATE") // "/districts/NY-STATE" (for senators)
  */
@@ -92,14 +94,31 @@ export function buildDistrictUrl(state: string, district?: string | null): strin
     return `/districts/${normalizedState}-${district || 'AL'}`;
   }
 
-  // Handle at-large designations
-  if (district === 'AL' || district === '00' || district === '0') {
+  // Handle at-large designations. A state's only seat lives at XX-AL even
+  // when the data numbers it (the page would 308 AK-01 there).
+  if (
+    district === 'AL' ||
+    district === '00' ||
+    district === '0' ||
+    HOUSE_SEATS_PER_STATE[normalizedState] === 1
+  ) {
     return `/districts/${normalizedState}-AL`;
   }
 
   // Pad single-digit districts to 2 digits
   const paddedDistrict = district.padStart(2, '0');
   return `/districts/${normalizedState}-${paddedDistrict}`;
+}
+
+/**
+ * Build a state page URL. State pages live at lowercase codes; /states/MI
+ * 308s to /states/mi, so a link to it costs a crawler a redirect.
+ *
+ * @example
+ * buildStatePageUrl("MI")  // "/states/mi"
+ */
+export function buildStatePageUrl(state: string): string {
+  return `/states/${state.toLowerCase()}`;
 }
 
 /**

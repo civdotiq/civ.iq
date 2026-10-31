@@ -20,6 +20,7 @@ import type { FilterState, VotesResponse, VotingRecordPageProps } from './types'
 import { houseSeatLabel } from '@/lib/data/us-states';
 import { formatDateOnly } from '@/lib/utils/date-only';
 import { SenateVoteFreshnessClient } from '@/components/votes/SenateVoteFreshnessClient';
+import { buildDistrictUrl, buildStatePageUrl } from '@/lib/helpers/url-builders';
 
 const VOTES_LIMIT = 50;
 
@@ -56,7 +57,9 @@ export function VotingRecordPage({ representative: r }: VotingRecordPageProps) {
 
   const fetchFailed = !isLoading && (error || data?.success === false);
 
-  const districtPath = r.district ? `/district/${r.state}/${r.district}` : `/states/${r.state}`;
+  const districtPath = r.district
+    ? buildDistrictUrl(r.state, r.district)
+    : buildStatePageUrl(r.state);
 
   return (
     <div

@@ -14,6 +14,7 @@ import { RepresentativeShareButton } from '@/components/shared/social/ShareButto
 import { AlertSubscribeButton } from '@/components/alerts/AlertSubscribeButton';
 import { partyAdjective } from '@/lib/party-label';
 import { commonName } from '@/features/representatives/utils/common-name';
+import { buildDistrictUrl, buildStatePageUrl } from '@/lib/helpers/url-builders';
 
 interface HeroStatsHeaderProps {
   representative: EnhancedRepresentative;
@@ -47,7 +48,7 @@ export function HeroStatsHeader({
         <>
           U.S. Senator from{' '}
           <Link
-            href={`/states/${representative.state}`}
+            href={buildStatePageUrl(representative.state)}
             className="hover:text-civiq-blue transition-colors underline decoration-1 underline-offset-2"
           >
             {representative.state}
@@ -60,7 +61,7 @@ export function HeroStatsHeader({
         <>
           U.S. Representative,{' '}
           <Link
-            href={`/districts/${representative.state}-${representative.district}`}
+            href={buildDistrictUrl(representative.state, representative.district)}
             className="hover:text-civiq-blue transition-colors underline decoration-1 underline-offset-2"
           >
             {representative.state}-{representative.district}
@@ -72,7 +73,7 @@ export function HeroStatsHeader({
       <>
         U.S. Representative from{' '}
         <Link
-          href={`/states/${representative.state}`}
+          href={buildStatePageUrl(representative.state)}
           className="hover:text-civiq-blue transition-colors underline decoration-1 underline-offset-2"
         >
           {representative.state}

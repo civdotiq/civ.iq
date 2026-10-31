@@ -83,7 +83,7 @@ interface StateBillsData {
   };
 }
 
-function BillCard({ bill }: { bill: StateBill }) {
+function BillCard({ bill, state }: { bill: StateBill; state: string }) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'signed':
@@ -135,7 +135,7 @@ function BillCard({ bill }: { bill: StateBill }) {
     return chamber === 'upper' ? 'Senate' : 'House';
   };
 
-  const billDetailUrl = `/state-bills/${bill.id.split('/')[3]?.split('-')[0]?.toUpperCase() || 'XX'}/${encodeBase64Url(bill.id)}`;
+  const billDetailUrl = `/state-bills/${state.toLowerCase()}/${encodeBase64Url(bill.id)}`;
 
   return (
     <Link
@@ -402,7 +402,7 @@ export default function StateBillsPage() {
             States
           </Link>
           <span className="mx-2">&rsaquo;</span>
-          <Link href={`/state-bills/${state.toUpperCase()}`} className="hover:text-civiq-blue">
+          <Link href={`/state-bills/${state.toLowerCase()}`} className="hover:text-civiq-blue">
             State Bills
           </Link>
           <span className="mx-2">&rsaquo;</span>
@@ -525,7 +525,7 @@ export default function StateBillsPage() {
             {/* Bills List */}
             <div className="space-y-6">
               {billsData.bills.map(bill => (
-                <BillCard key={bill.id} bill={bill} />
+                <BillCard key={bill.id} bill={bill} state={state} />
               ))}
             </div>
 

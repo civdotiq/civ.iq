@@ -14,6 +14,7 @@ import type { EnhancedRepresentative } from '@/types/representative';
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import type { FederalRegisterItem } from '@/types/federal-register';
 import type { DistrictRow, RegulationRow, SectorRow, StateRow, TopicRow } from './types';
+import { buildDistrictUrl } from '@/lib/helpers/url-builders';
 
 // ── Initials helper (reused by mini-portrait + map placeholder) ──
 
@@ -138,7 +139,7 @@ export async function fetchDistrictsForListing(
         bioguideId: d.representative.bioguideId,
       },
       population: d.demographics.population,
-      href: `/districts/${d.state.toLowerCase()}/${d.number}`,
+      href: buildDistrictUrl(d.state, d.number),
     }));
     return stateFilter ? rows.filter(r => r.state === stateFilter) : rows;
   } catch {

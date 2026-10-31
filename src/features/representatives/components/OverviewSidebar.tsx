@@ -15,6 +15,7 @@ import {
 } from '@/lib/data/congressional-constants';
 import { AicherSidebarCard } from './AicherSidebarCard';
 import { StateMapCard } from './StateMapCard';
+import { buildDistrictUrl } from '@/lib/helpers/url-builders';
 
 interface OverviewSidebarProps {
   representative: EnhancedRepresentative;
@@ -145,7 +146,7 @@ export function OverviewSidebar({ representative }: OverviewSidebarProps) {
             href={
               representative.chamber === 'Senate'
                 ? `/districts/${representative.state}-STATE`
-                : `/districts/${representative.state}-${representative.district?.padStart(2, '0') || 'AL'}`
+                : buildDistrictUrl(representative.state, representative.district || 'AL')
             }
             className="block"
           >
