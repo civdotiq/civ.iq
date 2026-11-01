@@ -8,6 +8,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { Representative } from '@/features/representatives/services/congress-api';
 import { SearchForm } from './SearchForm';
 import { RepresentativeGrid } from './RepresentativeGrid';
@@ -27,7 +28,6 @@ const FilterSidebar = dynamic(
   () => import('./FilterSidebar').then(mod => ({ default: mod.FilterSidebar })),
   {
     loading: () => <div className="w-64 h-96 bg-gray-50 animate-pulse"></div>,
-    ssr: false,
   }
 );
 
@@ -611,12 +611,12 @@ export function RepresentativesClient({
                           {rep.chamber}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button
-                            onClick={() => router.push(`/representative/${rep.bioguideId}`)}
-                            className="text-civiq-blue hover:text-civiq-blue mr-4"
+                          <Link
+                            href={`/representative/${rep.bioguideId}`}
+                            className="text-civiq-blue hover:underline mr-4"
                           >
                             View
-                          </button>
+                          </Link>
                         </td>
                       </tr>
                     ))}

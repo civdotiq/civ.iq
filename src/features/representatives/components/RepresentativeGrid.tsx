@@ -7,6 +7,7 @@
 
 import { useState, useRef, useCallback, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { ChevronDown } from 'lucide-react';
 import { Representative } from '@/features/representatives/services/congress-api';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
@@ -240,12 +241,12 @@ const RepresentativeCard = memo(function RepresentativeCard({
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2">
-            <button
-              onClick={() => router.push(`/representative/${rep.bioguideId}`)}
-              className="flex-1 bg-civiq-blue text-white px-4 py-2 border-2 border-civiq-blue hover:bg-civiq-blue/90 transition-colors text-sm sm:text-base min-h-[44px] font-medium"
+            <Link
+              href={`/representative/${rep.bioguideId}`}
+              className="flex-1 flex items-center justify-center bg-civiq-blue text-white px-4 py-2 border-2 border-civiq-blue hover:bg-civiq-blue/90 transition-colors text-sm sm:text-base min-h-[44px] font-medium"
             >
               View Profile
-            </button>
+            </Link>
             <button
               onClick={() => {
                 const currentCompare = compareIds.join(',');

@@ -12,6 +12,7 @@ import { getAllRepresentativesService } from '@/lib/services/representatives.ser
 import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
+import { MembersByState } from '@/features/representatives/components/MembersByState';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/representatives' },
@@ -82,6 +83,9 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
 
   // Fetch initial data on the server if we have URL params
   const initialRepresentatives = await getInitialRepresentatives(state, district);
+  // The by-state list always shows every member, whatever the grid is filtered to.
+  const allMembers =
+    state && district ? await getAllRepresentativesService() : initialRepresentatives;
 
   return (
     <>
@@ -144,6 +148,8 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
               }}
             />
           </Suspense>
+
+          <MembersByState representatives={allMembers} />
         </div>
 
         {/* Performance Dashboard - Development only */}
