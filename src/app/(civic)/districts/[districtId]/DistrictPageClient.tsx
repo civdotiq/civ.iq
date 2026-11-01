@@ -110,12 +110,15 @@ interface DistrictPageClientProps {
   initialDistrict: DistrictDetails | null;
   /** Answer-first opening, built on the server from the same details. */
   lede?: string | null;
+  /** "Latest record: … · Checked: …", built on the server from the same details. */
+  datesLine?: string;
 }
 
 export default function DistrictPageClient({
   districtId,
   initialDistrict,
   lede,
+  datesLine,
 }: DistrictPageClientProps) {
   const [district, setDistrict] = useState<DistrictDetails | null>(initialDistrict);
   const [loading, setLoading] = useState(initialDistrict === null);
@@ -397,6 +400,7 @@ export default function DistrictPageClient({
           <DataProvenance
             variant="block"
             sources={districtPageSources(district)}
+            headline={datesLine}
             note={
               <>
                 The spending narrative is written by AI from USAspending.gov data and is labeled
