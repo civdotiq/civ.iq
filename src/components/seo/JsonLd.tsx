@@ -298,6 +298,8 @@ interface GovernmentOrganizationSchemaProps {
     url?: string;
   }>;
   mainEntityOfPage?: string;
+  /** YYYY-MM-DD the page's newest record dates from; set on mainEntityOfPage. */
+  dateModified?: string | null;
 }
 
 /**
@@ -312,6 +314,7 @@ export function GovernmentOrganizationSchema({
   member,
   subOrganization,
   mainEntityOfPage,
+  dateModified,
 }: GovernmentOrganizationSchemaProps) {
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -328,7 +331,11 @@ export function GovernmentOrganizationSchema({
   };
 
   if (mainEntityOfPage) {
-    schema.mainEntityOfPage = { '@type': 'WebPage', '@id': mainEntityOfPage };
+    schema.mainEntityOfPage = {
+      '@type': 'WebPage',
+      '@id': mainEntityOfPage,
+      ...(dateModified ? { dateModified } : {}),
+    };
   }
   if (description) schema.description = description;
   if (url) schema.url = url;

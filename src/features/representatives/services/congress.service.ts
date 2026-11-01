@@ -708,13 +708,33 @@ function parseSocialMediaYAML(yamlText: string): CongressLegislatorSocialMedia[]
 /**
  * Fetch committee membership data
  */
+const COMMITTEE_LIST_KEY = 'congress-committees-current';
+const COMMITTEE_MEMBERSHIP_KEY = 'congress-committee-memberships';
+const COMMITTEE_FILES_TTL = 6 * 60 * 60; // 6 hours cache
+
+/** Where a file's download time is saved, beside its data and with its TTL. */
+function fetchedAtKey(dataKey: string): string {
+  return `${dataKey}:fetched-at`;
+}
+
+/** Record when a file was downloaded; fire-and-forget, never blocks or fails the fetch. */
+function saveFetchedAt(dataKey: string, ttlSeconds: number): void {
+  try {
+    Promise.resolve(cache.set(fetchedAtKey(dataKey), new Date().toISOString(), ttlSeconds)).catch(
+      () => {}
+    );
+  } catch {
+    // Bookkeeping only: a cache without set() must not break the download.
+  }
+}
+
 export async function fetchCommitteeMemberships(): Promise<CongressCommitteeMembership[]> {
-  return memoizedBlob('congress-committee-memberships', fetchCommitteeMembershipsUncached);
+  return memoizedBlob(COMMITTEE_MEMBERSHIP_KEY, fetchCommitteeMembershipsUncached);
 }
 
 async function fetchCommitteeMembershipsUncached(): Promise<CongressCommitteeMembership[]> {
   return cachedFetch(
-    'congress-committee-memberships',
+    COMMITTEE_MEMBERSHIP_KEY,
     async () => {
       try {
         logger.info('Fetching committee memberships from congress-legislators');
@@ -789,13 +809,14 @@ async function fetchCommitteeMembershipsUncached(): Promise<CongressCommitteeMem
           count: memberships.length,
         });
 
+        saveFetchedAt(COMMITTEE_MEMBERSHIP_KEY, COMMITTEE_FILES_TTL);
         return memberships;
       } catch (error) {
         logger.error('Error fetching committee memberships', error as Error);
         return [];
       }
     },
-    6 * 60 * 60 // 6 hours cache
+    COMMITTEE_FILES_TTL
   );
 }
 
@@ -803,12 +824,12 @@ async function fetchCommitteeMembershipsUncached(): Promise<CongressCommitteeMem
  * Fetch committee data
  */
 export async function fetchCommittees(): Promise<CongressCommittee[]> {
-  return memoizedBlob('congress-committees-current', fetchCommitteesUncached);
+  return memoizedBlob(COMMITTEE_LIST_KEY, fetchCommitteesUncached);
 }
 
 async function fetchCommitteesUncached(): Promise<CongressCommittee[]> {
   return cachedFetch(
-    'congress-committees-current',
+    COMMITTEE_LIST_KEY,
     async () => {
       try {
         logger.info('Fetching committees from congress-legislators');
@@ -826,14 +847,32 @@ async function fetchCommitteesUncached(): Promise<CongressCommittee[]> {
           count: committees.length,
         });
 
+        saveFetchedAt(COMMITTEE_LIST_KEY, COMMITTEE_FILES_TTL);
         return committees;
       } catch (error) {
         logger.error('Error fetching committees', error as Error);
         return [];
       }
     },
-    6 * 60 * 60 // 6 hours cache
+    COMMITTEE_FILES_TTL
   );
+}
+
+/**
+ * When the committee list and membership files were last downloaded: the
+ * older of the two saved times, so a committee page's "Checked" never claims
+ * more freshness than its stalest file has. Null until both are saved (the
+ * time is written with each download and expires with the data).
+ */
+export async function committeeFilesCheckedAt(): Promise<string | null> {
+  const times = await Promise.all(
+    [COMMITTEE_LIST_KEY, COMMITTEE_MEMBERSHIP_KEY].map(key =>
+      cache.get<string>(fetchedAtKey(key)).catch(() => null)
+    )
+  );
+  const valid = times.filter((t): t is string => !!t && !Number.isNaN(Date.parse(t)));
+  if (valid.length !== times.length) return null;
+  return valid.sort((a, b) => Date.parse(a) - Date.parse(b))[0] ?? null;
 }
 
 /**

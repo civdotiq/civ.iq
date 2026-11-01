@@ -301,3 +301,29 @@ export function districtPageSources(district: DistrictDetails): DataSource[] {
 
   return sources;
 }
+
+/**
+ * A committee page. Everything the server renders (name, jurisdiction,
+ * members, chair and ranking member, subcommittees) comes from two
+ * congress-legislators files; `checkedAt` is the older of their download
+ * times (committeeFilesCheckedAt), or null when not saved yet.
+ */
+export function committeePageSources(input: {
+  checkedAt: string | null;
+  congressGovUrl?: string;
+}): DataSource[] {
+  const fetchedAt = input.checkedAt ?? undefined;
+  return [
+    registrySource('congressLegislators', {
+      covers: 'Committee name, subcommittees, members, chair and ranking member',
+      fetchedAt,
+    }),
+    registrySource('congressGov', {
+      covers: 'Official committee page',
+      href: input.congressGovUrl,
+    }),
+    // Loaded in the browser by their own sections; no date reaches this block.
+    registrySource('govinfo', { covers: 'Hearings section' }),
+    registrySource('federalRegister', { covers: 'Regulations and rulemaking section' }),
+  ];
+}

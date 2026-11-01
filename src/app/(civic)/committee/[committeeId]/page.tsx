@@ -8,7 +8,7 @@ import { notFound } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { Users, MapPin, Calendar, ExternalLink, Phone } from 'lucide-react';
+import { Users, MapPin, ExternalLink, Phone } from 'lucide-react';
 import { RepLink } from '@/components/shared/links/EntityLinks';
 import { getCommitteeDisplayName } from '@/types/committee';
 import type { Committee } from '@/types/committee';
@@ -33,6 +33,10 @@ import GlossaryLink from '@/components/shared/ui/GlossaryLink';
 import { CommitteeDetail } from '@/components/committees/CommitteeDetail';
 import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 import { partyAbbreviation } from '@/lib/party-label';
+import { DataProvenance } from '@/shared/components/ui/DataProvenance';
+import { committeePageSources } from '@/lib/provenance/page-sources';
+import { getCommitteeDates } from '@/lib/committees/committee-dates';
+import { profileDatesLine } from '@/lib/provenance/profile-dates-line';
 
 // Dynamically import client components
 const SubcommitteeCard = dynamic(
@@ -258,6 +262,10 @@ async function CommitteeContent({
     );
   }
 
+  // Latest record and Checked for the Sources line and dateModified, from
+  // the committee history file and the files' saved download times.
+  const dates = await getCommitteeDates(committeeId);
+
   return (
     <div className="min-h-screen bg-white density-default">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -359,10 +367,6 @@ async function CommitteeContent({
                     {committee.leadership.chair.representative.district &&
                       `-${committee.leadership.chair.representative.district}`}
                   </p>
-                  <div className="flex items-center text-sm text-gray-500 mt-1">
-                    <Calendar className="w-4 h-4 mr-1" />
-                    Since {new Date(committee.leadership.chair.joinedDate).getFullYear()}
-                  </div>
                 </div>
               </div>
             </div>
@@ -392,10 +396,6 @@ async function CommitteeContent({
                     {committee.leadership.rankingMember.representative.district &&
                       `-${committee.leadership.rankingMember.representative.district}`}
                   </p>
-                  <div className="flex items-center text-sm text-gray-500 mt-1">
-                    <Calendar className="w-4 h-4 mr-1" />
-                    Since {new Date(committee.leadership.rankingMember.joinedDate).getFullYear()}
-                  </div>
                 </div>
               </div>
             </div>
@@ -442,6 +442,7 @@ async function CommitteeContent({
           description={committee.jurisdiction}
           url={`https://civdotiq.org/committee/${committeeId}`}
           mainEntityOfPage={`https://civdotiq.org/committee/${committeeId}`}
+          dateModified={dates.latestRecord}
           parentOrganization={
             committee.chamber === 'Senate'
               ? 'United States Senate'
@@ -496,6 +497,18 @@ async function CommitteeContent({
               },
             ]}
             title="Frequently Asked Questions"
+          />
+        </div>
+
+        {/* Sources, with the page's Latest record and Checked dates */}
+        <div className="mt-12">
+          <DataProvenance
+            variant="block"
+            sources={committeePageSources({
+              checkedAt: dates.checkedAt,
+              congressGovUrl: committee.url,
+            })}
+            headline={profileDatesLine(dates)}
           />
         </div>
 

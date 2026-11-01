@@ -53,14 +53,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./node_modules/.bin/tsx scripts/sync-member-roster-history.ts
 
+      # When each committee's list entry or roster last changed upstream: the
+      # committee page's "Latest record" date. Walks the new upstream commits.
+      - name: Refresh the committee roster history
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./node_modules/.bin/tsx scripts/sync-committee-roster-history.ts
+
       - name: Commit updated files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- data/legislators-current.yaml data/legislators-departed.yaml src/data/committees-with-subcommittees.json src/data/member-roster-history.json; then
+          if git diff --quiet -- data/legislators-current.yaml data/legislators-departed.yaml src/data/committees-with-subcommittees.json src/data/member-roster-history.json src/data/committee-roster-history.json; then
             echo "No change to the legislators, committee or roster history files"
           else
-            git add data/legislators-current.yaml data/legislators-departed.yaml src/data/committees-with-subcommittees.json src/data/member-roster-history.json
+            git add data/legislators-current.yaml data/legislators-departed.yaml src/data/committees-with-subcommittees.json src/data/member-roster-history.json src/data/committee-roster-history.json
             git commit -m "chore(data): refresh congress legislators [skip ci]"
             # Rebase and retry rather than merge: main-protection enforces
             # linear history. Only data/ files are touched here.
