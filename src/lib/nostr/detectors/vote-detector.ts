@@ -213,9 +213,14 @@ export async function detectSenateVoteEvents(): Promise<CivicEvent[]> {
         else if (v.v === 'X') notVoting++;
       }
 
-      const question = entry.i ? `${entry.q} — ${entry.i}` : entry.q;
+      // A roll call read from the Congressional Record may have no question
+      // yet (Congress.gov hadn't listed it); never invent one.
+      const asked = entry.q || 'Roll call vote';
+      const question = entry.i ? `${asked} — ${entry.i}` : asked;
       const padded = String(entry.n).padStart(5, '0');
-      const sourceUrl = `https://www.senate.gov/legislative/LIS/roll_call_votes/vote${congress}${session}/vote_${congress}_${session}_${padded}.htm`;
+      const sourceUrl =
+        entry.record?.url ??
+        `https://www.senate.gov/legislative/LIS/roll_call_votes/vote${congress}${session}/vote_${congress}_${session}_${padded}.htm`;
 
       const voteData: VoteRecordEvent = {
         voteId,
@@ -238,7 +243,7 @@ export async function detectSenateVoteEvents(): Promise<CivicEvent[]> {
         tags: ['vote', 'senate'],
         source: {
           url: sourceUrl,
-          api: 'senate.gov (mirrored corpus)',
+          api: entry.record ? 'Congressional Record (GovInfo)' : 'senate.gov (mirrored corpus)',
         },
         data: voteData,
       });

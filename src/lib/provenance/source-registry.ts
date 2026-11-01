@@ -70,6 +70,14 @@ export const SOURCE_REGISTRY = {
     ...PUBLIC_DOMAIN,
     ...METHOD_SOURCES,
   },
+  congressionalRecord: {
+    name: 'Congressional Record',
+    shortName: 'Congressional Record',
+    publisher: 'U.S. Government Publishing Office, via GovInfo',
+    href: 'https://www.govinfo.gov/app/collection/crec',
+    ...PUBLIC_DOMAIN,
+    ...METHOD_SOURCES,
+  },
   senate: {
     name: 'Senate roll-call votes',
     shortName: 'Senate',

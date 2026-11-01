@@ -26,7 +26,7 @@ import { foldForSearch } from '@/lib/utils/fold-for-search';
 export interface RosterLegislator {
   id: { bioguide: string; lis?: string };
   name: { last?: string; official_full?: string };
-  terms: Array<{ type: string; start: string; end: string; state?: string }>;
+  terms: Array<{ type: string; start: string; end: string; state?: string; party?: string }>;
 }
 
 export interface SenateTerm {
@@ -34,6 +34,8 @@ export interface SenateTerm {
   state: string;
   start: string;
   end: string;
+  /** "R", "D" or "I", as stored roll calls write it; '' when the term has no party. */
+  party: string;
   /** Folded candidate surnames. */
   surnames: string[];
 }
@@ -62,7 +64,14 @@ export function senateTerms(legislators: RosterLegislator[]): SenateTerm[] {
     const surnames = candidateSurnames(l.name);
     for (const t of l.terms) {
       if (t.type !== 'sen' || !t.state) continue;
-      terms.push({ bioguide: l.id.bioguide, state: t.state, start: t.start, end: t.end, surnames });
+      terms.push({
+        bioguide: l.id.bioguide,
+        state: t.state,
+        start: t.start,
+        end: t.end,
+        party: (t.party ?? '').slice(0, 1).toUpperCase(),
+        surnames,
+      });
     }
   }
   return terms;

@@ -165,6 +165,11 @@ export interface SenateMenuEntry {
   i: string;
   /** Full vote title. */
   t: string;
+  /** Set when the roll call was read from the Congressional Record, not
+   *  senate.gov (scripts/sync-senate-votes-from-record.ts): the Record
+   *  section it is printed in and when it was read. Blank q/i/t there mean
+   *  Congress.gov didn't confirm what the vote was on. */
+  record?: { url: string; readAt: string };
 }
 
 export interface SenateVoteMenu {
@@ -330,6 +335,55 @@ function senateSourceUrl(congress: number, session: number, rollCallNumber: numb
   return `https://www.senate.gov/legislative/LIS/roll_call_votes/vote${congress}${session}/vote_${congress}_${session}_${padded}.xml`;
 }
 
+/** Where a stored roll call was read: its Congressional Record section, or
+ *  senate.gov's roll-call XML. */
+export function senateEntrySourceUrl(
+  congress: number,
+  session: number,
+  entry: SenateMenuEntry
+): string {
+  return entry.record?.url ?? senateSourceUrl(congress, session, entry.n);
+}
+
+/**
+ * Add or replace menu entries for one session, keeping every other entry
+ * verbatim. Used for roll calls read from the Congressional Record, which
+ * arrive a few at a time rather than as senate.gov's whole menu. `updatedAt`
+ * (when the senate.gov mirror last synced) is left alone.
+ */
+export function withSenateMenuEntries(
+  menu: SenateVoteMenu,
+  session: number,
+  entries: SenateMenuEntry[]
+): SenateVoteMenu {
+  const byRoll = new Map((menu.sessions[String(session)] ?? []).map(e => [e.n, e]));
+  for (const e of entries) byRoll.set(e.n, e);
+  return {
+    ...menu,
+    sessions: {
+      ...menu.sessions,
+      [String(session)]: [...byRoll.values()].sort((a, b) => b.n - a.n),
+    },
+  };
+}
+
+/** The stored menu as written (measure tags kept), for read-modify-write. */
+export async function getRawSenateVoteMenu(congress: number): Promise<SenateVoteMenu | null> {
+  return getRedisCache().get<SenateVoteMenu>(senateMenuKey(congress));
+}
+
+/** Persist a compact roll call as is (already checked by the caller). */
+export async function setSenateCompactRoll(
+  congress: number,
+  roll: CompactRollCall
+): Promise<boolean> {
+  return getRedisCache().set(
+    rollKey('senate', congress, roll.session, roll.rollCallNumber),
+    roll,
+    ROLL_TTL_SECONDS
+  );
+}
+
 /**
  * The most recent `limit` Senate roll calls from the mirrored corpus,
  * enriched with menu metadata (question, result, bill) — full member
@@ -379,7 +433,7 @@ export async function getSenateCorpusRollCalls(
       // before they were persisted fall back to the menu-derived ones.
       if (!roll.amendment && fromMenu.amendment) roll.amendment = fromMenu.amendment;
       if (!roll.nomination && fromMenu.nomination) roll.nomination = fromMenu.nomination;
-      roll.sourceUrl = senateSourceUrl(congress, item.session, item.entry.n);
+      roll.sourceUrl = senateEntrySourceUrl(congress, item.session, item.entry);
       rolls.push(roll);
     });
   }

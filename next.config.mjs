@@ -97,6 +97,8 @@ const nextConfig = {
     // The baselines cron puts expiring Senate rolls back into Redis from the
     // committed snapshot; the tracer won't infer the fs read.
     '/api/cron/chamber-baselines': ['./data/senate-votes-*.json.br'],
+    // The Record ingest starts from the snapshot's menu when Redis has none.
+    '/api/intelligence/chamber-baselines/ingest': ['./data/senate-votes-*.json.br'],
   },
   // Remove console logs in production for better performance
   compiler: {

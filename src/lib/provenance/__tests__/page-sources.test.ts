@@ -176,6 +176,42 @@ describe('votePageSources', () => {
     expect(senate?.fetchedAt).toBeUndefined();
   });
 
+  it('credits the Congressional Record, and the Record page, for a vote read from it', () => {
+    const recordUrl =
+      'https://www.govinfo.gov/content/pkg/CREC-2026-11-09/html/CREC-2026-11-09-pt1-PgS5301.htm';
+    const sources = votePageSources(
+      makeVote({
+        chamber: 'Senate',
+        question: 'On the Cloture Motion',
+        metadata: {
+          source: 'senate-record',
+          confidence: 'high',
+          processingDate: LOADED,
+          recordUrl,
+          recordReadAt: '2026-11-10T15:31:00.000Z',
+        },
+      })
+    );
+    expect(sources[0]).toMatchObject({
+      name: 'Congressional Record',
+      href: recordUrl,
+      asOf: 'Vote held May 22, 2025 · Read Nov 10, 2026',
+    });
+    expect(sources.map(s => s.name)).toContain('Congress.gov');
+    expect(sources.map(s => s.name)).not.toContain('Senate roll-call votes');
+  });
+
+  it("doesn't credit Congress.gov when it confirmed nothing about a Record vote", () => {
+    const sources = votePageSources(
+      makeVote({
+        chamber: 'Senate',
+        question: '',
+        metadata: { source: 'senate-record', confidence: 'high', processingDate: LOADED },
+      })
+    );
+    expect(sources.map(s => s.name)).not.toContain('Congress.gov');
+  });
+
   it('credits Congress.gov on a Senate vote only when it supplied the summary', () => {
     const senate = { chamber: 'Senate' as const };
     const titleOnly = votePageSources(
