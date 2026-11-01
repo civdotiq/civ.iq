@@ -103,9 +103,10 @@ export function isFirstOrLastDay(terms: SenateTerm[], bioguide: string, date: st
 
 /** "Scott (FL)" → the Bioguide ID of the one seated senator it can mean. */
 export function matchPrintedName(printed: string, seated: SenateTerm[]): NameMatch {
-  const m = /^(.*?)\s*(?:\(([A-Z]{2})\))?$/.exec(printed.trim());
-  const surname = foldName(m?.[1] ?? '');
-  const state = m?.[2];
+  const trimmed = printed.trim();
+  const statePart = /\(([A-Z]{2})\)$/.exec(trimmed);
+  const surname = foldName(statePart ? trimmed.slice(0, statePart.index) : trimmed);
+  const state = statePart?.[1];
   if (!surname) return { error: `empty name "${printed}"` };
   const hits = seated.filter(s => s.surnames.includes(surname) && (!state || s.state === state));
   if (hits.length === 1 && hits[0]) return { bioguide: hits[0].bioguide };

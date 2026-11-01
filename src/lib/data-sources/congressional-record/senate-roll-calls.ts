@@ -144,14 +144,61 @@ export function recordText(htm: string): string {
     .replace(/&#0?39;|&apos;/g, "'");
   const header = text.indexOf('[www.gpo.gov]');
   if (header >= 0) text = text.slice(text.indexOf('\n', header) + 1);
-  return text
-    .replace(NOTE_BLOCK, '')
+  return withoutNoteBlocks(text)
     .split('\n')
     .filter(line => !/^\s*\[\[Page [SH]\d+\]\]\s*$/.test(line))
     .join('\n');
 }
 
-const NOTE_BLOCK = /[ \t]*=+ NOTE =+[\s\S]*?=+ END NOTE =+[ \t]*/g;
+interface NoteBlock {
+  /** The whole block: its "=== NOTE ===" and "=== END NOTE ===" lines and the
+   *  spaces or tabs around them. */
+  start: number;
+  end: number;
+  /** The note's own text, between the two marker lines. */
+  bodyStart: number;
+  bodyEnd: number;
+}
+
+const NOTE_OPEN = '= NOTE =';
+const NOTE_CLOSE = '= END NOTE =';
+
+/** GPO "==== NOTE ==== ... ==== END NOTE ====" blocks. Found with indexOf: a
+ *  lazy regex spanning the block backtracks on long pages. */
+function noteBlocks(text: string): NoteBlock[] {
+  const blocks: NoteBlock[] = [];
+  const isBlank = (c: string | undefined) => c === ' ' || c === '\t';
+  let from = 0;
+  for (;;) {
+    const open = text.indexOf(NOTE_OPEN, from);
+    if (open < 0) break;
+    const close = text.indexOf(NOTE_CLOSE, open + NOTE_OPEN.length);
+    if (close < 0) break;
+    let start = open;
+    while (start > from && text[start - 1] === '=') start--;
+    while (start > from && isBlank(text[start - 1])) start--;
+    let bodyStart = open + NOTE_OPEN.length;
+    while (text[bodyStart] === '=') bodyStart++;
+    let end = close + NOTE_CLOSE.length;
+    while (text[end] === '=') end++;
+    while (isBlank(text[end])) end++;
+    let bodyEnd = close + 1;
+    while (bodyEnd > bodyStart && text[bodyEnd - 1] === '=') bodyEnd--;
+    blocks.push({ start, end, bodyStart, bodyEnd });
+    from = end;
+  }
+  return blocks;
+}
+
+function withoutNoteBlocks(text: string): string {
+  let out = '';
+  let at = 0;
+  for (const block of noteBlocks(text)) {
+    out += text.slice(at, block.start);
+    at = block.end;
+  }
+  return out + text.slice(at);
+}
 
 /**
  * GPO correction notes in a Record section that mention a roll call: "On page
@@ -160,13 +207,8 @@ const NOTE_BLOCK = /[ \t]*=+ NOTE =+[\s\S]*?=+ END NOTE =+[ \t]*/g;
  */
 export function recordNotes(htm: string): string[] {
   const text = htm.replace(/\0/g, '').replace(HTML_TAG, '');
-  return [...text.matchAll(NOTE_BLOCK)]
-    .map(m =>
-      m[0]
-        .replace(/=+ (?:END )?NOTE =+/g, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-    )
+  return noteBlocks(text)
+    .map(block => text.slice(block.bodyStart, block.bodyEnd).replace(/\s+/g, ' ').trim())
     .filter(note => /Rollcall\s+Vote/i.test(note));
 }
 
@@ -174,7 +216,7 @@ const ROLL_HEADER =
   /\[Rollcall\s+Vote\s+No\.\s*(\d+)\.?\s*(Leg|Legislative|Ex|Exec|Executive)?\.?\]/gi;
 /** "YEAS--53", "YEAS--- 99", "ANSWERED ``PRESENT'' --1", and once "NOT VOTING--"
  *  with the number left off (2025 roll 444). */
-const HEADING_LINE = /^\s+([A-Z][A-Z `']*[A-Z'])\s*-{2,}\s*(\d+)?\s*$/;
+const HEADING_LINE = /^([A-Z][A-Z `']*[A-Z'])[ \t]*-{2,}[ \t]*(\d+)?$/;
 /** A printed surname: one or two capitalized words ("Van Hollen", "Hyde-Smith",
  *  "McCormick"), maybe "(ST)". Indented five spaces, or centered after a GPO
  *  note. All-caps section titles and running text don't match. */
@@ -218,7 +260,8 @@ export function parseSenateRollCalls(text: string): RecordRollCall[] {
     for (let li = 0; li < lines.length; li++) {
       const line = lines[li] ?? '';
       if (!line.trim()) continue;
-      const heading = HEADING_LINE.exec(line);
+      // Headings are indented; matched on the trimmed line.
+      const heading = /^\s/.test(line) ? HEADING_LINE.exec(line.trim()) : null;
       if (heading) {
         const label = (heading[1] ?? '').replace(/[`']/g, '').replace(/\s+/g, ' ');
         const code = HEADINGS[label];
@@ -259,10 +302,14 @@ export function parseSenateRollCalls(text: string): RecordRollCall[] {
     const vp = /Vice President votes in the (affirmative|negative)/i.exec(flat);
     if (vp) roll.vicePresident = vp[1]?.toLowerCase() === 'affirmative' ? 'Y' : 'N';
     const result =
-      /[^.]*\b(?:is|was|are|were)\s+(?:not\s+)?(?:agreed to|confirmed|passed|adopted|sustained|rejected|invoked|ratified|well[ -]taken|tabled)\b[^.]*\./i.exec(
+      /\b(?:is|was|are|were)\s+(?:not\s+)?(?:agreed to|confirmed|passed|adopted|sustained|rejected|invoked|ratified|well[ -]taken|tabled)\b[^.]*\./i.exec(
         flat
-      ) ?? /[^.]*\bfails? (?:of passage|to pass)\b[^.]*\./i.exec(flat);
-    if (result) roll.result = result[0].trim();
+      ) ?? /\bfails? (?:of passage|to pass)\b[^.]*\./i.exec(flat);
+    // The whole sentence: back from the match to the previous period.
+    if (result) {
+      const sentenceStart = flat.lastIndexOf('.', result.index - 1) + 1;
+      roll.result = flat.slice(sentenceStart, result.index + result[0].length).trim();
+    }
     return roll;
   });
 }

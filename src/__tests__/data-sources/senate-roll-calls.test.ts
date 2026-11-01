@@ -87,7 +87,7 @@ describe('selectGranulesForPages', () => {
 
 describe('parseSenateRollCalls', () => {
   it('reads roll 253 of 2026: every name, both Scotts, the tally', () => {
-    const [roll] = rollsIn('CREC-2026-09-30-PgS5199-roll-253.htm');
+    const [roll] = rollsIn('CREC-2026-09-30-PgS5199-roll-253.txt');
     expect(roll?.rollCall).toBe(253);
     expect(roll?.kind).toBe('Leg');
     expect(roll?.printedCounts).toEqual({ Y: 53, N: 47 });
@@ -103,7 +103,7 @@ describe('parseSenateRollCalls', () => {
   });
 
   it('joins a name list across a page break (roll 256, an "Ex." vote on S5241)', () => {
-    const [roll] = rollsIn('CREC-2026-09-30-PgS5238-roll-256-page-break.htm');
+    const [roll] = rollsIn('CREC-2026-09-30-PgS5238-roll-256-page-break.txt');
     expect(roll?.rollCall).toBe(256);
     expect(roll?.kind).toBe('Ex');
     const listed = roll ? roll.names.Y.length + roll.names.N.length + roll.names.X.length : 0;
@@ -113,7 +113,7 @@ describe('parseSenateRollCalls', () => {
   });
 
   it('records a Vice President tie-break as the result, not as a senator (roll 9)', () => {
-    const [roll] = rollsIn('CREC-2026-01-14-PgS218-roll-9-vice-president.htm');
+    const [roll] = rollsIn('CREC-2026-01-14-PgS218-roll-9-vice-president.txt');
     expect(roll?.rollCall).toBe(9);
     expect(roll?.names.Y).toHaveLength(50);
     expect(roll?.names.N).toHaveLength(50);
@@ -122,27 +122,27 @@ describe('parseSenateRollCalls', () => {
   });
 
   it("reads an ANSWERED ``PRESENT'' heading (roll 44)", () => {
-    const [roll] = rollsIn('CREC-2026-03-02-roll-44-answered-present.htm');
+    const [roll] = rollsIn('CREC-2026-03-02-roll-44-answered-present.txt');
     expect(roll?.printedCounts).toEqual({ Y: 84, N: 6, P: 1, X: 9 });
     expect(roll?.names.P).toEqual(['Booker']);
     expect(roll?.unknownHeadings).toEqual([]);
   });
 
   it('reads "YEAS--- 99" (roll 119)', () => {
-    const [roll] = rollsIn('CREC-2026-05-13-roll-119-three-hyphens.htm');
+    const [roll] = rollsIn('CREC-2026-05-13-roll-119-three-hyphens.txt');
     expect(roll?.printedCounts.Y).toBe(99);
     expect(roll?.names.Y).toHaveLength(99);
   });
 
   it('keeps the lead-in tally apart from a misprinted read-out (roll 138: "54" for 84)', () => {
-    const [roll] = rollsIn('CREC-2026-06-04-roll-138-chair-misprint.htm');
+    const [roll] = rollsIn('CREC-2026-06-04-roll-138-chair-misprint.txt');
     expect(roll?.tally).toEqual({ yeas: 15, nays: 84 });
     expect(roll?.chairTally).toEqual({ yeas: 15, nays: 54 });
     expect(roll?.names.N).toHaveLength(84);
   });
 
   it('reads the corrected list around a GPO note, and keeps the note (roll 99)', () => {
-    const html = fixture('CREC-2026-04-22-roll-99-correction-note.htm');
+    const html = fixture('CREC-2026-04-22-roll-99-correction-note.txt');
     const [roll] = parseSenateRollCalls(recordText(html));
     expect(roll?.rollCall).toBe(99);
     expect(roll?.names.Y).toHaveLength(25);
@@ -197,7 +197,7 @@ describe('print variants seen in 2025', () => {
 
 describe('parseChangesOfVote', () => {
   it('reads a granted change of vote (Padilla, roll 26 of 2025)', () => {
-    expect(parseChangesOfVote(fixture('CREC-2025-02-04-PgS574-change-of-vote.htm'))).toEqual([
+    expect(parseChangesOfVote(fixture('CREC-2025-02-04-PgS574-change-of-vote.txt'))).toEqual([
       { speaker: 'PADILLA', rollCall: 26, from: 'N', to: 'Y' },
     ]);
   });
