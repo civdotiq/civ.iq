@@ -207,6 +207,22 @@ export const SOURCE_REGISTRY = {
     ...CC0,
     ...METHOD_SOURCES,
   },
+  govinfo: {
+    name: 'GovInfo',
+    shortName: 'GovInfo',
+    publisher: 'U.S. Government Publishing Office',
+    href: 'https://www.govinfo.gov',
+    ...PUBLIC_DOMAIN,
+    ...METHOD_SOURCES,
+  },
+  federalRegister: {
+    name: 'Federal Register',
+    shortName: 'Federal Register',
+    publisher: 'Office of the Federal Register, NARA',
+    href: 'https://www.federalregister.gov',
+    ...PUBLIC_DOMAIN,
+    ...METHOD_SOURCES,
+  },
 } satisfies Record<string, RegistryEntry>;
 
 export type SourceKey = keyof typeof SOURCE_REGISTRY;

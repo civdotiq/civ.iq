@@ -27,6 +27,7 @@ import { firstDistrictPerChamber } from '@/lib/sitemap/state-district-urls';
 import { houseDistrictIds } from '@/lib/districts/known-districts';
 import { resolveSeatId } from '@/lib/districts/district-details';
 import { districtLatestRecord } from '@/lib/districts/district-dates';
+import { committeeChangedOn } from '@/lib/committees/committee-dates';
 import { buildBillUrl } from '@/lib/helpers/url-builders';
 import { latestCompleteWeekId, previousWeekIds } from '@/lib/digest/week';
 import { PUBLISHED_SECTORS } from '@/lib/industry/published-sectors';
@@ -484,6 +485,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Main committee page
     entries.push({
       url: `${BASE_URL}/committee/${code}`,
+      // The page's Latest record (committee-dates.ts): when its facts last
+      // changed upstream. None for a committee the history hasn't seen.
+      lastModified: sourceDate(committeeChangedOn(code)),
       changeFrequency: 'weekly',
       priority: committee.chamber === 'Joint' ? 0.6 : 0.7,
     });
@@ -493,6 +497,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       for (const sub of committee.subcommittees) {
         entries.push({
           url: `${BASE_URL}/committee/${sub.code}`,
+          lastModified: sourceDate(committeeChangedOn(sub.code)),
           changeFrequency: 'monthly',
           priority: 0.5,
         });

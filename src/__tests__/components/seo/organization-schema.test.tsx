@@ -10,7 +10,7 @@
  */
 
 import { renderToStaticMarkup } from 'react-dom/server';
-import { OrganizationSchema } from '@/components/seo/JsonLd';
+import { GovernmentOrganizationSchema, OrganizationSchema } from '@/components/seo/JsonLd';
 
 function renderedSchema(element: React.ReactElement): Record<string, unknown> {
   const html = renderToStaticMarkup(element);
@@ -56,6 +56,35 @@ describe('OrganizationSchema contactPoint', () => {
     expect(schema.contactPoint).toMatchObject({
       email: 'press@example.org',
       contactType: 'press',
+    });
+  });
+});
+
+describe('GovernmentOrganizationSchema dateModified', () => {
+  it('puts the Latest record on mainEntityOfPage, and omits it when unknown', () => {
+    const dated = renderedSchema(
+      <GovernmentOrganizationSchema
+        name="Senate Committee on the Judiciary"
+        mainEntityOfPage="https://civdotiq.org/committee/SSJU"
+        dateModified="2026-07-15"
+      />
+    );
+    expect(dated.mainEntityOfPage).toEqual({
+      '@type': 'WebPage',
+      '@id': 'https://civdotiq.org/committee/SSJU',
+      dateModified: '2026-07-15',
+    });
+
+    const undated = renderedSchema(
+      <GovernmentOrganizationSchema
+        name="Senate Committee on the Judiciary"
+        mainEntityOfPage="https://civdotiq.org/committee/SSJU"
+        dateModified={null}
+      />
+    );
+    expect(undated.mainEntityOfPage).toEqual({
+      '@type': 'WebPage',
+      '@id': 'https://civdotiq.org/committee/SSJU',
     });
   });
 });

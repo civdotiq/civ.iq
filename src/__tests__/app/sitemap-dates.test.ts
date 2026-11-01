@@ -107,12 +107,15 @@ describe('sitemap lastModified', () => {
     expect(entries.find(e => e.url.endsWith('/districts/MI-07'))?.lastModified).toBeUndefined();
   });
 
-  it('lists committees without a date', async () => {
+  it('dates a committee and a subcommittee by when their upstream facts last changed', async () => {
     const entries = await sitemap();
-    for (const path of ['/committee/SSJU']) {
-      const entry = entries.find(e => e.url.endsWith(path));
-      expect(entry).toBeDefined();
-      expect(entry?.lastModified).toBeUndefined();
-    }
+    // src/data/committee-roster-history.json: Judiciary's roster changed
+    // 2026-07-15; its Antitrust subcommittee (SSJU01) last changed 2025-04-04.
+    expect(entries.find(e => e.url.endsWith('/committee/SSJU'))?.lastModified).toEqual(
+      new Date('2026-07-15')
+    );
+    expect(entries.find(e => e.url.endsWith('/committee/SSJU01'))?.lastModified).toEqual(
+      new Date('2025-04-04')
+    );
   });
 });

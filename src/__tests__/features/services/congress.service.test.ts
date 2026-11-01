@@ -22,7 +22,11 @@ jest.mock('@/lib/logging/simple-logger', () => ({
 // Pass-through so every call exercises the real fetch + parse path.
 jest.mock('@/lib/cache', () => ({
   cachedFetch: jest.fn((_key: string, fn: () => unknown) => fn()),
-  cache: { ttl: jest.fn() },
+  cache: {
+    ttl: jest.fn(),
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(true),
+  },
 }));
 
 // The service calls getFileCache() at module load, so the mock object must
@@ -349,6 +353,15 @@ describe('fetchCommitteeMemberships', () => {
     expect(alice?.committees).toEqual([
       { thomas_id: 'SSJU', rank: 1, party: 'majority', title: 'Chair', chamber: 'senate' },
     ]);
+    // The download time is saved beside the data, with its TTL: the
+    // committee page's "Checked" date (committeeFilesCheckedAt).
+    const { cache } = jest.requireMock('@/lib/cache') as { cache: { set: jest.Mock } };
+    const saved = cache.set.mock.calls.find(
+      c => c[0] === 'congress-committee-memberships:fetched-at'
+    );
+    expect(saved).toBeDefined();
+    expect(Number.isNaN(Date.parse(saved?.[1]))).toBe(false);
+    expect(saved?.[2]).toBe(6 * 60 * 60);
 
     // Chamber is inferred from the committee id prefix (H → house).
     const bob = memberships.find(m => m.bioguide === 'B000002');

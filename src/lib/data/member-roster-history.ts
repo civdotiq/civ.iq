@@ -35,7 +35,7 @@ export interface MemberRosterHistory {
 }
 
 /** JSON with keys sorted at every level, so key order never reads as a change. */
-function stableJson(value: unknown): string {
+export function stableJson(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
   if (value && typeof value === 'object') {
     const entries = Object.entries(value as Record<string, unknown>)

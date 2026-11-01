@@ -1,0 +1,927 @@
+{
+  "throughCommit": "46b3d1480d8987b31761df9968d67400191e99d7",
+  "throughDate": "2026-09-02T17:40:14Z",
+  "source": "unitedstates/congress-legislators committees-current.yaml + committee-membership-current.yaml git history (CC0-1.0)",
+  "committees": {
+    "HSAG": {
+      "fingerprint": "720a488c06479370",
+      "changedOn": "2026-07-15"
+    },
+    "HSAG03": {
+      "fingerprint": "9dc020e277eaabf3",
+      "changedOn": "2026-03-13"
+    },
+    "HSAG14": {
+      "fingerprint": "9718a31c48a2d0ef",
+      "changedOn": "2026-03-13"
+    },
+    "HSAG15": {
+      "fingerprint": "79664b88e91dd300",
+      "changedOn": "2026-07-15"
+    },
+    "HSAG16": {
+      "fingerprint": "a89e8e63a03a7313",
+      "changedOn": "2026-07-15"
+    },
+    "HSAG22": {
+      "fingerprint": "9d1f1df269bbc018",
+      "changedOn": "2026-07-15"
+    },
+    "HSAG29": {
+      "fingerprint": "1dcc45afab49dd9d",
+      "changedOn": "2026-03-13"
+    },
+    "HSAP": {
+      "fingerprint": "eb598d79b1d5206b",
+      "changedOn": "2026-07-15"
+    },
+    "HSAP01": {
+      "fingerprint": "9ee73f7f1684e1ac",
+      "changedOn": "2025-04-04"
+    },
+    "HSAP02": {
+      "fingerprint": "1a0403e2307059c7",
+      "changedOn": "2025-04-04"
+    },
+    "HSAP04": {
+      "fingerprint": "0b2d4cf223fd1b0e",
+      "changedOn": "2025-04-04"
+    },
+    "HSAP06": {
+      "fingerprint": "c6b1084d954d3e72",
+      "changedOn": "2025-04-04"
+    },
+    "HSAP07": {
+      "fingerprint": "239de3226a8604b2",
+      "changedOn": "2025-04-04"
+    },
+    "HSAP10": {
+      "fingerprint": "313de7b9be69e806",
+      "changedOn": "2025-04-04"
+    },
+    "HSAP15": {
+      "fingerprint": "ecc90b25c0e1d8c2",
+      "changedOn": "2026-07-15"
+    },
+    "HSAP18": {
+      "fingerprint": "dde37e9cc92dd52c",
+      "changedOn": "2025-04-04"
+    },
+    "HSAP19": {
+      "fingerprint": "e95564a3bcde753d",
+      "changedOn": "2026-07-15"
+    },
+    "HSAP20": {
+      "fingerprint": "03d624e0fbb66e7c",
+      "changedOn": "2026-07-15"
+    },
+    "HSAP23": {
+      "fingerprint": "1e0ffbcc9360cc9e",
+      "changedOn": "2025-04-04"
+    },
+    "HSAP24": {
+      "fingerprint": "95a4cf493495c9ca",
+      "changedOn": "2025-04-04"
+    },
+    "HSAS": {
+      "fingerprint": "ff7b91f723ec5b53",
+      "changedOn": "2026-02-03"
+    },
+    "HSAS02": {
+      "fingerprint": "628d386416612b71",
+      "changedOn": "2025-04-04"
+    },
+    "HSAS03": {
+      "fingerprint": "a1dc6da693f0f6f1",
+      "changedOn": "2025-04-04"
+    },
+    "HSAS25": {
+      "fingerprint": "f24916eb434150ab",
+      "changedOn": "2026-03-13"
+    },
+    "HSAS26": {
+      "fingerprint": "52f30df36efe83ba",
+      "changedOn": "2025-04-04"
+    },
+    "HSAS28": {
+      "fingerprint": "1c1160b2d7a7d4f8",
+      "changedOn": "2025-04-04"
+    },
+    "HSAS29": {
+      "fingerprint": "922ba2477d1ffb52",
+      "changedOn": "2025-11-14"
+    },
+    "HSAS35": {
+      "fingerprint": "cfcd014a2c545c48",
+      "changedOn": "2026-03-13"
+    },
+    "HSBA": {
+      "fingerprint": "1714b4dbd47f34d8",
+      "changedOn": "2026-07-15"
+    },
+    "HSBA04": {
+      "fingerprint": "be6f5ff5736b3721",
+      "changedOn": "2025-09-11"
+    },
+    "HSBA09": {
+      "fingerprint": "f5c9e4a577cfeedc",
+      "changedOn": "2025-05-13"
+    },
+    "HSBA10": {
+      "fingerprint": "8ef85180d4f43aa4",
+      "changedOn": "2025-04-04"
+    },
+    "HSBA16": {
+      "fingerprint": "e2159174e1d1b942",
+      "changedOn": "2026-07-15"
+    },
+    "HSBA20": {
+      "fingerprint": "b89d3e4e18c998df",
+      "changedOn": "2026-07-15"
+    },
+    "HSBA21": {
+      "fingerprint": "1d495cd33642af38",
+      "changedOn": "2025-04-04"
+    },
+    "HSBU": {
+      "fingerprint": "5cdc9c87def8b6a4",
+      "changedOn": "2025-03-04"
+    },
+    "HSED": {
+      "fingerprint": "b9c7d9d41bbfd5ee",
+      "changedOn": "2026-07-15"
+    },
+    "HSED02": {
+      "fingerprint": "aae1b3f2e91da838",
+      "changedOn": "2025-09-11"
+    },
+    "HSED10": {
+      "fingerprint": "76815c5029f056c2",
+      "changedOn": "2025-09-11"
+    },
+    "HSED13": {
+      "fingerprint": "0f3b9741459932cc",
+      "changedOn": "2026-07-15"
+    },
+    "HSED14": {
+      "fingerprint": "7364b883dba5879c",
+      "changedOn": "2026-07-15"
+    },
+    "HSFA": {
+      "fingerprint": "13b2d9b3f9e15c0d",
+      "changedOn": "2026-07-15"
+    },
+    "HSFA05": {
+      "fingerprint": "868e809d75701dbf",
+      "changedOn": "2025-04-04"
+    },
+    "HSFA07": {
+      "fingerprint": "ba4a731adbd02f22",
+      "changedOn": "2026-07-15"
+    },
+    "HSFA13": {
+      "fingerprint": "7e9cd9127257e7d5",
+      "changedOn": "2026-07-15"
+    },
+    "HSFA14": {
+      "fingerprint": "fba852641e93bb29",
+      "changedOn": "2026-02-03"
+    },
+    "HSFA16": {
+      "fingerprint": "84f39ecf59f54b38",
+      "changedOn": "2026-07-15"
+    },
+    "HSFA17": {
+      "fingerprint": "207363694d64891f",
+      "changedOn": "2026-04-21"
+    },
+    "HSFA19": {
+      "fingerprint": "178a54d7a56cfbe3",
+      "changedOn": "2026-07-15"
+    },
+    "HSGO": {
+      "fingerprint": "c8e406ba60e4f2a3",
+      "changedOn": "2026-07-15"
+    },
+    "HSGO05": {
+      "fingerprint": "50beab8c5a1948f2",
+      "changedOn": "2025-04-04"
+    },
+    "HSGO06": {
+      "fingerprint": "3bfdba239459062a",
+      "changedOn": "2026-07-15"
+    },
+    "HSGO12": {
+      "fingerprint": "f380b6a5dbe1925e",
+      "changedOn": "2026-07-15"
+    },
+    "HSGO16": {
+      "fingerprint": "fafd1a9964de4e60",
+      "changedOn": "2026-09-02"
+    },
+    "HSGO24": {
+      "fingerprint": "f716bd49d21a0415",
+      "changedOn": "2025-04-04"
+    },
+    "HSGO27": {
+      "fingerprint": "496d8711b8680c96",
+      "changedOn": "2025-04-04"
+    },
+    "HSGO33": {
+      "fingerprint": "7fb63806ede5ee99",
+      "changedOn": "2026-09-02"
+    },
+    "HSHA": {
+      "fingerprint": "a919851425b3df2b",
+      "changedOn": "2026-03-13"
+    },
+    "HSHA08": {
+      "fingerprint": "cecb2219de38a980",
+      "changedOn": "2025-04-04"
+    },
+    "HSHA27": {
+      "fingerprint": "e4c0a3ab26ef39bb",
+      "changedOn": "2025-04-04"
+    },
+    "HSHM": {
+      "fingerprint": "4ece23479625d1ed",
+      "changedOn": "2026-07-15"
+    },
+    "HSHM05": {
+      "fingerprint": "716392ed8cc191a0",
+      "changedOn": "2026-07-15"
+    },
+    "HSHM07": {
+      "fingerprint": "4877433e76a62520",
+      "changedOn": "2026-02-03"
+    },
+    "HSHM08": {
+      "fingerprint": "82d261bad8905dad",
+      "changedOn": "2026-07-15"
+    },
+    "HSHM09": {
+      "fingerprint": "88f0e8105cd35c86",
+      "changedOn": "2026-07-15"
+    },
+    "HSHM11": {
+      "fingerprint": "bb6e9c2d83e2d37f",
+      "changedOn": "2026-07-15"
+    },
+    "HSHM12": {
+      "fingerprint": "cea87bb763e5692a",
+      "changedOn": "2026-07-15"
+    },
+    "HSIF": {
+      "fingerprint": "623e0b523cb53d81",
+      "changedOn": "2025-09-11"
+    },
+    "HSIF02": {
+      "fingerprint": "d907b0a2f20d4ab5",
+      "changedOn": "2025-09-11"
+    },
+    "HSIF03": {
+      "fingerprint": "f29175d9d6915aa5",
+      "changedOn": "2025-04-04"
+    },
+    "HSIF14": {
+      "fingerprint": "2e22be098133f0f2",
+      "changedOn": "2025-09-11"
+    },
+    "HSIF16": {
+      "fingerprint": "3cb5fc665810f2f4",
+      "changedOn": "2025-09-11"
+    },
+    "HSIF17": {
+      "fingerprint": "727abcd02b22e13c",
+      "changedOn": "2025-09-11"
+    },
+    "HSIF18": {
+      "fingerprint": "4037c404762755f9",
+      "changedOn": "2025-09-11"
+    },
+    "HSII": {
+      "fingerprint": "756c3ef0ae362b8b",
+      "changedOn": "2026-04-21"
+    },
+    "HSII06": {
+      "fingerprint": "2eff47c849bb7dca",
+      "changedOn": "2026-02-03"
+    },
+    "HSII10": {
+      "fingerprint": "622e55148c3ee41e",
+      "changedOn": "2025-09-11"
+    },
+    "HSII13": {
+      "fingerprint": "5a5f814e34267084",
+      "changedOn": "2026-04-21"
+    },
+    "HSII15": {
+      "fingerprint": "27a2040b2f07ff1c",
+      "changedOn": "2025-05-13"
+    },
+    "HSII24": {
+      "fingerprint": "59e17c5286ae3232",
+      "changedOn": "2026-04-21"
+    },
+    "HLIG": {
+      "fingerprint": "377f2d52b8ef3c11",
+      "changedOn": "2025-09-11"
+    },
+    "HLIG01": {
+      "fingerprint": "5b4c6598b50b2c0b",
+      "changedOn": "2025-05-13"
+    },
+    "HLIG02": {
+      "fingerprint": "692961694096cb68",
+      "changedOn": "2025-09-11"
+    },
+    "HLIG04": {
+      "fingerprint": "18de95c37838acbf",
+      "changedOn": "2025-09-11"
+    },
+    "HLIG06": {
+      "fingerprint": "64be588e932a5508",
+      "changedOn": "2026-07-15"
+    },
+    "HLIG09": {
+      "fingerprint": "fbd52c203924bbad",
+      "changedOn": "2025-05-13"
+    },
+    "HLIG11": {
+      "fingerprint": "b69bd8bb7e80ce12",
+      "changedOn": "2025-09-11"
+    },
+    "HSJU": {
+      "fingerprint": "e9285c792ed3835a",
+      "changedOn": "2026-07-15"
+    },
+    "HSJU01": {
+      "fingerprint": "6735a70d701e812a",
+      "changedOn": "2026-09-02"
+    },
+    "HSJU03": {
+      "fingerprint": "f97e7cb337acc091",
+      "changedOn": "2026-09-02"
+    },
+    "HSJU05": {
+      "fingerprint": "c6e5641995c85cc6",
+      "changedOn": "2025-04-04"
+    },
+    "HSJU08": {
+      "fingerprint": "597b11496e97a00d",
+      "changedOn": "2026-09-02"
+    },
+    "HSJU10": {
+      "fingerprint": "f8de2d4cc225dea3",
+      "changedOn": "2026-09-02"
+    },
+    "HSJU13": {
+      "fingerprint": "660a45ba584577e8",
+      "changedOn": "2026-09-02"
+    },
+    "HSPW": {
+      "fingerprint": "42ebe7df65193cb8",
+      "changedOn": "2026-07-15"
+    },
+    "HSPW02": {
+      "fingerprint": "26ddec553c46413d",
+      "changedOn": "2026-04-14"
+    },
+    "HSPW05": {
+      "fingerprint": "f88fa1d53fb6b10b",
+      "changedOn": "2026-07-15"
+    },
+    "HSPW07": {
+      "fingerprint": "486bae9226a7b297",
+      "changedOn": "2026-02-03"
+    },
+    "HSPW12": {
+      "fingerprint": "1dc93fedec07342a",
+      "changedOn": "2026-07-15"
+    },
+    "HSPW13": {
+      "fingerprint": "a8f50a5381446a92",
+      "changedOn": "2026-04-14"
+    },
+    "HSPW14": {
+      "fingerprint": "e5b735c320b52191",
+      "changedOn": "2026-07-15"
+    },
+    "HSRU": {
+      "fingerprint": "a51c0b3831f2856b",
+      "changedOn": "2025-01-21"
+    },
+    "HSRU02": {
+      "fingerprint": "228ac323a0a023ac",
+      "changedOn": "2025-04-04"
+    },
+    "HSRU04": {
+      "fingerprint": "bb83a4eba363be49",
+      "changedOn": "2025-04-04"
+    },
+    "HSSM": {
+      "fingerprint": "4adc4e1c7bec4510",
+      "changedOn": "2026-07-15"
+    },
+    "HSSM21": {
+      "fingerprint": "7baf7534dddf0550",
+      "changedOn": "2025-09-11"
+    },
+    "HSSM22": {
+      "fingerprint": "98b9ab7114cc0e46",
+      "changedOn": "2026-07-15"
+    },
+    "HSSM23": {
+      "fingerprint": "76b1b5870174012a",
+      "changedOn": "2026-07-15"
+    },
+    "HSSM24": {
+      "fingerprint": "0fe9bbbab54b09ac",
+      "changedOn": "2026-07-15"
+    },
+    "HSSM27": {
+      "fingerprint": "9fa7a6a246b81ddb",
+      "changedOn": "2026-04-21"
+    },
+    "HSSO": {
+      "fingerprint": "81a26396d5dca060",
+      "changedOn": "2026-03-13"
+    },
+    "HSSY": {
+      "fingerprint": "bad445c48c576e8e",
+      "changedOn": "2026-07-15"
+    },
+    "HSSY15": {
+      "fingerprint": "471888d997eafb7f",
+      "changedOn": "2026-02-03"
+    },
+    "HSSY16": {
+      "fingerprint": "5374f22e1c5c6c36",
+      "changedOn": "2026-02-03"
+    },
+    "HSSY18": {
+      "fingerprint": "5412ed816ec51ae2",
+      "changedOn": "2026-07-15"
+    },
+    "HSSY20": {
+      "fingerprint": "f076e386774be5d3",
+      "changedOn": "2026-02-03"
+    },
+    "HSSY21": {
+      "fingerprint": "5336c7cbab428510",
+      "changedOn": "2026-02-03"
+    },
+    "HSVR": {
+      "fingerprint": "2ff1aa709189390c",
+      "changedOn": "2026-07-15"
+    },
+    "HSVR03": {
+      "fingerprint": "b39c77fceaa443db",
+      "changedOn": "2026-09-02"
+    },
+    "HSVR08": {
+      "fingerprint": "ef81b280c75b0847",
+      "changedOn": "2025-04-04"
+    },
+    "HSVR09": {
+      "fingerprint": "1f74a1c8916d6a87",
+      "changedOn": "2025-04-04"
+    },
+    "HSVR10": {
+      "fingerprint": "c53f28e73bdec878",
+      "changedOn": "2025-04-04"
+    },
+    "HSVR11": {
+      "fingerprint": "289c972e33f5e12b",
+      "changedOn": "2026-09-02"
+    },
+    "HSWM": {
+      "fingerprint": "0068126234896973",
+      "changedOn": "2025-01-21"
+    },
+    "HSWM01": {
+      "fingerprint": "0f65a712ffdcbe18",
+      "changedOn": "2025-04-04"
+    },
+    "HSWM02": {
+      "fingerprint": "912b22b6fd2edaa7",
+      "changedOn": "2025-04-04"
+    },
+    "HSWM03": {
+      "fingerprint": "949fcebca15d97a4",
+      "changedOn": "2025-04-04"
+    },
+    "HSWM04": {
+      "fingerprint": "0d7d5bb4992b0f3c",
+      "changedOn": "2025-04-04"
+    },
+    "HSWM05": {
+      "fingerprint": "ccf3242ea59b5f0a",
+      "changedOn": "2025-04-04"
+    },
+    "HSWM06": {
+      "fingerprint": "5a6250776041170d",
+      "changedOn": "2025-04-04"
+    },
+    "JCSE": {
+      "fingerprint": "9e0ea4a5fa134e96",
+      "changedOn": "2026-02-03"
+    },
+    "JSEC": {
+      "fingerprint": "44d93d93994f5177",
+      "changedOn": "2025-04-04"
+    },
+    "JSLC": {
+      "fingerprint": "18c038997ac0f2a4",
+      "changedOn": "2025-09-11"
+    },
+    "JSPR": {
+      "fingerprint": "07bc27ce159ff45f",
+      "changedOn": "2025-04-04"
+    },
+    "JSTX": {
+      "fingerprint": "64feec6d1d0e1b3c",
+      "changedOn": "2026-02-03"
+    },
+    "SCNC": {
+      "fingerprint": "d9bca218ca1921e6",
+      "changedOn": "2025-03-04"
+    },
+    "SLET": {
+      "fingerprint": "0c464713dce65004",
+      "changedOn": "2025-01-17"
+    },
+    "SLIA": {
+      "fingerprint": "502d81ec0429053d",
+      "changedOn": "2026-04-21"
+    },
+    "SLIN": {
+      "fingerprint": "a6639cf62bfb1445",
+      "changedOn": "2025-01-28"
+    },
+    "SPAG": {
+      "fingerprint": "80dd004a583cb058",
+      "changedOn": "2025-01-28"
+    },
+    "SSAF": {
+      "fingerprint": "66c449bbe5541e3f",
+      "changedOn": "2025-03-04"
+    },
+    "SSAF13": {
+      "fingerprint": "f989ded4756c547e",
+      "changedOn": "2025-03-04"
+    },
+    "SSAF14": {
+      "fingerprint": "2fe4179bf84a84b1",
+      "changedOn": "2025-03-04"
+    },
+    "SSAF15": {
+      "fingerprint": "95be9221f2c15105",
+      "changedOn": "2025-03-04"
+    },
+    "SSAF16": {
+      "fingerprint": "3be6944aba1fd96f",
+      "changedOn": "2025-03-04"
+    },
+    "SSAF17": {
+      "fingerprint": "75db7d973f88ecdf",
+      "changedOn": "2025-03-04"
+    },
+    "SSAP": {
+      "fingerprint": "90b34a1d393780d1",
+      "changedOn": "2026-07-15"
+    },
+    "SSAP01": {
+      "fingerprint": "f18411f1560b3583",
+      "changedOn": "2026-04-21"
+    },
+    "SSAP02": {
+      "fingerprint": "394a92eda660ab95",
+      "changedOn": "2026-09-02"
+    },
+    "SSAP08": {
+      "fingerprint": "81fbbf0ed62cccf4",
+      "changedOn": "2026-04-21"
+    },
+    "SSAP14": {
+      "fingerprint": "71323a5d87e4f13f",
+      "changedOn": "2025-04-04"
+    },
+    "SSAP16": {
+      "fingerprint": "12f55adfc4e6b5f6",
+      "changedOn": "2026-07-15"
+    },
+    "SSAP17": {
+      "fingerprint": "3c507022784bf4cc",
+      "changedOn": "2026-04-21"
+    },
+    "SSAP18": {
+      "fingerprint": "b5ed61fcfed7585d",
+      "changedOn": "2026-07-15"
+    },
+    "SSAP19": {
+      "fingerprint": "ec1f85a9c1940c89",
+      "changedOn": "2026-09-02"
+    },
+    "SSAP20": {
+      "fingerprint": "cfa9cf9c4de4a57d",
+      "changedOn": "2026-09-02"
+    },
+    "SSAP22": {
+      "fingerprint": "5c3fecae28048f8e",
+      "changedOn": "2026-07-15"
+    },
+    "SSAP23": {
+      "fingerprint": "261ee41298c3d3ee",
+      "changedOn": "2026-09-02"
+    },
+    "SSAP24": {
+      "fingerprint": "6711e5e5f2717b75",
+      "changedOn": "2026-07-15"
+    },
+    "SSAS": {
+      "fingerprint": "be861817f87c4b47",
+      "changedOn": "2026-04-21"
+    },
+    "SSAS13": {
+      "fingerprint": "a8e50ff3c1ea1338",
+      "changedOn": "2026-04-21"
+    },
+    "SSAS14": {
+      "fingerprint": "f42f4e3e9cb2001e",
+      "changedOn": "2026-04-21"
+    },
+    "SSAS15": {
+      "fingerprint": "f5725c451125bf41",
+      "changedOn": "2025-02-02"
+    },
+    "SSAS16": {
+      "fingerprint": "59ae402aa6cd9b92",
+      "changedOn": "2025-01-28"
+    },
+    "SSAS17": {
+      "fingerprint": "dc888ae708a1d0ac",
+      "changedOn": "2025-01-28"
+    },
+    "SSAS20": {
+      "fingerprint": "d1956545efda2de8",
+      "changedOn": "2026-04-21"
+    },
+    "SSAS21": {
+      "fingerprint": "4da7861fb00854e6",
+      "changedOn": "2025-01-28"
+    },
+    "SSBK": {
+      "fingerprint": "7fc0c8bfc86f8d5d",
+      "changedOn": "2025-01-28"
+    },
+    "SSBK04": {
+      "fingerprint": "03df8b3925383e81",
+      "changedOn": "2025-01-28"
+    },
+    "SSBK05": {
+      "fingerprint": "b858b469cc35a1a9",
+      "changedOn": "2025-01-28"
+    },
+    "SSBK08": {
+      "fingerprint": "6adfa290c0eedddc",
+      "changedOn": "2025-01-28"
+    },
+    "SSBK09": {
+      "fingerprint": "694a0482374ff3d7",
+      "changedOn": "2025-01-28"
+    },
+    "SSBK12": {
+      "fingerprint": "6d8f2bb7e16003e2",
+      "changedOn": "2025-01-28"
+    },
+    "SSBK13": {
+      "fingerprint": "9b2d782a3e6e9aec",
+      "changedOn": "2025-01-28"
+    },
+    "SSBU": {
+      "fingerprint": "8dd8df2196799b3a",
+      "changedOn": "2026-09-02"
+    },
+    "SSCM": {
+      "fingerprint": "02e6a8665111a985",
+      "changedOn": "2025-04-04"
+    },
+    "SSCM33": {
+      "fingerprint": "4d3827ac2af6b8e8",
+      "changedOn": "2025-04-04"
+    },
+    "SSCM34": {
+      "fingerprint": "7f00a9ea20cd0f23",
+      "changedOn": "2025-04-04"
+    },
+    "SSCM35": {
+      "fingerprint": "38032899ee1c2d34",
+      "changedOn": "2025-04-04"
+    },
+    "SSCM36": {
+      "fingerprint": "ecc49827de49ebe8",
+      "changedOn": "2025-04-04"
+    },
+    "SSCM37": {
+      "fingerprint": "132610d760de260e",
+      "changedOn": "2025-04-04"
+    },
+    "SSCM38": {
+      "fingerprint": "627b44c08de76bf2",
+      "changedOn": "2025-04-04"
+    },
+    "SSCM39": {
+      "fingerprint": "f42d2b6767b2d840",
+      "changedOn": "2025-01-03"
+    },
+    "SSEG": {
+      "fingerprint": "410b9ec7689917fd",
+      "changedOn": "2025-01-17"
+    },
+    "SSEG01": {
+      "fingerprint": "e4efcba10f2a1de2",
+      "changedOn": "2025-03-04"
+    },
+    "SSEG03": {
+      "fingerprint": "291c38c7f4a013e6",
+      "changedOn": "2025-03-04"
+    },
+    "SSEG04": {
+      "fingerprint": "690939a359878673",
+      "changedOn": "2025-03-04"
+    },
+    "SSEG07": {
+      "fingerprint": "6152385a9a5dd76f",
+      "changedOn": "2025-03-04"
+    },
+    "SSEV": {
+      "fingerprint": "4aa620cfb24d5824",
+      "changedOn": "2026-09-02"
+    },
+    "SSEV08": {
+      "fingerprint": "1577b2419239ce30",
+      "changedOn": "2026-07-15"
+    },
+    "SSEV09": {
+      "fingerprint": "ae7ca719d444ca97",
+      "changedOn": "2026-07-15"
+    },
+    "SSEV10": {
+      "fingerprint": "29c0f96d890dadb2",
+      "changedOn": "2026-07-15"
+    },
+    "SSEV15": {
+      "fingerprint": "7d642ee18c82dccc",
+      "changedOn": "2026-09-02"
+    },
+    "SSFI": {
+      "fingerprint": "b89055a5f65d1c78",
+      "changedOn": "2025-01-17"
+    },
+    "SSFI02": {
+      "fingerprint": "5680c75458aaffdd",
+      "changedOn": "2025-04-04"
+    },
+    "SSFI10": {
+      "fingerprint": "1c7d9f16b43d958a",
+      "changedOn": "2025-04-04"
+    },
+    "SSFI11": {
+      "fingerprint": "f81464c1aefa0994",
+      "changedOn": "2025-04-04"
+    },
+    "SSFI12": {
+      "fingerprint": "00860ac4a2e0027c",
+      "changedOn": "2025-04-04"
+    },
+    "SSFI13": {
+      "fingerprint": "4a2cd1c6e25b4e8d",
+      "changedOn": "2025-04-04"
+    },
+    "SSFI14": {
+      "fingerprint": "55fcb6bfd3e8885c",
+      "changedOn": "2025-04-04"
+    },
+    "SSFR": {
+      "fingerprint": "ecc911601fe76ac6",
+      "changedOn": "2025-01-17"
+    },
+    "SSFR01": {
+      "fingerprint": "dc7e1ee268d101e0",
+      "changedOn": "2025-06-17"
+    },
+    "SSFR02": {
+      "fingerprint": "453d23af09e3ce31",
+      "changedOn": "2025-06-17"
+    },
+    "SSFR06": {
+      "fingerprint": "ea39babba7cb3fee",
+      "changedOn": "2025-06-17"
+    },
+    "SSFR07": {
+      "fingerprint": "d8bc5fa5015ce8f8",
+      "changedOn": "2025-06-17"
+    },
+    "SSFR09": {
+      "fingerprint": "3594b32598bb2984",
+      "changedOn": "2025-06-17"
+    },
+    "SSFR14": {
+      "fingerprint": "07a5561a235be32d",
+      "changedOn": "2025-06-17"
+    },
+    "SSFR15": {
+      "fingerprint": "e69e10e221e4409f",
+      "changedOn": "2025-06-17"
+    },
+    "SSGA": {
+      "fingerprint": "33060dbd649c89fc",
+      "changedOn": "2025-03-04"
+    },
+    "SSGA01": {
+      "fingerprint": "e030e4472eefaa4f",
+      "changedOn": "2025-03-04"
+    },
+    "SSGA20": {
+      "fingerprint": "35a3646a508980ca",
+      "changedOn": "2025-03-04"
+    },
+    "SSGA22": {
+      "fingerprint": "340f29e709ce2502",
+      "changedOn": "2025-03-04"
+    },
+    "SSHR": {
+      "fingerprint": "44c18c9e987f6a9e",
+      "changedOn": "2026-04-21"
+    },
+    "SSHR09": {
+      "fingerprint": "eca4a81bf64f1701",
+      "changedOn": "2025-03-04"
+    },
+    "SSHR11": {
+      "fingerprint": "584e7273fb15a9eb",
+      "changedOn": "2026-04-21"
+    },
+    "SSHR12": {
+      "fingerprint": "d4555c7494a69e65",
+      "changedOn": "2026-04-21"
+    },
+    "SSJU": {
+      "fingerprint": "e0fbfc5a08155d42",
+      "changedOn": "2026-07-15"
+    },
+    "SSJU01": {
+      "fingerprint": "1b4cf5e50236651c",
+      "changedOn": "2025-04-04"
+    },
+    "SSJU04": {
+      "fingerprint": "a5a6f5d2c1066499",
+      "changedOn": "2026-07-15"
+    },
+    "SSJU21": {
+      "fingerprint": "943f15945434abbd",
+      "changedOn": "2025-04-04"
+    },
+    "SSJU22": {
+      "fingerprint": "2edce94d19e59787",
+      "changedOn": "2026-07-15"
+    },
+    "SSJU25": {
+      "fingerprint": "ed43176d64f438bd",
+      "changedOn": "2026-07-15"
+    },
+    "SSJU26": {
+      "fingerprint": "d1117727a4846759",
+      "changedOn": "2025-04-04"
+    },
+    "SSJU27": {
+      "fingerprint": "46980ee87c5d0fd7",
+      "changedOn": "2025-01-03"
+    },
+    "SSJU28": {
+      "fingerprint": "9d29bf986e13dd10",
+      "changedOn": "2026-07-15"
+    },
+    "SSRA": {
+      "fingerprint": "2c0314284f127f0b",
+      "changedOn": "2025-01-17"
+    },
+    "SSSB": {
+      "fingerprint": "db4ccbb5bc196b84",
+      "changedOn": "2025-01-28"
+    },
+    "SSVA": {
+      "fingerprint": "afaff5bd8c1f6c13",
+      "changedOn": "2025-01-17"
+    },
+    "HSZS": {
+      "fingerprint": "0a186c00cf627340",
+      "changedOn": "2026-09-02"
+    },
+    "HSQJ": {
+      "fingerprint": "e170405f38296931",
+      "changedOn": "2026-04-14"
+    }
+  }
+}
