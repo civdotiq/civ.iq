@@ -34,7 +34,7 @@ const roster = senateTerms(
 
 function roll253(): RecordRollCall {
   const htm = readFileSync(
-    join(__dirname, 'fixtures/congressional-record', 'CREC-2026-09-30-PgS5199-roll-253.htm'),
+    join(__dirname, 'fixtures/congressional-record', 'CREC-2026-09-30-PgS5199-roll-253.txt'),
     'utf8'
   );
   const [roll] = parseSenateRollCalls(recordText(htm));

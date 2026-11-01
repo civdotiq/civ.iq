@@ -124,7 +124,7 @@ function sameVotes(a: CompactRollCall['votes'], b: CompactRollCall['votes']): bo
   const key = (votes: CompactRollCall['votes']) =>
     votes
       .map(v => `${v.b}:${v.v}`)
-      .sort()
+      .sort((x, y) => x.localeCompare(y))
       .join(',');
   return key(a) === key(b);
 }

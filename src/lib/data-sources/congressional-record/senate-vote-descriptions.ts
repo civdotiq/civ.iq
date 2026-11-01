@@ -85,7 +85,8 @@ export function nominationCitation(number: number | string, partNumber?: string)
 }
 
 /** A Digest page reference line: "Page S157", "  Pages S147-57", "Pages S5199-S5201, S5241". */
-const PAGE_REF_LINE = /^\s*(?:Pages?\s+S\d[\dS,\s-]*(?:and\s+S\d+)?|\[\[Page [A-Z]\d+\]\])\s*$/;
+const PAGE_REF = /^(?:Pages?\s+S\d[\dS,\s-]*(?:and\s+S\d+)?|\[\[Page [A-Z]\d+\]\])$/;
+const isPageRefLine = (line: string): boolean => PAGE_REF.test(line.trim());
 
 /** Labels inside an entry that also start in column 0 after a page
  *  reference ("Pending: Scott (SC)/Warren Amendment No. 4308, …"). */
@@ -121,15 +122,15 @@ export function digestVoteContext(digestText: string, rollCall: number): string 
     start = i;
     if (
       /^\S/.test(line) &&
-      !PAGE_REF_LINE.test(line) &&
+      !isPageRefLine(line) &&
       !ENTRY_SUBHEADING.test(line) &&
-      (i === 0 || PAGE_REF_LINE.test(previous))
+      (i === 0 || isPageRefLine(previous))
     ) {
       break;
     }
   }
   // The paragraph runs on to its page reference.
-  while (at + 1 < lines.length && !PAGE_REF_LINE.test(lines[at + 1] ?? '')) at += 1;
+  while (at + 1 < lines.length && !isPageRefLine(lines[at + 1] ?? '')) at += 1;
   return lines
     .slice(start, at + 1)
     .join(' ')
@@ -165,8 +166,9 @@ export function measureCitations(text: string): MeasureRef[] {
   return [...out.values()];
 }
 
+// The lookbehind starts a name at a word's start, which keeps matching linear.
 const NOMINEE =
-  /([A-Z][A-Za-zÀ-ſ.'’-]*(?:\s+[A-Z][A-Za-zÀ-ſ.'’-]*){0,5}),\s+of\s+(?:the\s+)?([A-Z][a-z]+(?:\s+(?:of\s+)?[A-Z][a-z]+){0,3}),\s+to\s+be\b/g;
+  /(?<![A-Za-zÀ-ſ.'’-])([A-Z][A-Za-zÀ-ſ.'’-]*(?:\s+[A-Z][A-Za-zÀ-ſ.'’-]*){0,5}),\s+of\s+(?:the\s+)?([A-Z][a-z]+(?:\s+(?:of\s+)?[A-Z][a-z]+){0,3}),\s+to\s+be\b/g;
 
 function nomineeKeyOf(name: string, state: string): string {
   const fold = (s: string) => foldForSearch(s).replace(/[.'’]/g, '').replace(/\s+/g, ' ').trim();
@@ -338,7 +340,9 @@ export function voteTitle(
     | { kind: 'bill'; label: string; title?: string }
     | { kind: 'amendment'; number: string; sponsor?: string; purpose?: string }
 ): string {
-  const motion = question.replace(/^On (?:the )?/, '').replace(/\s*S\.Amdt\. \d+$/, '');
+  const bare = question.replace(/^On (?:the )?/, '');
+  const amendment = /S\.Amdt\. \d+$/.exec(bare);
+  const motion = amendment ? bare.slice(0, amendment.index).trimEnd() : bare;
   if (measure.kind === 'nomination') {
     if (question === 'On the Nomination') return `Confirmation: ${measure.description}`;
     if (question === 'On the Cloture Motion')
