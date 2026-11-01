@@ -22,7 +22,7 @@ import {
 } from '@heroicons/react/24/outline';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import type { Committee } from '@/types/committee';
-import { buildBillUrl } from '@/lib/helpers/url-builders';
+import { buildBillUrl, buildDistrictUrl, buildStatePageUrl } from '@/lib/helpers/url-builders';
 
 // Sort options
 type SortField = 'name' | 'party' | 'state' | 'role' | 'joined' | 'legislation';
@@ -232,9 +232,9 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
 
   const getDistrictUrl = (state: string, district?: number | string) => {
     if (district) {
-      return `/districts/${state}-${String(district).padStart(2, '0')}`;
+      return buildDistrictUrl(state, String(district));
     } else {
-      return `/states/${state}`;
+      return buildStatePageUrl(state);
     }
   };
 

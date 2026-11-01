@@ -16,6 +16,7 @@ import { tenureFact } from '../../utils/tenure';
 import { dcOfficeLines, safeHttpUrl, telHref } from './contact';
 import { partyAdjective } from '@/lib/party-label';
 import { commonName } from '@/features/representatives/utils/common-name';
+import { buildDistrictUrl, buildStatePageUrl } from '@/lib/helpers/url-builders';
 
 interface IdentityHeaderProps {
   representative: EnhancedRepresentative;
@@ -82,7 +83,7 @@ export function IdentityHeader({
       <>
         U.S. Senator from{' '}
         <Link
-          href={`/states/${r.state}`}
+          href={buildStatePageUrl(r.state)}
           className="font-bold text-civiq-blue-dark hover:underline"
         >
           {r.state}
@@ -92,7 +93,7 @@ export function IdentityHeader({
       <>
         U.S. Representative,{' '}
         <Link
-          href={`/districts/${r.state}-${r.district}`}
+          href={buildDistrictUrl(r.state, r.district)}
           className="font-bold text-civiq-blue-dark hover:underline"
         >
           {r.state}-{r.district}
@@ -102,7 +103,7 @@ export function IdentityHeader({
       <>
         U.S. Representative from{' '}
         <Link
-          href={`/states/${r.state}`}
+          href={buildStatePageUrl(r.state)}
           className="font-bold text-civiq-blue-dark hover:underline"
         >
           {r.state}

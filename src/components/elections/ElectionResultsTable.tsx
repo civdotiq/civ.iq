@@ -9,6 +9,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import type { RaceResultFull } from '@/types/elections';
 import { US_STATES } from '@/lib/data/us-states';
+import { buildDistrictUrl } from '@/lib/helpers/url-builders';
 
 interface ElectionResultsTableProps {
   results: RaceResultFull[];
@@ -82,7 +83,7 @@ export function raceLink(result: RaceResultFull): string | null {
   // House district → /districts/PA-07
   const distNum = parseInt(suffix, 10);
   if (!isNaN(distNum) && suffix.length <= 2) {
-    return `/districts/${stateCode}-${suffix}`;
+    return buildDistrictUrl(stateCode, suffix);
   }
 
   // Statewide offices → /delegation/GA (senators + reps) or /states/ga (governor)

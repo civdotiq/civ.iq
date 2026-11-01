@@ -22,6 +22,7 @@ import {
 import { getGeneralElectionDayISO } from '@/lib/data/election-dates';
 import { summarizeRegistrationDeadline } from '@/lib/data/voter-registration';
 import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
+import { buildStatePageUrl } from '@/lib/helpers/url-builders';
 
 export const revalidate = 86400;
 
@@ -136,7 +137,7 @@ export default function HowToVote2026Page() {
                   >
                     <td className="p-3 font-medium whitespace-nowrap">
                       <Link
-                        href={`/states/${row.state}`}
+                        href={buildStatePageUrl(row.state)}
                         className="text-civiq-blue hover:underline"
                       >
                         {row.stateName}
