@@ -32,6 +32,13 @@ describe('parseSenateRecordVoteTotal', () => {
     expect(parseSenateRecordVoteTotal(text)).toBe(4);
   });
 
+  it('reads a total printed with one hyphen (Jun 16, 2026: "(Total-175)")', () => {
+    const text =
+      'Record Votes: Three record votes were taken today. (Total-175) \n' +
+      '                                           Pages S2807, S2812-13, S2815';
+    expect(parseSenateRecordVoteTotal(text)).toBe(175);
+  });
+
   it('returns null for a pro forma session (Oct 26, 2026)', () => {
     expect(
       parseSenateRecordVoteTotal(fixture('CREC-2026-10-26-senate-digest-pro-forma.txt'))

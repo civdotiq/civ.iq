@@ -11,6 +11,8 @@
  *
  *   Record Votes: Four record votes were taken today. (Total--256)
  *
+ * (Sometimes with one hyphen: "(Total-175)" on 2026-06-16.)
+ *
  * The total is the session's running count of roll calls (odd year = session
  * 1). Days with no votes (pro forma sessions, recesses) have no such line, so
  * the newest issue that has one gives the Senate's roll-call count to date.
@@ -70,7 +72,7 @@ async function govinfoFetch(url: string): Promise<Response> {
 export function parseSenateRecordVoteTotal(text: string): number | null {
   const clean = text.replace(/\0/g, '');
   let total: number | null = null;
-  for (const match of clean.matchAll(/Record\s+Votes?:[^()]{0,300}\(Total--\s*(\d+)\s*\)/gi)) {
+  for (const match of clean.matchAll(/Record\s+Votes?:[^()]{0,300}\(Total-+\s*(\d+)\s*\)/gi)) {
     const n = Number.parseInt(match[1] ?? '', 10);
     if (Number.isFinite(n) && (total === null || n > total)) total = n;
   }
