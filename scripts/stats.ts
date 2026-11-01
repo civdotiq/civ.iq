@@ -24,6 +24,7 @@ import * as dotenv from 'dotenv';
 import { Redis } from '@upstash/redis';
 import { fetchGa4Summary, type Ga4Summary } from './ga4-client';
 import { fetchGscSummary, type GscRow, type GscSummary } from './gsc-client';
+import { fetchBingSummary, type BingSummary } from './bing-client';
 import { PATH_TRACKED_CRAWLERS, crawlerPathKey } from '../src/lib/analytics/crawler-counter';
 
 dotenv.config({ path: '.env.local' });
@@ -36,6 +37,7 @@ const ADOPTION_WINDOW_DAYS = 28;
 const CRAWLER_WINDOW_DAYS = 7;
 const GA4_WINDOW_DAYS = 7;
 const GSC_WINDOW_DAYS = 28;
+const BING_WINDOW_DAYS = 28;
 
 interface Subscription {
   verified: boolean;
@@ -80,6 +82,7 @@ interface StatsReport {
   };
   ga4: Ga4Summary;
   gsc: GscSummary;
+  bing: BingSummary;
   npmDownloads: Array<{ package: string; lastWeek: number | null; lastMonth: number | null }>;
 }
 
@@ -500,22 +503,51 @@ function printReport(report: StatsReport): void {
           `CTR ${(t.ctr * 100).toFixed(1)}%, avg position ${t.position.toFixed(1)}`
       );
     }
-    const table = (title: string, rows: GscRow[]): void => {
-      line(`  ${title}:`);
-      if (rows.length === 0) {
-        line('    none');
-        return;
-      }
-      line('    clicks  impr    CTR  pos  ');
-      for (const r of rows) {
-        line(
-          `    ${String(r.clicks).padStart(6)}  ${String(r.impressions).padStart(6)}  ` +
-            `${(r.ctr * 100).toFixed(1).padStart(4)}%  ${r.position.toFixed(1).padStart(4)}  ${r.key}`
-        );
-      }
-    };
-    table('Top queries', gsc.topQueries);
-    table('Top pages', gsc.topPages);
+    searchTable(line, 'Top queries', gsc.topQueries);
+    searchTable(line, 'Top pages', gsc.topPages);
+  }
+
+  line();
+  const bing = report.bing;
+  const bingRange = bing.startDate ? `, ${bing.startDate} to ${bing.endDate}` : '';
+  line(`Bing Search — impressions / clicks (last ${bing.windowDays} days${bingRange})`);
+  if (!bing.configured) {
+    line('  not configured — needs BING_WEBMASTER_API_KEY in .env.local');
+    line('  (Bing Webmaster Tools → Settings → API Access → Generate API Key; see scripts/bing-client.ts)');
+  } else if (bing.error) {
+    line(`  ERROR: ${bing.error}`);
+  } else {
+    const t = bing.totals;
+    if (t) {
+      line(
+        `  ${bing.siteUrl}: ${t.clicks} clicks, ${t.impressions} impressions, ` +
+          `CTR ${(t.ctr * 100).toFixed(1)}% (${bing.daysReported} of ${bing.windowDays} days reported)`
+      );
+    }
+    const detail =
+      bing.detailStart && bing.detailEnd ? ` (Bing's report, ${bing.detailStart} to ${bing.detailEnd})` : '';
+    searchTable(line, `Top queries${detail}`, bing.topQueries);
+    searchTable(line, `Top pages${detail}`, bing.topPages);
+  }
+}
+
+/** clicks / impressions / CTR / position rows, shared by the Google and Bing sections. */
+function searchTable(
+  line: (text?: string) => void,
+  title: string,
+  rows: Array<Pick<GscRow, 'key' | 'clicks' | 'impressions' | 'ctr' | 'position'>>
+): void {
+  line(`  ${title}:`);
+  if (rows.length === 0) {
+    line('    none');
+    return;
+  }
+  line('    clicks  impr    CTR  pos  ');
+  for (const r of rows) {
+    line(
+      `    ${String(r.clicks).padStart(6)}  ${String(r.impressions).padStart(6)}  ` +
+        `${(r.ctr * 100).toFixed(1).padStart(4)}%  ${r.position.toFixed(1).padStart(4)}  ${r.key}`
+    );
   }
 }
 
@@ -523,13 +555,15 @@ async function main(): Promise<void> {
   const asJson = process.argv.includes('--json');
   const redis = getRedis();
 
-  const [subscribers, apiRequests, adoption, crawlers, ga4, gsc, npmDownloads] = await Promise.all([
+  const [subscribers, apiRequests, adoption, crawlers, ga4, gsc, bing, npmDownloads] =
+    await Promise.all([
     collectSubscribers(redis),
     collectApiRequests(redis),
     collectAdoption(redis),
     collectCrawlers(redis),
     fetchGa4Summary(GA4_WINDOW_DAYS),
     fetchGscSummary(GSC_WINDOW_DAYS),
+    fetchBingSummary(BING_WINDOW_DAYS),
     collectNpm(),
   ]);
 
@@ -541,6 +575,7 @@ async function main(): Promise<void> {
     crawlers,
     ga4,
     gsc,
+    bing,
     npmDownloads,
   };
 
