@@ -75,10 +75,11 @@ export function combineProfileDates(parts: ProfileDatePart[]): ProfileDates {
   const dates = parts.map(p => p.date).filter((d): d is string => !!d);
   const checks = parts.map(p => p.checkedAt).filter((c): c is string => !!c);
   return {
-    latestRecord: dates.length ? dates.reduce((a, b) => (b > a ? b : a)) : null,
-    checkedAt: checks.length
-      ? checks.reduce((a, b) => (Date.parse(b) < Date.parse(a) ? b : a))
-      : null,
+    latestRecord: dates.reduce<string | null>((a, b) => (a === null || b > a ? b : a), null),
+    checkedAt: checks.reduce<string | null>(
+      (a, b) => (a === null || Date.parse(b) < Date.parse(a) ? b : a),
+      null
+    ),
     parts,
   };
 }
