@@ -36,21 +36,21 @@ These credentials live in `.env.local` on the machine that runs the report. They
 
 Taken the day the audit's crawlability, dates and internal-link PRs (#328–#334) and the AI-page counter (#321) went live. Compare later readings with this table.
 
-| Measure                                                         | Value                                           | Window                   |
-| --------------------------------------------------------------- | ----------------------------------------------- | ------------------------ |
-| Google Search clicks                                            | 1,740                                           | 2026-10-02 to 2026-10-29 |
-| Google Search impressions                                       | 205,929                                         | same                     |
-| Google Search CTR / average position                            | 0.8% / 13.4                                     | same                     |
-| Google Search, earlier reading                                  | 1,408 clicks, 169,303 impressions, 0.8%, 13.6   | 28 days to 2026-10-24    |
-| GA4 users / sessions / pageviews                                | 834 / 916 / 1,148                               | 7 days to 2026-11-01     |
-| GA4 sessions from google / bing / chatgpt.com                   | 561 / 18 / 9                                    | same                     |
-| ChatGPT-User page fetches                                       | 484                                             | 7 days                   |
-| Perplexity-User page fetches                                    | 0 recorded (not in the crawler totals)          | 7 days                   |
-| OAI-SearchBot / ClaudeBot / PerplexityBot / Bingbot / Googlebot | 18,058 / 9,767 / 3,494 / 6,710 / 3,516          | 7 days                   |
-| Pages AI assistants opened                                      | none yet (counter live from 2026-11-01 evening) | 7 days                   |
-| Bing Search impressions / clicks                                | not configured (no API key yet)                 | 28 days                  |
+| Measure                                                         | Value                                           | Window                                            |
+| --------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------- |
+| Google Search clicks                                            | 1,740                                           | 2026-10-02 to 2026-10-29                          |
+| Google Search impressions                                       | 205,929                                         | same                                              |
+| Google Search CTR / average position                            | 0.8% / 13.4                                     | same                                              |
+| Google Search, earlier reading                                  | 1,408 clicks, 169,303 impressions, 0.8%, 13.6   | 28 days to 2026-10-24                             |
+| GA4 users / sessions / pageviews                                | 834 / 916 / 1,148                               | 7 days to 2026-11-01                              |
+| GA4 sessions from google / bing / chatgpt.com                   | 561 / 18 / 9                                    | same                                              |
+| ChatGPT-User page fetches                                       | 484                                             | 7 days                                            |
+| Perplexity-User page fetches                                    | 0 recorded (not in the crawler totals)          | 7 days                                            |
+| OAI-SearchBot / ClaudeBot / PerplexityBot / Bingbot / Googlebot | 18,058 / 9,767 / 3,494 / 6,710 / 3,516          | 7 days                                            |
+| Pages AI assistants opened                                      | none yet (counter live from 2026-11-01 evening) | 7 days                                            |
+| Bing Search impressions / clicks / CTR                          | 6,432 / 66 / 1.0%                               | 2026-10-04 to 2026-10-31 (27 of 28 days reported) |
 
-Top Google pages were state-legislator profiles and two House voting-record pages; top queries were "[name] voting record" searches. Google is the only search source that sends meaningful traffic; ChatGPT reads the site hundreds of times a week but sends about 9 visits.
+Top Google pages were state-legislator profiles and two House voting-record pages; top queries were "[name] voting record" searches. Bing's top pages were `/ask/bills-sponsored` and `/ask/contact-info` question pages and state-legislature pages, reached from long, specific questions ("rick scott office phone number"). Google is the only search source that sends meaningful traffic: Bing sends about a thirtieth of Google's clicks, and ChatGPT reads the site hundreds of times a week but sends about 9 visits.
 
 ## How to read a change
 
