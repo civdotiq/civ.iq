@@ -13,6 +13,9 @@ import type { Metadata } from 'next';
 import { getServerBaseUrl } from '@/lib/server-url';
 import { EmbedDistrictCard } from '@/components/embed/EmbedDistrictCard';
 import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
+import { notFound } from 'next/navigation';
+import { canonicalizeDistrictId } from '@/lib/helpers/url-builders';
+import { checkDistrictId } from '@/lib/districts/known-districts';
 
 interface PageProps {
   params: Promise<{ districtId: string }>;
@@ -66,6 +69,8 @@ function formatNumber(num: number): string {
 export default async function EmbedDistrictPage({ params, searchParams }: PageProps) {
   const { districtId } = await params;
   const { v } = await searchParams;
+  const parsed = canonicalizeDistrictId(districtId);
+  if (!parsed || checkDistrictId(parsed.state, parsed.district).kind === 'unknown') notFound();
 
   let data: DistrictData | null = null;
   try {
@@ -84,7 +89,7 @@ export default async function EmbedDistrictPage({ params, searchParams }: PagePr
     return (
       <div style={{ padding: '16px', fontFamily: 'system-ui, sans-serif' }}>
         <p style={{ color: '#6b7280', fontSize: '14px' }}>
-          District {districtId.toUpperCase()} not found.
+          District {districtId.toUpperCase()} data is unavailable right now.
         </p>
       </div>
     );

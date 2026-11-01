@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { getStateName } from '@/lib/data/us-states';
+import { notFound } from 'next/navigation';
+import { getStateName, isValidStateCode } from '@/lib/data/us-states';
 import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 interface LayoutProps {
@@ -9,6 +10,7 @@ interface LayoutProps {
 
 export async function generateMetadata({ params }: LayoutProps): Promise<Metadata> {
   const { state } = await params;
+  if (!isValidStateCode(state)) return { title: 'State not found' };
   const stateName = getStateName(state.toUpperCase()) || state.toUpperCase();
 
   return {
@@ -25,6 +27,10 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
   };
 }
 
-export default function StateBillsLayout({ children }: { children: React.ReactNode }) {
+// Checked here so the bill pages below get a real 404 too. No loading.tsx in
+// this segment: it would commit a 200 before any notFound() below it.
+export default async function StateBillsLayout({ children, params }: LayoutProps) {
+  const { state } = await params;
+  if (!isValidStateCode(state)) notFound();
   return <>{children}</>;
 }

@@ -54,14 +54,17 @@ export async function generateMetadata({
     const lookup = await getVoteLookup(voteId);
     if (lookup.status === 'not_found') {
       return {
-        title: 'Vote Not Found',
+        title: 'Vote not found',
         description: 'The requested vote could not be found.',
       };
     }
     if (lookup.status === 'unavailable') {
+      // Couldn't load (or a roll call we can't yet prove doesn't exist): the
+      // page says so, and must not be indexed meanwhile.
       return {
-        title: 'Vote Details',
+        title: 'Vote details unavailable',
         description: 'View detailed vote results including member positions and party breakdown.',
+        robots: { index: false, follow: true },
       };
     }
     const { vote } = lookup;
@@ -91,8 +94,9 @@ export async function generateMetadata({
     };
   } catch {
     return {
-      title: 'Vote Details',
+      title: 'Vote details unavailable',
       description: 'View detailed vote results including member positions and party breakdown.',
+      robots: { index: false, follow: true },
     };
   }
 }

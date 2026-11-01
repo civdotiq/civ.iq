@@ -1138,7 +1138,9 @@ class OpenStatesAPI {
       });
       return this.transformBill(response);
     } catch (error) {
-      if (error instanceof Error && error.message.includes('404')) {
+      // The message carries the URL, whose bill UUID can contain "404": match
+      // the status prefix only, as getCommitteeById does.
+      if (error instanceof Error && error.message.startsWith('HTTP 404')) {
         return null;
       }
       throw error;

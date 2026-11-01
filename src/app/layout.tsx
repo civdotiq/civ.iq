@@ -63,12 +63,12 @@ export const metadata: Metadata = {
     site: '@civdotiq',
     creator: '@civdotiq',
   },
+  // No index/follow here: indexing is the default, and an explicit
+  // "index, follow" inherits into every 404, next to the "noindex" Next.js
+  // adds there (two robots tags that disagree). Pages that must not be
+  // indexed say so themselves.
   robots: {
-    index: true,
-    follow: true,
     googleBot: {
-      index: true,
-      follow: true,
       'max-video-preview': -1,
       'max-image-preview': 'large',
       'max-snippet': -1,

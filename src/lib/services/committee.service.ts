@@ -8,6 +8,7 @@ import logger from '@/lib/logging/simple-logger';
 import type { Committee, CommitteeMember } from '@/types/committee';
 import { COMMITTEE_ID_MAP } from '@/types/committee';
 import { getCommitteeJurisdiction } from '@/lib/data/committee-jurisdictions';
+import { isCongressionalSystemCode } from '@/lib/data/route-slugs';
 import {
   fetchCommittees,
   fetchCommitteeMemberships,
@@ -81,7 +82,8 @@ async function fetchCommitteeFromCongressLegislators(
 ): Promise<Committee | null> {
   // v2: member names as they go by ("Bernie Sanders").
   // v4: names checked against members' official sites (src/data/member-names.ts).
-  const cacheKey = `committee-real-v4-${committeeId}`;
+  // v5: subcommittee ids are the full ID ("SSJU01"), not the suffix.
+  const cacheKey = `committee-real-v5-${committeeId}`;
 
   return cachedFetch(
     cacheKey,
@@ -298,7 +300,9 @@ async function fetchCommitteeFromCongressLegislators(
               const finalMembers = subMembers.length > 0 ? subMembers : [];
 
               return {
-                id: sub.thomas_id,
+                // The full ID ("SSJU01"): pages link /committee/{id}, and the
+                // bare suffix gave /committee/01 (v5 cache key since).
+                id: subcommitteeFullId,
                 name: sub.name,
                 chair: subChair?.representative || leadership.chair?.representative,
                 focus: `${sub.name} subcommittee`,
@@ -443,6 +447,41 @@ export function resolveCommitteeId(inputId: string): string {
   return inputId;
 }
 
+export type CommitteeLookup =
+  { status: 'found'; committee: Committee } | { status: 'not_found' } | { status: 'unavailable' };
+
+/**
+ * Committee data for a page, telling "no such committee" apart from "the
+ * source failed": pages 404 only on the first and show a noindexed "couldn't
+ * load" state on the second (getCommitteeDataService answers both with an
+ * empty placeholder, which made /committee/ZZZZ99 a page titled "Joint
+ * Committee ZZZZ99").
+ *
+ * The roster of record is congress-legislators' committees-current.yaml.
+ * fetchCommittees() answers [] when that fetch fails (and never caches it),
+ * so an empty list is a failure, while a list without the ID proves it
+ * doesn't exist. A subcommittee must be listed under its parent: SSJU99
+ * used to render the Judiciary Committee itself.
+ */
+export async function lookupCommittee(rawCommitteeId: string): Promise<CommitteeLookup> {
+  const committeeId = resolveCommitteeId(rawCommitteeId).toUpperCase();
+  if (!isCongressionalSystemCode(committeeId)) return { status: 'not_found' };
+
+  const committees = await fetchCommittees().catch(() => []);
+  if (committees.length === 0) return { status: 'unavailable' };
+  const { isSubcommittee, parentId, subcommitteeNum } = parseSubcommitteeId(committeeId);
+  const parent = committees.find(c => c.thomas_id === parentId);
+  if (!parent) return { status: 'not_found' };
+  if (isSubcommittee && !parent.subcommittees?.some(s => s.thomas_id === subcommitteeNum)) {
+    return { status: 'not_found' };
+  }
+
+  const committee = await fetchCommitteeFromCongressLegislators(committeeId).catch(() => null);
+  if (!committee) return { status: 'unavailable' };
+  const jurisdiction = getCommitteeJurisdiction(committeeId);
+  return { status: 'found', committee: jurisdiction ? { ...committee, jurisdiction } : committee };
+}
+
 /**
  * Get committee data - main entry point
  * Used by both API routes and server components
@@ -462,7 +501,7 @@ export async function getCommitteeDataService(
 
   // If cache bypass requested, delete cached entry first
   if (bypassCache) {
-    const cacheKey = `committee-real-v4-${committeeId}`;
+    const cacheKey = `committee-real-v5-${committeeId}`;
     await cache.delete(cacheKey);
     logger.info('Cache bypassed - deleted cached entry', { cacheKey });
   }

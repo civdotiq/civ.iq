@@ -6,7 +6,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getCachedRepresentative } from '@/lib/questions/get-representative';
-import { getCachedCommittee } from '@/lib/questions/get-committee';
+import { getCachedCommitteeLookup } from '@/lib/questions/get-committee';
 import {
   getTemplate,
   getTitlePattern,
@@ -65,8 +65,13 @@ export async function generateMetadata({
       const topicBills = await fetchTopicBillsData(policyArea);
       if (!topicBills.results?.bills.length) robots = { index: false, follow: true };
     } else if (template.entityType === 'committee') {
-      const committee = await getCachedCommittee(entityId);
-      if (!committee?.name) return { title: 'Committee not found' };
+      const lookup = await getCachedCommitteeLookup(entityId);
+      // not_found: the page 404s and not-found.tsx titles it.
+      if (lookup.status === 'not_found') return { title: 'Committee not found' };
+      if (lookup.status === 'unavailable') {
+        return { title: 'Committee details unavailable', robots: { index: false, follow: true } };
+      }
+      const committee = lookup.committee;
       const vars = { name: committee.name, chamber: committee.chamber };
       title = fillPattern(template.questionPattern, vars);
       description = fillPattern(template.descriptionPattern, vars);
@@ -117,8 +122,8 @@ export default async function AskLayout({ children, params }: LayoutProps) {
   } else if (template.entityType === 'committee') {
     entityName = 'Committee';
     try {
-      const committee = await getCachedCommittee(entityId);
-      if (committee?.name) entityName = committee.name;
+      const lookup = await getCachedCommitteeLookup(entityId);
+      if (lookup.status === 'found') entityName = lookup.committee.name;
     } catch {
       // Breadcrumb falls back to generic label
     }
