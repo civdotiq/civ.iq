@@ -33,6 +33,13 @@ interface PersonVote {
 
 interface VotesApiResponse {
   success: boolean;
+  /** False when the roll-call corpus does not cover this state. */
+  dataAvailable?: boolean;
+  reason?: string;
+  /** When the corpus artifact for this state was built. */
+  dataAsOf?: string;
+  /** Every recorded roll call vs. the floor ones this panel asks for. */
+  totals?: { all: number; floor: number };
   votes: PersonVote[];
   total: number;
   statistics: {
@@ -78,7 +85,7 @@ export function RecordPanel({ legislator: l, legislatorIdBase64, stateCode }: Re
   const pColor = partyColorVar(pKey);
 
   const { data, isLoading } = useSWR<VotesApiResponse>(
-    `/api/state-legislature/${stateCode}/legislator/${legislatorIdBase64}/votes?page=1&per_page=20`,
+    `/api/state-legislature/${stateCode}/legislator/${legislatorIdBase64}/votes?floor=only&page=1&per_page=20`,
     fetcher,
     { revalidateOnFocus: false, dedupingInterval: 120000 }
   );
@@ -125,7 +132,11 @@ export function RecordPanel({ legislator: l, legislatorIdBase64, stateCode }: Re
               fontFamily: 'var(--font-mono)',
             }}
           >
-            Data unavailable — no floor votes returned for this legislator.
+            {data?.dataAvailable === false
+              ? 'Not yet available — roll-call records for this legislature are not in the corpus yet. Each bill page lists its votes.'
+              : data?.totals && data.totals.all > 0
+                ? `No floor roll calls recorded — ${data.totals.all} committee roll calls on file.`
+                : 'Data unavailable — no floor votes returned for this legislator.'}
           </div>
         ) : (
           <>
@@ -184,7 +195,7 @@ export function RecordPanel({ legislator: l, legislatorIdBase64, stateCode }: Re
               <div style={{ marginTop: 16 }}>
                 <CqPlainReading>
                   {l.lastName || l.name} voted yes on {yesPct}% of {stats.total} floor votes in the
-                  most recent fetch from OpenStates.
+                  roll-call record built {formatDate(data?.dataAsOf)} from OpenStates bulk data.
                 </CqPlainReading>
               </div>
             )}

@@ -27,6 +27,8 @@ interface PersonVote {
 
 interface VotesApiResponse {
   success: boolean;
+  /** False while no per-legislator roll-call source exists for states. */
+  dataAvailable?: boolean;
   votes: PersonVote[];
   total: number;
   page: number;
@@ -241,9 +243,15 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
   if (!data || !data.votes || data.votes.length === 0) {
     return (
       <div className="text-center py-8">
-        <div className="text-gray-600 mb-2">No voting records available</div>
+        <div className="text-gray-600 mb-2">
+          {data?.dataAvailable === false
+            ? 'Voting records not yet available'
+            : 'No voting records available'}
+        </div>
         <div className="text-sm text-gray-400">
-          {legislatorName}&apos;s voting records are not yet available from OpenStates.
+          {data?.dataAvailable === false
+            ? 'Roll-call records for this legislature are not in the corpus yet. Each bill page lists its votes.'
+            : `${legislatorName}'s voting records are not available from OpenStates.`}
         </div>
       </div>
     );

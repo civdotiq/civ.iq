@@ -28,6 +28,7 @@
 import { NextResponse } from 'next/server';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { getVotesCorpusStatus } from '@/lib/data-sources/openstates-votes/load-votes';
 
 export const dynamic = 'force-dynamic';
 
@@ -92,7 +93,35 @@ export async function GET() {
        */
       departed: meta.departed,
       compressedBytes: meta.compressedBytes,
+      votes: await votesStatus(today),
     },
     { headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600' } }
   );
+}
+
+/**
+ * The per-state roll-call corpus (scripts/sync-openstates-votes.ts) has its
+ * own manifest and its own stall mode: artifacts live outside the repo, so a
+ * month the mirror skipped shows here as `stale`, and a state it never built
+ * is simply absent from `jurisdictions`.
+ */
+async function votesStatus(today: string) {
+  const manifest = await getVotesCorpusStatus();
+  if (!manifest) {
+    return { status: 'unavailable', message: 'Roll-call corpus has not been generated yet.' };
+  }
+  const states = Object.values(manifest.jurisdictions);
+  return {
+    status: 'ok',
+    generatedAt: manifest.generatedAt,
+    generatedAgeDays: Math.round((Date.now() - new Date(manifest.generatedAt).getTime()) / DAY_MS),
+    staleAfter: manifest.staleAfter,
+    stale: today >= manifest.staleAfter,
+    hosted: manifest.baseUrl ? 'remote' : 'local',
+    jurisdictions: states.length,
+    rollCalls: states.reduce((n, s) => n + s.rollCalls, 0),
+    memberVotes: states.reduce((n, s) => n + s.memberVotes, 0),
+    /** Rows the source could not attribute to a member — see votes-corpus.ts. */
+    unresolvedVotes: states.reduce((n, s) => n + s.unresolvedVotes, 0),
+  };
 }

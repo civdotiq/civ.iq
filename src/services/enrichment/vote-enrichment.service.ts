@@ -6,22 +6,29 @@
 /**
  * Vote Enrichment Service
  *
- * Computes enriched voting metrics from existing OpenStates data:
- * - Party-line alignment percentage
+ * Computes enriched voting metrics for a state legislator from the roll-call
+ * corpus (src/lib/data-sources/openstates-votes):
+ * - Party-line alignment: the member's yes/no against the yes/no majority of
+ *   their own party on the same roll call, from the corpus's per-party tallies
  * - Vote categorization by policy topic
- * - Key vote detection (close margins, party defections)
+ * - Key vote detection (close margins, votes against the chamber majority)
  * - Attendance rate
  *
- * No new APIs required — all data comes from StateLegislatureCoreService.
+ * Nothing here calls OpenStates. The previous version fetched every roll call
+ * through the bills API — up to 100 requests per legislator against a
+ * 1,000/day cap — and had no party data on the voters, so "party alignment"
+ * was really chamber-majority alignment.
  */
 
-import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
 import { categorizeBill } from './vote-categorizer';
+import {
+  getMemberVotes,
+  getVotesCorpusStatus,
+} from '@/lib/data-sources/openstates-votes/load-votes';
+import type { CorpusMemberVote } from '@/lib/data-sources/openstates-votes/votes-corpus';
 import type {
-  StatePersonVote,
-  StateVoteDetail,
   VoteEnrichmentResult,
   EnrichedKeyVote,
   VoteCategoryBreakdown,
@@ -29,21 +36,26 @@ import type {
 } from '@/types/state-legislature';
 
 const ENRICHMENT_CACHE_TTL = 3600000; // 1 hour
+/** Bumped when the computation changed source (API fan-out → corpus). */
+const CACHE_VERSION = 'v2';
+const CLOSE_VOTE_MARGIN_PERCENT = 10;
+const KEY_VOTE_LIMIT = 20;
 
 export class VoteEnrichmentService {
   /**
-   * Generate enriched voting analysis for a state legislator
+   * Generate enriched voting analysis for a state legislator. An empty result
+   * (totalVotesAnalyzed 0) means the corpus has no record for them — the
+   * state is not covered, or the member cast no recorded votes.
    */
   static async enrichVotes(
     state: string,
     legislatorId: string,
     legislatorParty: string
   ): Promise<VoteEnrichmentResult> {
-    const cacheKey = `enrichment:votes:${state}:${legislatorId}`;
+    const cacheKey = `enrichment:votes:${CACHE_VERSION}:${state}:${legislatorId}`;
     const startTime = Date.now();
 
     try {
-      // Check cache first
       const cached = await govCache.get<VoteEnrichmentResult>(cacheKey);
       if (cached) {
         logger.info('Vote enrichment cache hit', {
@@ -54,44 +66,27 @@ export class VoteEnrichmentService {
         return cached;
       }
 
-      // 1. Fetch legislator's votes
-      const votes = await StateLegislatureCoreService.getStateLegislatorVotes(
-        state,
-        legislatorId,
-        100 // Fetch up to 100 votes for analysis
-      );
-
-      if (votes.length === 0) {
-        const emptyResult = this.buildEmptyResult(state, legislatorId);
-        return emptyResult;
+      const votes = await getMemberVotes(state, legislatorId);
+      if (!votes || votes.length === 0) {
+        return this.buildEmptyResult(state, legislatorId);
       }
 
-      // 2. Fetch full vote details for party-line computation (batch, parallel)
-      const voteDetails = await this.getVoteDetailsForVotes(state, votes);
-
-      // 3. Compute enrichment
-      const partyBreakdown = this.computePartyAlignment(
-        votes,
-        voteDetails,
-        legislatorId,
-        legislatorParty
-      );
-      const categoryBreakdown = this.computeCategoryBreakdown(votes);
-      const keyVotes = this.detectKeyVotes(votes, voteDetails, legislatorId, legislatorParty);
-      const attendance = this.computeAttendance(votes);
-
+      const floorVotes = votes.filter(v => v.rollCall.floor);
       const result: VoteEnrichmentResult = {
         state,
         legislatorId,
         totalVotesAnalyzed: votes.length,
-        partyBreakdown,
-        categoryBreakdown,
-        keyVotes,
-        attendance,
+        floorVotesAnalyzed: floorVotes.length,
+        partyBreakdown: this.computePartyAlignment(votes, legislatorParty),
+        categoryBreakdown: this.computeCategoryBreakdown(votes),
+        // Key votes come from floor roll calls when the state records them as
+        // such; a committee vote against the room is not a key vote.
+        keyVotes: this.detectKeyVotes(floorVotes.length > 0 ? floorVotes : votes),
+        attendance: this.computeAttendance(votes),
+        dataAsOf: (await getVotesCorpusStatus())?.jurisdictions[state.toUpperCase()]?.generatedAt,
         lastUpdated: new Date().toISOString(),
       };
 
-      // Cache the result
       await govCache.set(cacheKey, result, {
         ttl: ENRICHMENT_CACHE_TTL,
         source: 'vote-enrichment',
@@ -102,9 +97,9 @@ export class VoteEnrichmentService {
         state,
         legislatorId,
         votesAnalyzed: votes.length,
-        detailsFetched: voteDetails.length,
-        keyVoteCount: keyVotes.length,
-        partyAlignmentPercent: partyBreakdown.alignmentPercentage,
+        floorVotes: floorVotes.length,
+        keyVoteCount: result.keyVotes.length,
+        partyAlignmentPercent: result.partyBreakdown.alignmentPercentage,
         responseTime: Date.now() - startTime,
       });
 
@@ -120,162 +115,68 @@ export class VoteEnrichmentService {
   }
 
   /**
-   * Batch-fetch full vote details for a set of person votes.
-   * Fetches in parallel with concurrency limit to respect rate limits.
-   */
-  static async getVoteDetailsForVotes(
-    state: string,
-    votes: StatePersonVote[]
-  ): Promise<StateVoteDetail[]> {
-    // Deduplicate vote IDs, keeping the bill each one belongs to: OpenStates
-    // has no vote-by-id endpoint, so a roll call is fetched through its bill.
-    // Votes with no bill attached cannot be fetched at all and are skipped.
-    const billByVoteId = new Map<string, string>();
-    for (const vote of votes) {
-      if (vote.bill_id && !billByVoteId.has(vote.vote_id)) {
-        billByVoteId.set(vote.vote_id, vote.bill_id);
-      }
-    }
-    const uniqueVoteIds = [...billByVoteId.keys()];
-
-    // Limit to 20 concurrent detail fetches to respect OpenStates rate limits
-    const BATCH_SIZE = 10;
-    const details: StateVoteDetail[] = [];
-
-    for (let i = 0; i < uniqueVoteIds.length; i += BATCH_SIZE) {
-      const batch = uniqueVoteIds.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.allSettled(
-        batch.map(voteId =>
-          StateLegislatureCoreService.getStateVoteById(state, voteId, billByVoteId.get(voteId)!)
-        )
-      );
-
-      for (const result of batchResults) {
-        if (result.status === 'fulfilled' && result.value) {
-          details.push(result.value);
-        }
-      }
-    }
-
-    return details;
-  }
-
-  /**
-   * Compute party-line alignment by comparing the legislator's vote
-   * against their party's majority position on each vote.
+   * Party-line alignment: on each roll call where the member voted yes or no,
+   * compare with how the rest of their party split. The corpus tallies each
+   * party from the roster, so the member's own vote is subtracted before the
+   * majority is read. A tie, or a party with no other yes/no votes, is "no
+   * party data" rather than a guess.
    */
   private static computePartyAlignment(
-    votes: StatePersonVote[],
-    voteDetails: StateVoteDetail[],
-    legislatorId: string,
+    votes: CorpusMemberVote[],
     legislatorParty: string
   ): PartyBreakdown {
-    const detailMap = new Map(voteDetails.map(d => [d.id, d]));
-
     let withParty = 0;
     let againstParty = 0;
     let noPartyData = 0;
 
     for (const vote of votes) {
-      // Skip non-substantive votes (absent, abstain, etc.)
       if (vote.option !== 'yes' && vote.option !== 'no') continue;
 
-      const detail = detailMap.get(vote.vote_id);
-      if (!detail || !detail.votes || detail.votes.length === 0) {
+      const tally = vote.rollCall.partyTally.get(legislatorParty);
+      if (!tally) {
         noPartyData++;
         continue;
       }
-
-      // Determine party majority position
-      const partyMajorityOption = this.getPartyMajorityPosition(
-        detail,
-        legislatorParty,
-        legislatorId
-      );
-
-      if (!partyMajorityOption) {
+      const yes = tally.yes - (vote.option === 'yes' ? 1 : 0);
+      const no = tally.no - (vote.option === 'no' ? 1 : 0);
+      if (yes === no) {
         noPartyData++;
         continue;
       }
-
-      if (vote.option === partyMajorityOption) {
-        withParty++;
-      } else {
-        againstParty++;
-      }
+      const majority = yes > no ? 'yes' : 'no';
+      if (vote.option === majority) withParty++;
+      else againstParty++;
     }
 
     const total = withParty + againstParty;
-    const alignmentPercentage = total > 0 ? Math.round((withParty / total) * 1000) / 10 : 0;
-
     return {
       withParty,
       againstParty,
       total,
-      alignmentPercentage,
+      alignmentPercentage: total > 0 ? Math.round((withParty / total) * 1000) / 10 : 0,
       noPartyData,
     };
   }
 
   /**
-   * Determine what the majority of a party voted on a specific vote.
-   * Returns 'yes' or 'no', or null if insufficient data.
-   */
-  private static getPartyMajorityPosition(
-    voteDetail: StateVoteDetail,
-    _party: string,
-    excludeLegislatorId: string
-  ): 'yes' | 'no' | null {
-    // We don't have party data on each voter from OpenStates vote details,
-    // so we use the overall vote result as a proxy for majority position.
-    // This is a reasonable approximation since most state votes align with
-    // the majority party's position.
-    //
-    // For more accurate results, we would need to cross-reference each voter
-    // with their party affiliation, which would require additional API calls.
-    // That enhancement can be added later.
-
-    // Count yes/no from voters excluding the target legislator
-    let yesCount = 0;
-    let noCount = 0;
-
-    for (const voter of voteDetail.votes) {
-      if (voter.voter_id === excludeLegislatorId) continue;
-      if (voter.option === 'yes') yesCount++;
-      else if (voter.option === 'no') noCount++;
-    }
-
-    if (yesCount === 0 && noCount === 0) return null;
-
-    // Use overall chamber majority as proxy
-    // In highly partisan legislatures, the majority usually aligns with one party
-    return yesCount >= noCount ? 'yes' : 'no';
-  }
-
-  /**
    * Categorize votes by policy topic using bill title keywords.
    */
-  private static computeCategoryBreakdown(votes: StatePersonVote[]): VoteCategoryBreakdown[] {
+  private static computeCategoryBreakdown(votes: CorpusMemberVote[]): VoteCategoryBreakdown[] {
     const categoryCounts = new Map<
       string,
       { total: number; yes: number; no: number; other: number }
     >();
 
     for (const vote of votes) {
-      const title = vote.bill_title ?? vote.motion_text ?? '';
-      const category = categorizeBill(title);
-
+      const category = categorizeBill(vote.rollCall.billTitle ?? vote.rollCall.motion);
       const existing = categoryCounts.get(category) ?? { total: 0, yes: 0, no: 0, other: 0 };
       existing.total++;
-
       if (vote.option === 'yes') existing.yes++;
       else if (vote.option === 'no') existing.no++;
       else existing.other++;
-
       categoryCounts.set(category, existing);
     }
 
-    // Sort by total count descending
     return Array.from(categoryCounts.entries())
       .sort(([, a], [, b]) => b.total - a.total)
       .map(([category, counts]) => ({
@@ -289,84 +190,63 @@ export class VoteEnrichmentService {
   }
 
   /**
-   * Detect key votes: close margins (<5% margin) or legislator voted against majority.
+   * Key votes: a close margin, or the member voted against the chamber
+   * majority. Newest first, capped.
    */
-  private static detectKeyVotes(
-    votes: StatePersonVote[],
-    voteDetails: StateVoteDetail[],
-    _legislatorId: string,
-    _legislatorParty: string
-  ): EnrichedKeyVote[] {
-    const detailMap = new Map(voteDetails.map(d => [d.id, d]));
+  private static detectKeyVotes(votes: CorpusMemberVote[]): EnrichedKeyVote[] {
     const keyVotes: EnrichedKeyVote[] = [];
 
     for (const vote of votes) {
       if (vote.option !== 'yes' && vote.option !== 'no') continue;
+      const { rollCall } = vote;
+      const substantive = rollCall.yes + rollCall.no;
+      if (substantive === 0) continue;
 
-      const detail = detailMap.get(vote.vote_id);
-      if (!detail) continue;
-
-      const totalVoters = detail.votes.length;
-      if (totalVoters === 0) continue;
-
-      const yesCount = detail.counts.find(c => c.option === 'yes')?.value ?? 0;
-      const noCount = detail.counts.find(c => c.option === 'no')?.value ?? 0;
-      const totalSubstantive = yesCount + noCount;
-      if (totalSubstantive === 0) continue;
-
-      const margin = Math.abs(yesCount - noCount);
-      const marginPercent = (margin / totalSubstantive) * 100;
-      const isCloseVote = marginPercent < 10; // Close margin
-
-      // Check if legislator voted against chamber majority
-      const chamberMajority = yesCount >= noCount ? 'yes' : 'no';
+      const marginPercent = (Math.abs(rollCall.yes - rollCall.no) / substantive) * 100;
+      const isCloseVote = marginPercent < CLOSE_VOTE_MARGIN_PERCENT;
+      const chamberMajority = rollCall.yes >= rollCall.no ? 'yes' : 'no';
       const votedAgainstMajority = vote.option !== chamberMajority;
+      if (!isCloseVote && !votedAgainstMajority) continue;
 
-      if (isCloseVote || votedAgainstMajority) {
-        keyVotes.push({
-          voteId: vote.vote_id,
-          billIdentifier: vote.bill_identifier ?? '',
-          billTitle: vote.bill_title ?? vote.motion_text,
-          date: vote.start_date,
-          legislatorPosition: vote.option as 'yes' | 'no',
-          result: vote.result,
-          yesCount,
-          noCount,
-          marginPercent: Math.round(marginPercent * 10) / 10,
-          isCloseVote,
-          votedAgainstMajority,
-          category: categorizeBill(vote.bill_title ?? vote.motion_text ?? ''),
-        });
-      }
+      keyVotes.push({
+        voteId: rollCall.id,
+        billIdentifier: rollCall.billIdentifier ?? '',
+        billTitle: rollCall.billTitle ?? rollCall.motion,
+        date: rollCall.date,
+        legislatorPosition: vote.option,
+        result: rollCall.result === 'pass' ? 'passed' : 'failed',
+        yesCount: rollCall.yes,
+        noCount: rollCall.no,
+        marginPercent: Math.round(marginPercent * 10) / 10,
+        isCloseVote,
+        votedAgainstMajority,
+        category: categorizeBill(rollCall.billTitle ?? rollCall.motion),
+      });
     }
 
-    // Sort by date descending, limit to 20 most recent key votes
-    return keyVotes
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 20);
+    // Already newest first from the corpus; the slice keeps the most recent.
+    return keyVotes.slice(0, KEY_VOTE_LIMIT);
   }
 
   /**
-   * Compute attendance rate from vote records.
+   * Attendance: present when the member cast any named position, absent when
+   * the chamber marked them absent or excused. 'other' — a position the
+   * chamber did not name — counts in neither, so it does not read as absence.
    */
-  private static computeAttendance(votes: StatePersonVote[]): {
-    totalVotes: number;
-    present: number;
-    absent: number;
-    attendanceRate: number;
-  } {
-    const present = votes.filter(
-      v =>
-        v.option === 'yes' ||
-        v.option === 'no' ||
-        v.option === 'abstain' ||
-        v.option === 'not voting'
-    ).length;
-    const absent = votes.filter(v => v.option === 'absent' || v.option === 'excused').length;
-    const total = votes.length;
-    const attendanceRate = total > 0 ? Math.round((present / total) * 1000) / 10 : 0;
-
-    return { totalVotes: total, present, absent, attendanceRate };
+  private static computeAttendance(votes: CorpusMemberVote[]): VoteEnrichmentResult['attendance'] {
+    let present = 0;
+    let absent = 0;
+    for (const vote of votes) {
+      if (vote.option === 'absent' || vote.option === 'excused') absent++;
+      else if (vote.option !== 'other') present++;
+    }
+    const total = present + absent;
+    return {
+      totalVotes: votes.length,
+      present,
+      absent,
+      attendanceRate: total > 0 ? Math.round((present / total) * 1000) / 10 : 0,
+    };
   }
 
   /**

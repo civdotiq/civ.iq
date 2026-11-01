@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
+import { openStatesUnavailableInit } from '@/lib/openstates-api';
 import { fetchBillText } from '@/lib/services/bill-text-fetcher.service';
 import { normalizeStateIdentifier } from '@/lib/data/us-states';
 import { decodeBase64Url } from '@/lib/url-encoding';
@@ -79,7 +80,7 @@ export async function GET(
         error: 'Failed to fetch bill text',
         message: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      openStatesUnavailableInit(error) ?? { status: 500 }
     );
   }
 }

@@ -41,6 +41,8 @@ function VoteCardShell({ href, children }: { href?: string; children: React.Reac
 
 interface VotesResponse {
   success: boolean;
+  /** False while no per-legislator roll-call source exists for states. */
+  dataAvailable?: boolean;
   votes: StatePersonVote[];
   count: number;
   legislator?: {
@@ -60,6 +62,7 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
   limit = 50,
 }) => {
   const [votes, setVotes] = useState<StatePersonVote[]>([]);
+  const [unavailable, setUnavailable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -83,6 +86,7 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
 
         if (data.success && data.votes) {
           setVotes(data.votes);
+          setUnavailable(data.dataAvailable === false);
         } else {
           setError(data.error || 'No voting records available');
         }
@@ -154,7 +158,11 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
     return (
       <div className="p-grid-3">
         <div className="bg-gray-50 border-2 border-gray-300 p-grid-4 text-center">
-          <p className="text-gray-600">No voting records found for {legislatorName}.</p>
+          <p className="text-gray-600">
+            {unavailable
+              ? 'Roll-call records for this legislature are not in the corpus yet. Open a bill to see its votes.'
+              : `No voting records found for ${legislatorName}.`}
+          </p>
         </div>
       </div>
     );
