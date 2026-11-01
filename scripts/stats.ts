@@ -5,9 +5,11 @@
  *   1. Alert subscribers (verified/pending) and most-watched legislators
  *   2. API request volume for the last 7 days with top endpoints
  *   3. MCP client + SDK adoption counters for the last 28 days
- *   4. npm download counts for the three @civiq packages
- *   5. GA4 human traffic for the last 7 days
- *   6. Google Search top queries and pages for the last 28 days (Search Console)
+ *   4. Search/AI crawler hits on page paths, and which pages AI assistants
+ *      opened live for a user's question
+ *   5. npm download counts for the three @civiq packages
+ *   6. GA4 human traffic for the last 7 days
+ *   7. Google Search top queries and pages for the last 28 days (Search Console)
  *
  * Redis data comes from Upstash REST (UPSTASH_REDIS_REST_URL/TOKEN in
  * .env.local — same store production writes to). Sections degrade to a
@@ -22,6 +24,7 @@ import * as dotenv from 'dotenv';
 import { Redis } from '@upstash/redis';
 import { fetchGa4Summary, type Ga4Summary } from './ga4-client';
 import { fetchGscSummary, type GscRow, type GscSummary } from './gsc-client';
+import { PATH_TRACKED_CRAWLERS, crawlerPathKey } from '../src/lib/analytics/crawler-counter';
 
 dotenv.config({ path: '.env.local' });
 
@@ -37,6 +40,12 @@ const GSC_WINDOW_DAYS = 28;
 interface Subscription {
   verified: boolean;
   entities: Array<{ type: string; id: string; name?: string }>;
+}
+
+interface AssistantPages {
+  total: number;
+  bySection: Array<{ section: string; count: number }>;
+  topPaths: Array<{ path: string; count: number }>;
 }
 
 interface StatsReport {
@@ -67,6 +76,7 @@ interface StatsReport {
     configured: boolean;
     windowDays: number;
     byBot: Record<string, number>;
+    assistantPages: Record<string, AssistantPages>;
   };
   ga4: Ga4Summary;
   gsc: GscSummary;
@@ -213,7 +223,12 @@ async function collectApiRequests(redis: Redis | null): Promise<StatsReport['api
 }
 
 async function collectCrawlers(redis: Redis | null): Promise<StatsReport['crawlers']> {
-  const empty = { configured: false, windowDays: CRAWLER_WINDOW_DAYS, byBot: {} };
+  const empty = {
+    configured: false,
+    windowDays: CRAWLER_WINDOW_DAYS,
+    byBot: {},
+    assistantPages: {},
+  };
   if (!redis) return empty;
 
   const byBot: Record<string, number> = {};
@@ -229,7 +244,51 @@ async function collectCrawlers(redis: Redis | null): Promise<StatsReport['crawle
     });
   }
 
-  return { configured: true, windowDays: CRAWLER_WINDOW_DAYS, byBot };
+  return {
+    configured: true,
+    windowDays: CRAWLER_WINDOW_DAYS,
+    byBot,
+    assistantPages: await collectAssistantPages(redis),
+  };
+}
+
+/**
+ * Which pages AI assistants fetched live for a user. Keys are exact
+ * (date × tracked bot), so no SCAN pass is needed.
+ */
+async function collectAssistantPages(redis: Redis): Promise<Record<string, AssistantPages>> {
+  const result: Record<string, AssistantPages> = {};
+  for (const bot of PATH_TRACKED_CRAWLERS) {
+    const byPath: Record<string, number> = {};
+    for (const date of lastNDates(CRAWLER_WINDOW_DAYS)) {
+      const flat = await redis.zrange<Array<string | number>>(crawlerPathKey(date, bot), 0, -1, {
+        withScores: true,
+      });
+      for (let i = 0; i + 1 < flat.length; i += 2) {
+        const path = String(flat[i]);
+        const count = Number(flat[i + 1]);
+        if (Number.isFinite(count) && count > 0) byPath[path] = (byPath[path] || 0) + count;
+      }
+    }
+
+    const paths = Object.entries(byPath).sort((a, b) => b[1] - a[1]);
+    if (paths.length === 0) continue;
+
+    const bySection: Record<string, number> = {};
+    for (const [path, count] of paths) {
+      const section = `/${path.split('/')[1] ?? ''}`;
+      bySection[section] = (bySection[section] || 0) + count;
+    }
+
+    result[bot] = {
+      total: paths.reduce((sum, [, count]) => sum + count, 0),
+      bySection: Object.entries(bySection)
+        .map(([section, count]) => ({ section, count }))
+        .sort((a, b) => b.count - a.count),
+      topPaths: paths.slice(0, 15).map(([path, count]) => ({ path, count })),
+    };
+  }
+  return result;
 }
 
 async function collectAdoption(redis: Redis | null): Promise<StatsReport['adoption']> {
@@ -366,6 +425,20 @@ function printReport(report: StatsReport): void {
     const bots = Object.entries(report.crawlers.byBot).sort((a, b) => b[1] - a[1]);
     if (bots.length === 0) line('  none recorded yet');
     else for (const [bot, n] of bots) line(`  ${bot}: ${n}`);
+
+    line();
+    line(
+      `Pages AI assistants opened for a user's question (last ${report.crawlers.windowDays} days)`
+    );
+    const assistants = Object.entries(report.crawlers.assistantPages);
+    if (assistants.length === 0) line('  none recorded yet');
+    for (const [bot, pages] of assistants) {
+      line(`  ${bot}: ${pages.total} fetches`);
+      line('    By section:');
+      for (const s of pages.bySection) line(`      ${String(s.count).padStart(6)}  ${s.section}`);
+      line('    Top pages:');
+      for (const p of pages.topPaths) line(`      ${String(p.count).padStart(6)}  ${p.path}`);
+    }
   }
 
   line();

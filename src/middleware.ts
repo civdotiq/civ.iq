@@ -410,6 +410,7 @@ export async function middleware(request: NextRequest) {
             : '/';
         const markdown = MARKDOWN_PAGES.get(normalizedPath);
         if (markdown) {
+          incrementCrawlerHit(clientInfo.userAgent, request.nextUrl.pathname);
           return markdownResponse(markdown, 200, request.method === 'HEAD');
         }
       }
@@ -424,6 +425,8 @@ export async function middleware(request: NextRequest) {
         !KNOWN_ROUTE_PREFIXES.has(firstSegment) &&
         (wantsMarkdown || !acceptsHtmlExplicitly(accept))
       ) {
+        // Counted too: an assistant fetching a dead address shows a link it made up.
+        incrementCrawlerHit(clientInfo.userAgent, request.nextUrl.pathname);
         return markdownResponse(AGENT_NOT_FOUND_MARKDOWN, 404, request.method === 'HEAD');
       }
     }
@@ -558,9 +561,10 @@ export async function middleware(request: NextRequest) {
 
     // Fire-and-forget crawler attribution for page paths. API paths already log
     // their User-Agent; pages did not, which made search/AI indexing invisible.
-    // Only known bots increment, so humans never cost a Redis command.
+    // Only known bots increment, so humans never cost a Redis command. The two
+    // markdown early returns above count themselves.
     if (!request.nextUrl.pathname.startsWith('/api/')) {
-      incrementCrawlerHit(clientInfo.userAgent);
+      incrementCrawlerHit(clientInfo.userAgent, request.nextUrl.pathname);
     }
 
     return response;

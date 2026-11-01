@@ -10,7 +10,26 @@
  * bots whose UA also contains another bot's name or a full browser UA.
  */
 
-import { identifyCrawler } from '@/lib/analytics/crawler-counter';
+const mockIncr = jest.fn().mockResolvedValue(1);
+const mockZincrby = jest.fn().mockResolvedValue(1);
+const mockExpire = jest.fn().mockResolvedValue(true);
+
+jest.mock('@upstash/redis', () => ({
+  Redis: jest.fn().mockImplementation(() => ({
+    incr: mockIncr,
+    zincrby: mockZincrby,
+    expire: mockExpire,
+  })),
+}));
+
+process.env.UPSTASH_REDIS_REST_URL = 'https://test.upstash.io';
+process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
+
+import { identifyCrawler, incrementCrawlerHit } from '@/lib/analytics/crawler-counter';
+
+const CHATGPT_USER =
+  'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot';
+const flush = () => new Promise(resolve => setTimeout(resolve, 10));
 
 describe('identifyCrawler', () => {
   it('identifies search crawlers', () => {
@@ -62,5 +81,60 @@ describe('identifyCrawler', () => {
     expect(identifyCrawler('python-requests/2.31.0')).toBeNull();
     expect(identifyCrawler(null)).toBeNull();
     expect(identifyCrawler('')).toBeNull();
+  });
+});
+
+describe('incrementCrawlerHit page paths', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('records the page a live AI assistant fetch opened', async () => {
+    incrementCrawlerHit(CHATGPT_USER, '/representative/S000033/record');
+    await flush();
+
+    expect(mockIncr).toHaveBeenCalledWith(
+      expect.stringMatching(/^analytics:crawler:\d{4}-\d{2}-\d{2}:chatgpt-user$/)
+    );
+    expect(mockZincrby).toHaveBeenCalledWith(
+      expect.stringMatching(/^analytics:crawler-path:\d{4}-\d{2}-\d{2}:chatgpt-user$/),
+      1,
+      '/representative/S000033/record'
+    );
+    // First hit of both keys sets both TTLs
+    expect(mockExpire).toHaveBeenCalledTimes(2);
+  });
+
+  it('skips the TTL on repeat hits of a path', async () => {
+    mockIncr.mockResolvedValueOnce(5);
+    mockZincrby.mockResolvedValueOnce(3);
+    incrementCrawlerHit(CHATGPT_USER, '/');
+    await flush();
+
+    expect(mockExpire).not.toHaveBeenCalled();
+  });
+
+  it('does not record paths for index crawlers', async () => {
+    incrementCrawlerHit('Mozilla/5.0 (compatible; OAI-SearchBot/1.0)', '/about');
+    await flush();
+
+    expect(mockIncr).toHaveBeenCalledTimes(1);
+    expect(mockZincrby).not.toHaveBeenCalled();
+  });
+
+  it('caps very long paths', async () => {
+    incrementCrawlerHit('Perplexity-User/1.0', `/${'a'.repeat(500)}`);
+    await flush();
+
+    const member = mockZincrby.mock.calls[0]![2] as string;
+    expect(member).toHaveLength(200);
+  });
+
+  it('costs nothing for humans', async () => {
+    incrementCrawlerHit('Mozilla/5.0 (Macintosh) Chrome/126.0.0.0 Safari/537.36', '/');
+    await flush();
+
+    expect(mockIncr).not.toHaveBeenCalled();
+    expect(mockZincrby).not.toHaveBeenCalled();
   });
 });

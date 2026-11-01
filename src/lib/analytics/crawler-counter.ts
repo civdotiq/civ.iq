@@ -18,6 +18,11 @@
  * Humans are covered by GA4 and Vercel Web Analytics instead.
  *
  * Key format: analytics:crawler:{YYYY-MM-DD}:{botName}
+ *
+ * Crawlers that fetch a page because a person just asked an AI assistant a
+ * question (ChatGPT-User, Perplexity-User) also record WHICH page, in a sorted
+ * set per day: analytics:crawler-path:{YYYY-MM-DD}:{botName} → path → count.
+ * Index crawlers don't, because their paths say nothing about what gets cited.
  */
 
 import { Redis } from '@upstash/redis';
@@ -74,6 +79,21 @@ const CRAWLER_SIGNATURES: ReadonlyArray<readonly [string, string]> = [
   ['discordbot', 'discordbot'],
 ];
 
+/**
+ * Crawlers that fetch a page live for a user's question, not to build an index.
+ * The page they open is the citation signal, so their paths are kept.
+ */
+export const PATH_TRACKED_CRAWLERS: ReadonlySet<string> = new Set([
+  'chatgpt-user',
+  'perplexity-user',
+]);
+
+const MAX_PATH_LENGTH = 200;
+
+export function crawlerPathKey(date: string, label: string): string {
+  return `analytics:crawler-path:${date}:${label}`;
+}
+
 /** Return the canonical crawler label for a User-Agent, or null if not a known bot. */
 export function identifyCrawler(userAgent: string | null | undefined): string | null {
   if (!userAgent) return null;
@@ -85,10 +105,11 @@ export function identifyCrawler(userAgent: string | null | undefined): string | 
 }
 
 /**
- * Count a page-path request from a known crawler. Fire-and-forget: never
- * awaited, never throws, never blocks a response.
+ * Count a page-path request from a known crawler, plus the path itself for
+ * PATH_TRACKED_CRAWLERS. Fire-and-forget: never awaited, never throws, never
+ * blocks a response.
  */
-export function incrementCrawlerHit(userAgent: string | null | undefined): void {
+export function incrementCrawlerHit(userAgent: string | null | undefined, pathname?: string): void {
   const label = identifyCrawler(userAgent);
   if (!label) return;
 
@@ -105,5 +126,18 @@ export function incrementCrawlerHit(userAgent: string | null | undefined): void 
       }
     },
     () => {} // Silently ignore errors
+  );
+
+  if (!pathname || !PATH_TRACKED_CRAWLERS.has(label)) return;
+
+  const pathKey = crawlerPathKey(date, label);
+  client.zincrby(pathKey, 1, pathname.slice(0, MAX_PATH_LENGTH)).then(
+    score => {
+      // A path's first hit of the day (re)sets the TTL; repeats cost nothing extra.
+      if (score === 1) {
+        client.expire(pathKey, TTL_SECONDS).catch(() => {});
+      }
+    },
+    () => {}
   );
 }
