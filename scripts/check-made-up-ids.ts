@@ -94,4 +94,7 @@ async function main(): Promise<void> {
   process.exit(failures.length ? 1 : 0);
 }
 
-main();
+main().catch(error => {
+  console.error(error);
+  process.exit(1);
+});

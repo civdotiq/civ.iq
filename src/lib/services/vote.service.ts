@@ -737,7 +737,7 @@ export function senateRollAbsentFromMenu(
 ): boolean {
   const syncedAt = Date.parse(menu.updatedAt);
   // The Record issue for a day covers that whole day.
-  const recordThrough = record ? Date.parse(`${record.throughDate}T23:59:59-05:00`) : NaN;
+  const recordThrough = record ? Date.parse(`${record.throughDate}T23:59:59-05:00`) : Number.NaN;
   const knownAt = Math.max(
     Number.isFinite(syncedAt) ? syncedAt : -Infinity,
     Number.isFinite(recordThrough) ? recordThrough : -Infinity
