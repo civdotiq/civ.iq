@@ -870,8 +870,9 @@ export async function committeeFilesCheckedAt(): Promise<string | null> {
       cache.get<string>(fetchedAtKey(key)).catch(() => null)
     )
   );
-  if (times.some(t => !t || Number.isNaN(Date.parse(t)))) return null;
-  return (times as string[]).reduce((a, b) => (Date.parse(b) < Date.parse(a) ? b : a));
+  const valid = times.filter((t): t is string => !!t && !Number.isNaN(Date.parse(t)));
+  if (valid.length !== times.length) return null;
+  return valid.sort((a, b) => Date.parse(a) - Date.parse(b))[0] ?? null;
 }
 
 /**
