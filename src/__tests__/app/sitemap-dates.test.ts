@@ -9,6 +9,7 @@
  * their Wikipedia text, and bills fell back to "now" because the code read
  * `latestAction.date` where Congress.gov sends `latestAction.actionDate`.
  * A date is only listed when the data gives one for the page's facts.
+ * Profiles are dated since 2026-10-30 (real-dates PR 3).
  */
 
 jest.mock('@/lib/questions/stock-trades', () => ({
@@ -16,6 +17,14 @@ jest.mock('@/lib/questions/stock-trades', () => ({
 }));
 jest.mock('@/lib/data-sources/bill-policy-areas/load', () => ({
   getBillsByPolicyArea: jest.fn().mockResolvedValue({ total: 1 }),
+}));
+jest.mock('@/features/representatives/services/profile-dates', () => ({
+  ...jest.requireActual('@/features/representatives/services/profile-dates'),
+  chamberVoteDates: jest.fn(async (chamber: string) => ({
+    source: 'votes',
+    date: chamber === 'Senate' ? '2026-09-30' : '2026-09-16',
+    checkedAt: '2026-10-30T14:17:12Z',
+  })),
 }));
 jest.mock('@/lib/sitemap/state-district-urls', () => ({
   firstDistrictPerChamber: jest.fn().mockResolvedValue([{ chamber: 'upper', district: '1' }]),
@@ -78,9 +87,16 @@ describe('sitemap lastModified', () => {
     expect(undated?.lastModified).toBeUndefined();
   });
 
-  it('lists committees, profiles and districts without a date', async () => {
+  it("dates a profile by its chamber's newest roll call, or a newer roster change", async () => {
     const entries = await sitemap();
-    for (const path of ['/committee/SSJU', '/representative/S001208', '/districts/MI-06']) {
+    const profile = entries.find(e => e.url.endsWith('/representative/S001208'));
+    // Slotkin's roster entry last changed 2025-04-04; the Senate voted 2026-09-30.
+    expect(profile?.lastModified).toEqual(new Date('2026-09-30'));
+  });
+
+  it('lists committees and districts without a date', async () => {
+    const entries = await sitemap();
+    for (const path of ['/committee/SSJU', '/districts/MI-06']) {
       const entry = entries.find(e => e.url.endsWith(path));
       expect(entry).toBeDefined();
       expect(entry?.lastModified).toBeUndefined();

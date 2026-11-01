@@ -41,6 +41,9 @@ interface DataProvenanceProps {
   variant?: 'line' | 'block';
   /** Block variant: a note under the list, e.g. how AI text is labeled. */
   note?: ReactNode;
+  /** Block variant: the dates on the collapsed line, in place of the first
+   *  source's date (profiles: "Latest record: … · Checked: …"). */
+  headline?: string;
 }
 
 /**
@@ -56,9 +59,12 @@ export const DataProvenance: FC<DataProvenanceProps> = ({
   className = '',
   variant = 'line',
   note,
+  headline,
 }) => {
   if (variant === 'block') {
-    return <SourcesAndMethod sources={sources} note={note} className={className} />;
+    return (
+      <SourcesAndMethod sources={sources} note={note} className={className} headline={headline} />
+    );
   }
 
   const available = sources.filter(s => s.status === 'available');
@@ -135,10 +141,12 @@ function SourcesAndMethod({
   sources,
   note,
   className,
+  headline: givenHeadline,
 }: {
   sources: DataSource[];
   note?: ReactNode;
   className: string;
+  headline?: string;
 }) {
   const allNames = [...new Set(sources.map(s => s.shortName ?? s.name))];
   const names =
@@ -148,7 +156,7 @@ function SourcesAndMethod({
           `and ${allNames.length - MAX_SUMMARY_NAMES + 2} more`,
         ]
       : allNames;
-  const headline = sources.find(s => s.asOf)?.asOf;
+  const headline = givenHeadline || sources.find(s => s.asOf)?.asOf;
 
   const licenses = new Map<string, { href?: string; names: string[] }>();
   for (const source of sources) {

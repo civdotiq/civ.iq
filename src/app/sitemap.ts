@@ -29,6 +29,10 @@ import { buildBillUrl } from '@/lib/helpers/url-builders';
 import { latestCompleteWeekId, previousWeekIds } from '@/lib/digest/week';
 import { PUBLISHED_SECTORS } from '@/lib/industry/published-sectors';
 import { houseVoteUrls, senateVoteUrls } from '@/lib/sitemap/vote-urls';
+import {
+  chamberVoteDates,
+  rosterChangedOn,
+} from '@/features/representatives/services/profile-dates';
 
 const BASE_URL = 'https://civdotiq.org';
 
@@ -143,15 +147,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (res.ok) {
       const data = await res.json();
       const representatives = data.representatives || data || [];
+      // A profile's newest dated fact: its chamber's newest roll call (every
+      // member's vote list carries it) or the member's roster change, if newer.
+      const [houseVotes, senateVotes] = await Promise.all([
+        chamberVoteDates('House'),
+        chamberVoteDates('Senate'),
+      ]);
 
       for (const rep of representatives) {
         if (rep.bioguideId) {
+          const voteDate = (rep.chamber === 'Senate' ? senateVotes : houseVotes).date;
+          const rosterDate = rosterChangedOn(rep.bioguideId);
+          const latestRecord =
+            voteDate && rosterDate
+              ? voteDate > rosterDate
+                ? voteDate
+                : rosterDate
+              : voteDate || rosterDate;
           // Senators get slightly higher priority (more searches)
           const isSenator = rep.chamber === 'Senate';
           const isHighPopState = HIGH_POP_STATES.includes(rep.state);
 
           entries.push({
             url: `${BASE_URL}/representative/${rep.bioguideId}`,
+            lastModified: sourceDate(latestRecord),
             changeFrequency: 'weekly',
             priority: isSenator ? 0.95 : isHighPopState ? 0.9 : 0.85,
           });
