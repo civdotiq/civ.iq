@@ -25,6 +25,7 @@
 import { cache } from '@/lib/cache';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import logger from '@/lib/logging/simple-logger';
+import { dayOf } from '@/lib/questions/question-dates';
 import type { DigestIssue } from './types';
 
 export interface DigestIssueDates {
@@ -40,17 +41,6 @@ export interface DigestIssueDates {
 
 /** Longest a key may live (agreed rule); well past the 30-day issue cache. */
 const ISSUE_DATES_TTL = 90 * 24 * 60 * 60;
-
-const DAY = /^\d{4}-\d{2}-\d{2}/;
-
-/** The calendar day in Washington of a timestamp; a bare date as is. */
-function dayOf(value: string | null | undefined): string | null {
-  if (!value || !DAY.test(value)) return null;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-  const time = Date.parse(value);
-  if (Number.isNaN(time)) return null;
-  return new Date(time).toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-}
 
 export function issueDatesKey(state: string, weekId: string): string {
   return `digest:issue-dates:v1:${state.toUpperCase()}:${weekId}`;

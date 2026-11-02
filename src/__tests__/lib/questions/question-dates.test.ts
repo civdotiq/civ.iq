@@ -84,6 +84,11 @@ describe('dayOf and newestDay', () => {
     // 03:00 UTC on Oct 27 is still Oct 26 in Washington.
     expect(dayOf('2026-10-27T03:00:00Z')).toBe('2026-10-26');
     expect(dayOf('2026-10-26T11:35:18-04:00')).toBe('2026-10-26');
+    expect(dayOf('2026-10-26T23:35:18+0000')).toBe('2026-10-26');
+    // A zoneless timestamp (FEC receipt dates) keeps the day its source wrote,
+    // whatever zone the server runs in (UTC on Vercel and CI).
+    expect(dayOf('2026-10-24T00:00:00')).toBe('2026-10-24');
+    expect(dayOf('2026-10-24T00:00:00.000')).toBe('2026-10-24');
     expect(dayOf('not a date')).toBeNull();
     expect(dayOf(undefined)).toBeNull();
   });

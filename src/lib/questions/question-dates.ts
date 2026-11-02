@@ -48,10 +48,19 @@ export type QuestionDates = ProfileDates;
 
 const DAY = /^\d{4}-\d{2}-\d{2}/;
 
-/** The calendar day in Washington of a timestamp; a bare date as is. */
+/** A timestamp that names its zone (Z or ±hh:mm); a bare one is wall-clock time. */
+const ZONED = /(Z|[+-]\d{2}:?\d{2})$/i;
+
+/**
+ * The calendar day of a value: a bare date as is; a zoneless timestamp (FEC
+ * receipt dates, Congress.gov meeting times) by the day its source wrote,
+ * since the server's own zone (UTC on Vercel) says nothing about it; a zoned
+ * timestamp by its day in Washington.
+ */
 export function dayOf(value: string | null | undefined): string | null {
   if (!value || !DAY.test(value)) return null;
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  if (!ZONED.test(value)) return Number.isNaN(Date.parse(value)) ? null : value.slice(0, 10);
   const time = Date.parse(value);
   if (Number.isNaN(time)) return null;
   return new Date(time).toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
