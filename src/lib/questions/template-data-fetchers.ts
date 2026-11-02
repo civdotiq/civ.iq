@@ -474,7 +474,8 @@ export interface CommitteeActivityData {
   meetings: CommitteeActivityMeeting[];
   bills: CommitteeActivityBill[];
   jurisdiction: string;
-  fetchedAt: string;
+  /** When the saved hearing list was read; null when none is saved. */
+  fetchedAt: string | null;
 }
 
 export async function fetchCommitteeActivityData(

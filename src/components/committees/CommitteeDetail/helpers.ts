@@ -1,7 +1,7 @@
 import type { Committee, CommitteeMember } from '@/types/committee';
 import type { PartyKey } from './types';
 
-export function formatDate(iso: string | undefined): string {
+export function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';

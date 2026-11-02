@@ -28,8 +28,17 @@ import { houseDistrictIds } from '@/lib/districts/known-districts';
 import { resolveSeatId } from '@/lib/districts/district-details';
 import { districtLatestRecord } from '@/lib/districts/district-dates';
 import { committeeChangedOn } from '@/lib/committees/committee-dates';
+import { getCorpusMeta } from '@/lib/data-sources/lda-corpus/load';
+import {
+  committeeLobbyingDates,
+  readQuestionDates,
+  topicBillsDates,
+  type SavedDateSlug,
+  type SavedQuestionDates,
+} from '@/lib/questions/question-dates';
 import { buildBillUrl } from '@/lib/helpers/url-builders';
 import { latestCompleteWeekId, previousWeekIds } from '@/lib/digest/week';
+import { issueModifiedOn, readIssueDates } from '@/lib/digest/issue-dates';
 import { PUBLISHED_SECTORS } from '@/lib/industry/published-sectors';
 import { houseVoteUrls, senateVoteUrls } from '@/lib/sitemap/vote-urls';
 import {
@@ -117,6 +126,36 @@ function sourceDate(value: unknown): Date | undefined {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}/.test(value)) return undefined;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+/** Question templates whose pages save their dates for the sitemap to read back. */
+const SAVED_REP_SLUGS = ['campaign-contributions', 'bills-sponsored', 'stock-trades'] as const;
+
+/**
+ * A representative question page's Latest record, as the page itself shows
+ * it (question-dates.ts): the chamber's newest roll call for voting-record,
+ * the roster change for contact-info, and the page's saved date for the
+ * templates whose data lives in per-member caches. Donor-voting-alignment
+ * carries no date.
+ */
+function repQuestionDate(
+  slug: string,
+  bioguideId: string,
+  voteDate: string | null,
+  saved: Record<SavedDateSlug, Map<string, SavedQuestionDates>>
+): string | null {
+  switch (slug) {
+    case 'voting-record':
+      return voteDate;
+    case 'contact-info':
+      return rosterChangedOn(bioguideId);
+    case 'campaign-contributions':
+    case 'bills-sponsored':
+    case 'stock-trades':
+      return saved[slug].get(bioguideId.toUpperCase())?.latestRecord ?? null;
+    default:
+      return null;
+  }
 }
 
 // Type the imported data
@@ -208,12 +247,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         (rep.chamber === 'Senate' ? tradeMembers?.senate : tradeMembers?.house)?.includes(
           rep.bioguideId
         ) ?? false;
+      // Dates the pages saved when they rendered (question-dates.ts), one
+      // batch read per template. A page not rendered since is undated.
+      const repIds: string[] = representatives
+        .map((rep: { bioguideId?: string }) => rep.bioguideId)
+        .filter((id: string | undefined): id is string => Boolean(id));
+      const savedLists = await Promise.all(
+        SAVED_REP_SLUGS.map(qSlug => readQuestionDates(qSlug, repIds))
+      );
+      const saved: Record<SavedDateSlug, Map<string, SavedQuestionDates>> = {
+        'campaign-contributions': savedLists[0] ?? new Map(),
+        'bills-sponsored': savedLists[1] ?? new Map(),
+        'stock-trades': savedLists[2] ?? new Map(),
+        'committee-activity': new Map(),
+      };
       for (const rep of representatives) {
         if (rep.bioguideId) {
+          const voteDate = (rep.chamber === 'Senate' ? senateVotes : houseVotes).date;
           for (const qSlug of repSlugs) {
             if (qSlug === 'stock-trades' && !hasTrades(rep)) continue;
             entries.push({
               url: `${BASE_URL}/ask/${qSlug}/${rep.bioguideId}`,
+              lastModified: sourceDate(repQuestionDate(qSlug, rep.bioguideId, voteDate, saved)),
               changeFrequency: 'weekly',
               priority: 0.75,
             });
@@ -228,22 +283,47 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Topic question pages: topic-bills × policy areas that have bills in the
   // corpus. An area with none renders empty and is noindexed, so listing it
   // would only invite a soft 404. Corpus unavailable → list none.
+  // Dated by the newest action among the ten bills the page shows (the same
+  // corpus read the page makes).
   for (const area of getAllPolicyAreas()) {
-    const areaBills = await getBillsByPolicyArea(area, 0);
+    const areaBills = await getBillsByPolicyArea(area, 10);
     if (!areaBills?.total) continue;
     entries.push({
       url: `${BASE_URL}/ask/topic-bills/${slugifyPolicyArea(area)}`,
+      lastModified: sourceDate(topicBillsDates(areaBills).latestRecord),
       changeFrequency: 'weekly',
       priority: 0.7,
     });
   }
 
-  // Committee question pages: committee templates × all committees
+  // Committee question pages: committee templates × all committees. Members
+  // pages date like the committee page; activity pages by the date they
+  // saved when rendered; lobbying pages by the LDA corpus's newest filing.
   const committeeSlugs = getTemplatesByEntityType('committee').map(t => t.slug);
-  for (const code of Object.keys(committees)) {
+  const committeeCodes = Object.keys(committees);
+  const [activityDates, lobbyingDate] = await Promise.all([
+    readQuestionDates('committee-activity', committeeCodes),
+    getCorpusMeta()
+      .then(meta => committeeLobbyingDates(meta).latestRecord)
+      .catch(() => null),
+  ]);
+  const committeeQuestionDate = (qSlug: string, code: string): string | null => {
+    switch (qSlug) {
+      case 'committee-members':
+        return committeeChangedOn(code);
+      case 'committee-activity':
+        return activityDates.get(code.toUpperCase())?.latestRecord ?? null;
+      case 'committee-lobbying':
+        return lobbyingDate;
+      default:
+        return null;
+    }
+  };
+  for (const code of committeeCodes) {
     for (const qSlug of committeeSlugs) {
       entries.push({
         url: `${BASE_URL}/ask/${qSlug}/${code}`,
+        lastModified: sourceDate(committeeQuestionDate(qSlug, code)),
         changeFrequency: 'weekly',
         priority: 0.7,
       });
@@ -444,8 +524,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // reachable through each state's archive page (which the crawler follows),
   // so this is a recency window, not the full history. Canonical digest URLs
   // are lowercase (/digest/{state}/{week}); keep in sync with the route.
+  // An issue covers a finished week, so it is dated only when a re-assembly
+  // changed its content (issue-dates.ts), the same rule as its dateModified.
+  // The archive pages are hubs and carry no date.
   const DIGEST_ARCHIVE_WEEKS = 12;
   const digestWeeks = previousWeekIds(latestCompleteWeekId(), DIGEST_ARCHIVE_WEEKS);
+  const issueDates = await readIssueDates(
+    ALL_REGIONS.flatMap(state => digestWeeks.map(weekId => ({ state, weekId })))
+  );
   for (const state of ALL_REGIONS) {
     const isHighPop = HIGH_POP_STATES.includes(state);
     const code = state.toLowerCase();
@@ -457,6 +543,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const week of digestWeeks) {
       entries.push({
         url: `${BASE_URL}/digest/${code}/${week}`,
+        lastModified: sourceDate(issueModifiedOn(issueDates.get(`${state}:${week}`) ?? null)),
         changeFrequency: 'monthly',
         priority: isHighPop ? 0.6 : 0.5,
       });

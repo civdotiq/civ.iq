@@ -17,6 +17,8 @@ interface QuestionLayoutProps {
   category: string;
   /** Answer-first opening under the question, in the server HTML. */
   lede?: string | null;
+  /** "Latest record: … · Checked: …" (profileDatesLine); omitted when no date is known. */
+  datesLine?: string | null;
   children: ReactNode;
   relatedQuestions: ReactNode;
 }
@@ -25,6 +27,7 @@ export function QuestionLayout({
   question,
   category,
   lede,
+  datesLine,
   children,
   relatedQuestions,
 }: QuestionLayoutProps) {
@@ -34,8 +37,20 @@ export function QuestionLayout({
         <p className="type-xs aicher-heading-wide text-gray-500 mb-1">{category.toUpperCase()}</p>
         <h1 className="type-2xl font-semibold text-black mb-grid-4">{question}</h1>
         {lede && (
-          <p className="-mt-grid-2 mb-grid-4 max-w-3xl text-base text-gray-700 leading-relaxed">
+          <p
+            className={`-mt-grid-2 max-w-3xl text-base text-gray-700 leading-relaxed ${
+              datesLine ? 'mb-grid-1' : 'mb-grid-4'
+            }`}
+          >
             {lede}
+          </p>
+        )}
+        {datesLine && (
+          <p
+            className={`type-xs text-gray-500 tracking-[0.02em] mb-grid-4 ${lede ? '' : '-mt-grid-2'}`}
+            data-testid="question-dates"
+          >
+            {datesLine}
           </p>
         )}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">{children}</div>

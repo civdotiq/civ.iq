@@ -72,12 +72,28 @@ import {
 } from '@/components/questions/CommitteeMembersAnswer';
 import { CommitteeActivityAnswer } from '@/components/questions/CommitteeActivityAnswer';
 import { CommitteeLobbyingAnswer } from '@/components/questions/CommitteeLobbyingAnswer';
-import { getCommitteeCorpusTotals } from '@/lib/data-sources/lda-corpus/load';
+import { getCommitteeCorpusTotals, getCorpusMeta } from '@/lib/data-sources/lda-corpus/load';
+import { getBillsByPolicyArea } from '@/lib/data-sources/bill-policy-areas/load';
+import { congressTradingMonitor } from '@/lib/data-sources/senate-disclosure-service';
 import { AskResultPage, type AskEntity } from '@/components/ask/AskResultPage';
 import {
   getSenateVoteFreshness,
   type SenateVoteFreshness,
 } from '@/features/representatives/services/senate-vote-freshness';
+import { profileDatesLine } from '@/lib/provenance/profile-dates-line';
+import {
+  billsSponsoredDates,
+  campaignContributionsDates,
+  committeeActivityDates,
+  committeeLobbyingDates,
+  committeeMembersDates,
+  contactInfoDates,
+  saveQuestionDates,
+  stockTradesDates,
+  topicBillsDates,
+  votingRecordDates,
+  type QuestionDates,
+} from '@/lib/questions/question-dates';
 
 export const revalidate = 3600;
 
@@ -401,7 +417,14 @@ export default async function QuestionPage({ params }: PageProps) {
 
     const question = fillPattern(template.questionPattern, { name: policyArea });
     const relatedQuestions = computeRelatedQuestions(slug, entityId, policyArea);
-    const topicBills = await fetchTopicBillsData(policyArea);
+    // The page's bills are the corpus's newest ten for the area; its dates
+    // (newest action, corpus build) come from the same corpus read the
+    // sitemap uses, so the two agree.
+    const [topicBills, corpusBills] = await Promise.all([
+      fetchTopicBillsData(policyArea),
+      getBillsByPolicyArea(policyArea, 10),
+    ]);
+    const dates: QuestionDates = topicBillsDates(corpusBills);
 
     const results = topicBills.results;
     const lede = results
@@ -432,7 +455,7 @@ export default async function QuestionPage({ params }: PageProps) {
       const entity: AskEntity = { type: 'topic', name: policyArea, slug: entityId };
       return (
         <>
-          <FAQPageSchema question={question} answer={faqAnswer} />
+          <FAQPageSchema question={question} answer={faqAnswer} dateModified={dates.latestRecord} />
           <AskResultPage
             slug={slug}
             category={template.category}
@@ -450,11 +473,12 @@ export default async function QuestionPage({ params }: PageProps) {
 
     return (
       <>
-        <FAQPageSchema question={question} answer={faqAnswer} />
+        <FAQPageSchema question={question} answer={faqAnswer} dateModified={dates.latestRecord} />
         <QuestionLayout
           question={question}
           category={template.category}
           lede={lede}
+          datesLine={profileDatesLine(dates)}
           relatedQuestions={<RelatedQuestions questions={relatedQuestions} />}
         >
           {topicBills.results ? (
@@ -501,20 +525,30 @@ export default async function QuestionPage({ params }: PageProps) {
     let committeeActivity: CommitteeActivityData | undefined;
     let committeLobbying: CommitteeLobbyingData | undefined;
     let committeeCorpus: Awaited<ReturnType<typeof getCommitteeCorpusTotals>> = null;
+    // Latest record and Checked for the dates line and dateModified, from the
+    // data the page already has (question-dates.ts). Never the render time.
+    let dates: QuestionDates | null = null;
 
     switch (slug) {
       case 'committee-members':
         committeeMembers = { committee };
+        dates = await committeeMembersDates(entityId);
         break;
       case 'committee-activity':
         committeeActivity = await fetchCommitteeActivityData(entityId, committee.chamber);
+        dates = committeeActivityDates(committeeActivity);
+        saveQuestionDates('committee-activity', entityId, dates);
         break;
-      case 'committee-lobbying':
-        [committeLobbying, committeeCorpus] = await Promise.all([
+      case 'committee-lobbying': {
+        let corpusMeta: Awaited<ReturnType<typeof getCorpusMeta>> = null;
+        [committeLobbying, committeeCorpus, corpusMeta] = await Promise.all([
           fetchCommitteeLobbyingData(entityId),
           getCommitteeCorpusTotals(entityId),
+          getCorpusMeta(),
         ]);
+        dates = committeeLobbyingDates(corpusMeta);
         break;
+      }
       default:
         notFound();
     }
@@ -608,7 +642,11 @@ export default async function QuestionPage({ params }: PageProps) {
       };
       return (
         <>
-          <FAQPageSchema question={question} answer={faqAnswer} />
+          <FAQPageSchema
+            question={question}
+            answer={faqAnswer}
+            dateModified={dates?.latestRecord}
+          />
           <AskResultPage
             slug={slug}
             category={template.category}
@@ -626,11 +664,12 @@ export default async function QuestionPage({ params }: PageProps) {
 
     return (
       <>
-        <FAQPageSchema question={question} answer={faqAnswer} />
+        <FAQPageSchema question={question} answer={faqAnswer} dateModified={dates?.latestRecord} />
         <QuestionLayout
           question={question}
           category={template.category}
           lede={lede}
+          datesLine={profileDatesLine(dates)}
           relatedQuestions={<RelatedQuestions questions={relatedQuestions} />}
         >
           {podBody}
@@ -667,6 +706,10 @@ export default async function QuestionPage({ params }: PageProps) {
   let senateVoteFreshness: SenateVoteFreshness | null = null;
   let billsSponsored: BillsSponsoredData | undefined;
   let stockTrades: StockTradesData | undefined;
+  // Latest record and Checked for the dates line and dateModified, read from
+  // the data the page already has or from stored values (question-dates.ts).
+  // donor-voting-alignment streams in later and carries its own "Data as of".
+  let dates: QuestionDates | null = null;
 
   switch (slug) {
     case 'campaign-contributions':
@@ -674,20 +717,38 @@ export default async function QuestionPage({ params }: PageProps) {
       if (campaign.financeUnavailable || campaign.industriesUnavailable) {
         await markFecDegradedRender();
       }
+      dates = campaignContributionsDates(campaign);
+      saveQuestionDates('campaign-contributions', id, dates);
       break;
     case 'voting-record':
-      [voting, senateVoteFreshness] = await Promise.all([
+      [voting, senateVoteFreshness, dates] = await Promise.all([
         fetchVotingRecordData(id, rep.chamber),
         rep.chamber === 'Senate' ? getSenateVoteFreshness() : Promise.resolve(null),
+        votingRecordDates(rep.chamber),
       ]);
       break;
     case 'bills-sponsored':
       billsSponsored = await fetchBillsSponsoredData(id);
+      dates = billsSponsoredDates(billsSponsored);
+      saveQuestionDates('bills-sponsored', id, dates);
       break;
-    case 'stock-trades':
-      stockTrades = await fetchStockTradesData(id, rep.chamber);
+    case 'stock-trades': {
+      let tradesCheckedAt: string | null = null;
+      [stockTrades, tradesCheckedAt] = await Promise.all([
+        fetchStockTradesData(id, rep.chamber),
+        congressTradingMonitor
+          .getTradesCheckedAt(id, rep.chamber === 'Senate' ? 'senate' : 'house')
+          .catch(() => null),
+      ]);
+      if (!stockTrades.unavailable) {
+        dates = stockTradesDates(stockTrades.trades, tradesCheckedAt);
+        saveQuestionDates('stock-trades', id, dates);
+      }
       break;
+    }
     case 'contact-info':
+      dates = await contactInfoDates(id);
+      break;
     case 'donor-voting-alignment':
       break;
     default:
@@ -832,7 +893,7 @@ export default async function QuestionPage({ params }: PageProps) {
     };
     return (
       <>
-        <FAQPageSchema question={question} answer={faqAnswer} />
+        <FAQPageSchema question={question} answer={faqAnswer} dateModified={dates?.latestRecord} />
         <AskResultPage
           slug={slug}
           category={template.category}
@@ -850,11 +911,12 @@ export default async function QuestionPage({ params }: PageProps) {
 
   return (
     <>
-      <FAQPageSchema question={question} answer={faqAnswer} />
+      <FAQPageSchema question={question} answer={faqAnswer} dateModified={dates?.latestRecord} />
       <QuestionLayout
         question={question}
         category={template.category}
         lede={lede}
+        datesLine={profileDatesLine(dates)}
         relatedQuestions={<RelatedQuestions questions={relatedQuestions} />}
       >
         {podBody}

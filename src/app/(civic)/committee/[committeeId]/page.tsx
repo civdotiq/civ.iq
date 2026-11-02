@@ -593,7 +593,8 @@ async function RedesignedCommitteeContent({
   let activity: CommitteeActivityResult = {
     bills: [],
     meetings: [],
-    fetchedAt: new Date().toISOString(),
+    // No saved hearing list means no "As of" date: never the render time.
+    fetchedAt: null,
   };
   try {
     activity = await fetchCommitteeActivity(committeeId, committee.chamber);

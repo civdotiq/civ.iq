@@ -454,9 +454,19 @@ export function subcommitteeName(committees: CongressCommittee[], thomasId: stri
 /**
  * Fetch current legislators data
  */
+const LEGISLATORS_KEY = 'congress-legislators-current';
+/** persistentCachedFetch's default TTL; the download time is saved beside the data for as long. */
+const LEGISLATORS_TTL = 86400;
+
+/** When legislators-current.yaml was last downloaded, as saved with it, or null. */
+export async function legislatorsFileCheckedAt(): Promise<string | null> {
+  const time = await cache.get<string>(fetchedAtKey(LEGISLATORS_KEY)).catch(() => null);
+  return time && !Number.isNaN(Date.parse(time)) ? time : null;
+}
+
 async function fetchCurrentLegislators(): Promise<CongressLegislator[]> {
   return persistentCachedFetch(
-    'congress-legislators-current',
+    LEGISLATORS_KEY,
     async () => {
       try {
         logger.info('Fetching current legislators from congress-legislators');
@@ -481,6 +491,7 @@ async function fetchCurrentLegislators(): Promise<CongressLegislator[]> {
           count: legislators.length,
         });
 
+        saveFetchedAt(LEGISLATORS_KEY, LEGISLATORS_TTL);
         return legislators;
       } catch (error) {
         logger.error('Error fetching current legislators', error as Error, {

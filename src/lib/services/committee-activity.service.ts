@@ -79,10 +79,11 @@ export interface CommitteeActivityBill {
 export interface CommitteeActivityResult {
   meetings: CommitteeActivityMeeting[];
   bills: CommitteeActivityBill[];
-  // ISO timestamp of when this data was fetched from Congress.gov, so the
-  // UI can render an "As of {date}" caveat. Bills listings skew sparse for
-  // smaller committees — the caveat is the honest way to explain why.
-  fetchedAt: string;
+  // ISO timestamp of when the served hearing list was read from Congress.gov,
+  // so the UI can render an "As of {date}" caveat. Bills listings skew sparse
+  // for smaller committees — the caveat is the honest way to explain why.
+  // Null when no list is saved (never the render time).
+  fetchedAt: string | null;
 }
 
 /**
@@ -216,11 +217,12 @@ export async function fetchCommitteeActivity(
     fetchCommitteeBills(committeeId, chamber).catch(() => []),
   ]);
   // "As of" is when the served hearing list was read, which can be up to the
-  // stale window old; fall back to now when there is no saved list.
+  // stale window old. With no saved list there is no date: the render time
+  // is never passed off as one.
   return {
     meetings: meetings.meetings,
     bills,
-    fetchedAt: new Date(meetings.fetchedAt ?? Date.now()).toISOString(),
+    fetchedAt: meetings.fetchedAt === null ? null : new Date(meetings.fetchedAt).toISOString(),
   };
 }
 

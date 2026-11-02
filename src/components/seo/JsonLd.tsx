@@ -396,16 +396,19 @@ export function BreadcrumbSchema({ items }: BreadcrumbSchemaProps) {
 interface FAQPageSchemaProps {
   question: string;
   answer: string;
+  /** YYYY-MM-DD of the page's newest dated fact (its visible "Latest record"); omitted when unknown. */
+  dateModified?: string | null;
 }
 
 /**
  * FAQPage schema for question-template pages.
  * Renders a single Q&A pair as structured data for rich results.
  */
-export function FAQPageSchema({ question, answer }: FAQPageSchemaProps) {
+export function FAQPageSchema({ question, answer, dateModified }: FAQPageSchemaProps) {
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
+    ...(dateModified ? { dateModified } : {}),
     mainEntity: [
       {
         '@type': 'Question',
