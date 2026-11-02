@@ -17,7 +17,41 @@ jest.mock('@/lib/questions/stock-trades', () => ({
   getMembersWithStockTrades: jest.fn().mockResolvedValue({ senate: [], house: [] }),
 }));
 jest.mock('@/lib/data-sources/bill-policy-areas/load', () => ({
-  getBillsByPolicyArea: jest.fn().mockResolvedValue({ total: 1 }),
+  getBillsByPolicyArea: jest.fn().mockResolvedValue({
+    total: 1,
+    congress: 119,
+    generatedAt: '2026-10-28T13:35:01.291Z',
+    bills: [
+      { id: '119-hr-1', introducedDate: '2026-01-03', latestActionDate: '2026-10-22' },
+      { id: '119-hr-2', introducedDate: '2026-02-03', latestActionDate: null },
+    ],
+  }),
+}));
+jest.mock('@/lib/data-sources/lda-corpus/load', () => ({
+  getCorpusMeta: jest.fn().mockResolvedValue({
+    quarters: ['2026-Q2', '2026-Q3'],
+    generatedAt: '2026-10-26T15:49:15.771Z',
+    latestFilingPosted: '2026-10-26T11:35:18-04:00',
+  }),
+}));
+const savedQuestionDates = new Map<string, Map<string, unknown>>();
+const savedIssueDates = new Map<string, unknown>();
+jest.mock('@/lib/cache/redis-client', () => ({
+  getRedisCache: () => ({
+    mget: jest.fn(async (keys: string[]) =>
+      keys.map(key => {
+        const question = /^question:dates:v1:([^:]+):(.+)$/.exec(key);
+        if (question)
+          return savedQuestionDates.get(question[1] ?? '')?.get(question[2] ?? '') ?? null;
+        return savedIssueDates.get(key) ?? null;
+      })
+    ),
+    get: jest.fn(async () => null),
+    set: jest.fn(async () => true),
+  }),
+}));
+jest.mock('@/features/representatives/services/congress.service', () => ({
+  legislatorsFileCheckedAt: jest.fn().mockResolvedValue(null),
 }));
 jest.mock('@/features/representatives/services/profile-dates', () => ({
   ...jest.requireActual('@/features/representatives/services/profile-dates'),
@@ -117,5 +151,71 @@ describe('sitemap lastModified', () => {
     expect(entries.find(e => e.url.endsWith('/committee/SSJU01'))?.lastModified).toEqual(
       new Date('2025-04-04')
     );
+  });
+
+  it('dates representative question pages the way each page dates itself', async () => {
+    savedQuestionDates.set(
+      'campaign-contributions',
+      new Map([['S001208', { latestRecord: '2026-10-14', checkedAt: '2026-10-31T20:00:00Z' }]])
+    );
+    const entries = await sitemap();
+    const find = (path: string) => entries.find(e => e.url.endsWith(path));
+    // voting-record: the chamber's newest roll call.
+    expect(find('/ask/voting-record/S001208')?.lastModified).toEqual(new Date('2026-09-30'));
+    expect(find('/ask/voting-record/D000624')?.lastModified).toEqual(new Date('2026-09-16'));
+    // contact-info: the member's roster change.
+    expect(find('/ask/contact-info/S001208')?.lastModified).toEqual(new Date('2025-04-04'));
+    // campaign-contributions: the date the page saved; undated until it renders.
+    expect(find('/ask/campaign-contributions/S001208')?.lastModified).toEqual(
+      new Date('2026-10-14')
+    );
+    expect(find('/ask/campaign-contributions/D000624')).toBeDefined();
+    expect(find('/ask/campaign-contributions/D000624')?.lastModified).toBeUndefined();
+    expect(find('/ask/bills-sponsored/S001208')?.lastModified).toBeUndefined();
+    // donor-voting-alignment carries no date.
+    expect(find('/ask/donor-voting-alignment/S001208')).toBeDefined();
+    expect(find('/ask/donor-voting-alignment/S001208')?.lastModified).toBeUndefined();
+    savedQuestionDates.clear();
+  });
+
+  it('dates topic and committee question pages from the corpora and the committee history', async () => {
+    const entries = await sitemap();
+    const topics = entries.filter(e => e.url.includes('/ask/topic-bills/'));
+    expect(topics.length).toBeGreaterThan(0);
+    // Newest action among the (mocked) bills shown.
+    expect(new Set(topics.map(e => e.lastModified?.toString()))).toEqual(
+      new Set([new Date('2026-10-22').toString()])
+    );
+    const find = (path: string) => entries.find(e => e.url.endsWith(path));
+    expect(find('/ask/committee-members/SSJU')?.lastModified).toEqual(new Date('2026-07-15'));
+    // The LDA corpus's newest filing (mocked), posted Oct 26 Eastern.
+    expect(find('/ask/committee-lobbying/SSJU')?.lastModified).toEqual(new Date('2026-10-26'));
+    // No saved activity date for this committee.
+    expect(find('/ask/committee-activity/SSJU')).toBeDefined();
+    expect(find('/ask/committee-activity/SSJU')?.lastModified).toBeUndefined();
+  });
+
+  it('dates a digest issue only when a re-assembly changed it, and never its archive page', async () => {
+    // FIXED_NOW is Tue Oct 27; the newest complete week is 2026-W43 (Oct 19–25).
+    savedIssueDates.set('digest:issue-dates:v1:MI:2026-W42', {
+      latestRecord: '2026-10-17',
+      checkedAt: '2026-11-20T06:10:00.000Z',
+      modifiedAt: '2026-11-20T06:10:00.000Z',
+      fingerprint: 'f',
+    });
+    savedIssueDates.set('digest:issue-dates:v1:MI:2026-W43', {
+      latestRecord: '2026-10-24',
+      checkedAt: '2026-10-26T06:10:00.000Z',
+      modifiedAt: null,
+      fingerprint: 'g',
+    });
+    const entries = await sitemap();
+    const find = (path: string) => entries.find(e => e.url.endsWith(path));
+    expect(find('/digest/mi/2026-W42')?.lastModified).toEqual(new Date('2026-11-20'));
+    expect(find('/digest/mi/2026-W43')).toBeDefined();
+    expect(find('/digest/mi/2026-W43')?.lastModified).toBeUndefined();
+    expect(find('/digest/ca/2026-W43')?.lastModified).toBeUndefined();
+    expect(find('/digest/mi')?.lastModified).toBeUndefined();
+    savedIssueDates.clear();
   });
 });

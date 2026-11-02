@@ -23,7 +23,8 @@ interface CommitteeActivityAnswerProps {
   // ISO timestamp of when the data was fetched. Displayed as an
   // "As of {date}" caveat so citizens know coverage is bounded and can
   // judge whether sparse results reflect a quiet week or a lagging fetch.
-  fetchedAt?: string;
+  // Null when no saved list exists: then there is no "As of" line.
+  fetchedAt?: string | null;
 }
 
 // Markup meeting titles from Congress.gov often concatenate several bills
@@ -71,7 +72,7 @@ export function formatSponsor(raw: string): string {
   return `${displayFirst} ${lastName} (${bracket})`;
 }
 
-function formatFetchedAt(iso: string | undefined): string | null {
+function formatFetchedAt(iso: string | null | undefined): string | null {
   if (!iso) return null;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
@@ -102,7 +103,7 @@ function RecentHearingsPod({
   fetchedAt,
 }: {
   meetings: CommitteeActivityMeeting[];
-  fetchedAt?: string;
+  fetchedAt?: string | null;
 }) {
   const asOf = formatFetchedAt(fetchedAt);
   if (!meetings.length) {

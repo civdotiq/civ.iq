@@ -192,7 +192,13 @@ export function CommitteeDetail({ committee, activity, committeeId }: CommitteeD
           <CqStat
             label="Recent meetings"
             value={meetingsCount > 0 ? meetingsCount : '—'}
-            caption={meetingsCount > 0 ? `As of ${formatDate(activity.fetchedAt)}` : 'None listed'}
+            caption={
+              meetingsCount > 0
+                ? activity.fetchedAt
+                  ? `As of ${formatDate(activity.fetchedAt)}`
+                  : 'From Congress.gov'
+                : 'None listed'
+            }
             size={32}
           />
         </StatCell>

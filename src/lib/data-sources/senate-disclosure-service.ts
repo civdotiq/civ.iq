@@ -32,7 +32,7 @@
  * @see {@link https://disclosures-clerk.house.gov}
  */
 
-import { cachedFetch } from '@/lib/cache';
+import { cache, cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { ASSET_TYPE_CODES } from '@/types/stock-trades';
 import type { StockTrade } from '@/types/stock-trades';
@@ -45,6 +45,13 @@ const BASE_URL =
 
 /** Concurrency for per-filer fetches in bulk loads */
 const BULK_FETCH_CONCURRENCY = 6;
+/** Per-filer trade files are cached a day (the upstream dataset refreshes daily). */
+const FILER_FILE_TTL = 86400;
+
+/** Where a filer file's download time is saved, beside its data. */
+function tradesFetchedAtKey(filerId: string): string {
+  return `senate-trades:filer:${filerId}:fetched-at`;
+}
 
 /** Congress Trading Monitor filer index entry (filers.json) */
 interface CtmFiler {
@@ -284,10 +291,31 @@ export class SenateDisclosureService {
         }
 
         const data = (await response.json()) as CtmFilerFile;
+        // Save when this file was downloaded, beside it and for as long, so
+        // pages can say when the trades were checked (never the render time).
+        try {
+          Promise.resolve(
+            cache.set(tradesFetchedAtKey(filerId), new Date().toISOString(), FILER_FILE_TTL)
+          ).catch(() => {});
+        } catch {
+          // Bookkeeping only.
+        }
         return data.trades ?? [];
       },
-      86400 // 24 hours
+      FILER_FILE_TTL
     );
+  }
+
+  /**
+   * When a member's trade file was last downloaded, as saved with it, or null
+   * when the member has no file or no time is saved. No upstream call.
+   */
+  async getTradesCheckedAt(bioguideId: string, chamber: Chamber): Promise<string | null> {
+    const index = await this.fetchFilerIndex(chamber);
+    const filer = index[bioguideId.toUpperCase()];
+    if (!filer) return null;
+    const time = await cache.get<string>(tradesFetchedAtKey(filer.id)).catch(() => null);
+    return time && !Number.isNaN(Date.parse(time)) ? time : null;
   }
 
   /**

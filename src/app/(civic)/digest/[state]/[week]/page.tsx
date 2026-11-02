@@ -12,6 +12,8 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { RepLink, BillLink, VoteLink } from '@/components/shared/links/EntityLinks';
 import { getPartyTextClass } from '@/lib/party-colors';
 import { getDigestIssue } from '@/lib/digest/assemble';
+import { issueModifiedOn, recordIssueDates } from '@/lib/digest/issue-dates';
+import { profileDatesLine } from '@/lib/provenance/profile-dates-line';
 import { parseWeekId, formatWeekRange } from '@/lib/digest/week';
 import { getStateName, isValidStateCode } from '@/lib/data/us-states';
 import {
@@ -217,6 +219,10 @@ export default async function DigestIssuePage({ params }: PageProps) {
 
   const issue = await getDigestIssue(state, week);
   if (!issue) notFound();
+  // Latest record (newest fact in the issue) and Checked (when it was
+  // assembled) for the Sources line; a dateModified only when a re-assembly
+  // changed the content (issue-dates.ts). Never the render time.
+  const issueDates = await recordIssueDates(issue);
 
   const range = parseWeekId(issue.weekId);
   const label = range ? formatWeekRange(range) : issue.weekId;
@@ -255,6 +261,7 @@ export default async function DigestIssuePage({ params }: PageProps) {
         description={`Roll-call votes with every ${issue.stateName} position, bills that moved, and new FEC filings for ${label}. Public records with citations.`}
         url={canonicalUrl}
         datePublished={datePublished}
+        dateModified={issueModifiedOn(issueDates) ?? undefined}
         about={{ name: issue.stateName, type: 'AdministrativeArea' }}
       />
       <BreadcrumbSchema
@@ -535,11 +542,13 @@ export default async function DigestIssuePage({ params }: PageProps) {
             )}
           </section>
 
-          {/* Sources */}
+          {/* Sources, with the issue's Latest record and Checked dates */}
           <footer className="mt-grid-4 border-t-2 border-gray-200 pt-grid-2 text-xs text-gray-500">
             <p>
               Sources: Congress.gov, U.S. Senate roll-call records, House Clerk, Federal Election
-              Commission. Compiled {issue.generatedAt.slice(0, 10)}. Something look wrong?{' '}
+              Commission.
+              {profileDatesLine(issueDates) ? ` ${profileDatesLine(issueDates)}.` : ''} Something
+              look wrong?{' '}
               <Link href="/corrections" className="text-[#3ea2d4] underline hover:no-underline">
                 Report an error
               </Link>

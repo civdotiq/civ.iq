@@ -5,7 +5,8 @@ import { formatDate } from './helpers';
 
 interface HearingsPanelProps {
   meetings: CommitteeActivityMeeting[];
-  fetchedAt: string;
+  /** When the saved hearing list was read; null when none is saved (never the render time). */
+  fetchedAt: string | null;
 }
 
 export function HearingsPanel({ meetings, fetchedAt }: HearingsPanelProps) {
@@ -30,7 +31,7 @@ export function HearingsPanel({ meetings, fetchedAt }: HearingsPanelProps) {
   return (
     <section>
       <PanelHeader
-        eyebrow={`As of ${formatDate(fetchedAt)} · ${meetings.length} recent`}
+        eyebrow={`${fetchedAt ? `As of ${formatDate(fetchedAt)} · ` : ''}${meetings.length} recent`}
         title="Recent hearings &amp; markups"
         source={{ name: 'Congress.gov', id: 'committee meetings' }}
       />

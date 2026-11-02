@@ -16,7 +16,8 @@ export function partyKey(party: string | undefined): PartyKey {
 export interface CommitteeActivity {
   bills: CommitteeActivityBill[];
   meetings: CommitteeActivityMeeting[];
-  fetchedAt: string;
+  /** When the saved hearing list was read; null when none is saved (never the render time). */
+  fetchedAt: string | null;
 }
 
 export interface CommitteeDetailProps {
