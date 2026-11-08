@@ -1,6 +1,6 @@
 {
-  "throughCommit": "46b3d1480d8987b31761df9968d67400191e99d7",
-  "throughDate": "2026-09-02T17:40:14Z",
+  "throughCommit": "97261713f5dcd1b846050130cea77eded642268b",
+  "throughDate": "2026-11-04T18:42:47Z",
   "source": "unitedstates/congress-legislators committees-current.yaml + committee-membership-current.yaml git history (CC0-1.0)",
   "committees": {
     "HSAG": {
@@ -116,8 +116,8 @@
       "changedOn": "2026-03-13"
     },
     "HSBA": {
-      "fingerprint": "1714b4dbd47f34d8",
-      "changedOn": "2026-07-15"
+      "fingerprint": "b84e4647be760757",
+      "changedOn": "2026-11-04"
     },
     "HSBA04": {
       "fingerprint": "be6f5ff5736b3721",
@@ -176,24 +176,24 @@
       "changedOn": "2025-04-04"
     },
     "HSFA07": {
-      "fingerprint": "ba4a731adbd02f22",
-      "changedOn": "2026-07-15"
+      "fingerprint": "e73120f5b8316024",
+      "changedOn": "2026-11-04"
     },
     "HSFA13": {
-      "fingerprint": "7e9cd9127257e7d5",
-      "changedOn": "2026-07-15"
+      "fingerprint": "30999628b13bcfb1",
+      "changedOn": "2026-11-04"
     },
     "HSFA14": {
       "fingerprint": "fba852641e93bb29",
       "changedOn": "2026-02-03"
     },
     "HSFA16": {
-      "fingerprint": "84f39ecf59f54b38",
-      "changedOn": "2026-07-15"
+      "fingerprint": "6c8ea44f69b4f32b",
+      "changedOn": "2026-11-04"
     },
     "HSFA17": {
-      "fingerprint": "207363694d64891f",
-      "changedOn": "2026-04-21"
+      "fingerprint": "218aa73632aeed34",
+      "changedOn": "2026-11-04"
     },
     "HSFA19": {
       "fingerprint": "178a54d7a56cfbe3",
@@ -476,8 +476,8 @@
       "changedOn": "2026-07-15"
     },
     "HSVR03": {
-      "fingerprint": "b39c77fceaa443db",
-      "changedOn": "2026-09-02"
+      "fingerprint": "fcf97c4e2477b646",
+      "changedOn": "2026-11-04"
     },
     "HSVR08": {
       "fingerprint": "ef81b280c75b0847",
@@ -492,8 +492,8 @@
       "changedOn": "2025-04-04"
     },
     "HSVR11": {
-      "fingerprint": "289c972e33f5e12b",
-      "changedOn": "2026-09-02"
+      "fingerprint": "c402a63ed62ada24",
+      "changedOn": "2026-11-04"
     },
     "HSWM": {
       "fingerprint": "0068126234896973",
@@ -588,8 +588,8 @@
       "changedOn": "2025-03-04"
     },
     "SSAP": {
-      "fingerprint": "90b34a1d393780d1",
-      "changedOn": "2026-07-15"
+      "fingerprint": "33e923b69debb35d",
+      "changedOn": "2026-11-04"
     },
     "SSAP01": {
       "fingerprint": "f18411f1560b3583",
@@ -608,36 +608,36 @@
       "changedOn": "2025-04-04"
     },
     "SSAP16": {
-      "fingerprint": "12f55adfc4e6b5f6",
-      "changedOn": "2026-07-15"
+      "fingerprint": "8353dce4760140b0",
+      "changedOn": "2026-11-04"
     },
     "SSAP17": {
       "fingerprint": "3c507022784bf4cc",
       "changedOn": "2026-04-21"
     },
     "SSAP18": {
-      "fingerprint": "b5ed61fcfed7585d",
-      "changedOn": "2026-07-15"
+      "fingerprint": "55984d127f71b47f",
+      "changedOn": "2026-11-04"
     },
     "SSAP19": {
-      "fingerprint": "ec1f85a9c1940c89",
-      "changedOn": "2026-09-02"
+      "fingerprint": "00ab981ffb4f7d5a",
+      "changedOn": "2026-11-04"
     },
     "SSAP20": {
       "fingerprint": "cfa9cf9c4de4a57d",
       "changedOn": "2026-09-02"
     },
     "SSAP22": {
-      "fingerprint": "5c3fecae28048f8e",
-      "changedOn": "2026-07-15"
+      "fingerprint": "47241d4f7efaf16d",
+      "changedOn": "2026-11-04"
     },
     "SSAP23": {
-      "fingerprint": "261ee41298c3d3ee",
-      "changedOn": "2026-09-02"
+      "fingerprint": "36d0d142cfdf23cc",
+      "changedOn": "2026-11-04"
     },
     "SSAP24": {
-      "fingerprint": "6711e5e5f2717b75",
-      "changedOn": "2026-07-15"
+      "fingerprint": "72894fa2a1be0a85",
+      "changedOn": "2026-11-04"
     },
     "SSAS": {
       "fingerprint": "be861817f87c4b47",
@@ -700,8 +700,8 @@
       "changedOn": "2025-01-28"
     },
     "SSBU": {
-      "fingerprint": "8dd8df2196799b3a",
-      "changedOn": "2026-09-02"
+      "fingerprint": "bb33199bd76a4516",
+      "changedOn": "2026-11-04"
     },
     "SSCM": {
       "fingerprint": "02e6a8665111a985",
@@ -756,20 +756,20 @@
       "changedOn": "2025-03-04"
     },
     "SSEV": {
-      "fingerprint": "4aa620cfb24d5824",
-      "changedOn": "2026-09-02"
+      "fingerprint": "061d856c766f280b",
+      "changedOn": "2026-11-04"
     },
     "SSEV08": {
-      "fingerprint": "1577b2419239ce30",
-      "changedOn": "2026-07-15"
+      "fingerprint": "95a7fefe86fa60a3",
+      "changedOn": "2026-11-04"
     },
     "SSEV09": {
-      "fingerprint": "ae7ca719d444ca97",
-      "changedOn": "2026-07-15"
+      "fingerprint": "b58173e8ef0a3182",
+      "changedOn": "2026-11-04"
     },
     "SSEV10": {
-      "fingerprint": "29c0f96d890dadb2",
-      "changedOn": "2026-07-15"
+      "fingerprint": "d7eb8f7484a9a867",
+      "changedOn": "2026-11-04"
     },
     "SSEV15": {
       "fingerprint": "7d642ee18c82dccc",
@@ -868,28 +868,28 @@
       "changedOn": "2026-04-21"
     },
     "SSJU": {
-      "fingerprint": "e0fbfc5a08155d42",
-      "changedOn": "2026-07-15"
+      "fingerprint": "962cf8bfd4a5d1cd",
+      "changedOn": "2026-11-04"
     },
     "SSJU01": {
       "fingerprint": "1b4cf5e50236651c",
       "changedOn": "2025-04-04"
     },
     "SSJU04": {
-      "fingerprint": "a5a6f5d2c1066499",
-      "changedOn": "2026-07-15"
+      "fingerprint": "f15270553e7f4baf",
+      "changedOn": "2026-11-04"
     },
     "SSJU21": {
       "fingerprint": "943f15945434abbd",
       "changedOn": "2025-04-04"
     },
     "SSJU22": {
-      "fingerprint": "2edce94d19e59787",
-      "changedOn": "2026-07-15"
+      "fingerprint": "b85ca8358ce68979",
+      "changedOn": "2026-11-04"
     },
     "SSJU25": {
-      "fingerprint": "ed43176d64f438bd",
-      "changedOn": "2026-07-15"
+      "fingerprint": "96c794a368a6ace5",
+      "changedOn": "2026-11-04"
     },
     "SSJU26": {
       "fingerprint": "d1117727a4846759",
@@ -900,8 +900,8 @@
       "changedOn": "2025-01-03"
     },
     "SSJU28": {
-      "fingerprint": "9d29bf986e13dd10",
-      "changedOn": "2026-07-15"
+      "fingerprint": "334fd4fe7fe53185",
+      "changedOn": "2026-11-04"
     },
     "SSRA": {
       "fingerprint": "2c0314284f127f0b",
