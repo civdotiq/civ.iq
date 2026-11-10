@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-11-03T14:05:25.570Z",
-  "staleAfter": "2026-11-24",
-  "upstreamCommit": "282bf0ae48e3d233c59bb9248abd57f79b62ca55",
-  "upstreamCommittedAt": "2026-11-02T17:14:07Z",
+  "generatedAt": "2026-11-10T14:48:10.979Z",
+  "staleAfter": "2026-12-01",
+  "upstreamCommit": "bcdda400007b22d92cc889ca946d44a4c9811a28",
+  "upstreamCommittedAt": "2026-11-05T23:13:18Z",
   "jurisdictions": 52,
   "people": 7417,
   "departed": 0,
-  "compressedBytes": 514688,
+  "compressedBytes": 514241,
   "meta": {
     "people": 7417,
     "departed": 0,
