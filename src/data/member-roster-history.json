@@ -1,6 +1,6 @@
 {
-  "throughCommit": "753b363e003312525174006e93932b11022ee078",
-  "throughDate": "2026-10-05T14:08:50Z",
+  "throughCommit": "e078c2032341b2b3d59a17d13e1e556b59793d4e",
+  "throughDate": "2026-11-14T19:55:54Z",
   "source": "unitedstates/congress-legislators legislators-current.yaml git history (CC0-1.0)",
   "members": {
     "C000127": {
@@ -2100,12 +2100,12 @@
       "changedOn": "2026-02-03"
     },
     "H001104": {
-      "fingerprint": "fd2940761e842482",
-      "changedOn": "2026-01-13"
+      "fingerprint": "2ec2feaa4a38c2c2",
+      "changedOn": "2026-11-14"
     },
     "M001244": {
-      "fingerprint": "313d8c744cc16e6f",
-      "changedOn": "2026-01-13"
+      "fingerprint": "66cbbb2f4037f4e0",
+      "changedOn": "2026-11-14"
     },
     "P000622": {
       "fingerprint": "41c83c3df6ec95e6",
