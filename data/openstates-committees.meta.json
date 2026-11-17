@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-11-10T14:48:10.979Z",
-  "staleAfter": "2026-12-01",
+  "generatedAt": "2026-11-17T15:55:59.768Z",
+  "staleAfter": "2026-12-08",
   "upstreamCommit": "bcdda400007b22d92cc889ca946d44a4c9811a28",
   "upstreamCommittedAt": "2026-11-05T23:13:18Z",
   "jurisdictions": 52,
   "committees": 2796,
   "memberships": 34165,
-  "compressedBytes": 396833,
+  "compressedBytes": 396709,
   "meta": {
     "committees": 2796,
     "memberships": 34165,
