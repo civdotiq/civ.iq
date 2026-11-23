@@ -1,6 +1,6 @@
 {
   "congress": 119,
-  "lastUpdated": "2026-10-12",
+  "lastUpdated": "2026-11-23",
   "source": "https://en.wikipedia.org/wiki/119th_United_States_Congress#Changes_in_membership",
   "vacancies": [
     {
@@ -33,7 +33,7 @@
         "name": "JD Vance",
         "party": "Republican"
       },
-      "reasonDetail": "Incumbent resigned January 10, 2025, to become Vice President of the United States. Successor was appointed to continue the term until a special election is held in 2026.",
+      "reasonDetail": "Incumbent resigned January 10, 2025, to become Vice President of the United States. Successor was appointed January 18, 2025, to continue the term.",
       "successor": {
         "name": "Jon Husted",
         "party": "Republican",
@@ -57,12 +57,12 @@
         "name": "Marco Rubio",
         "party": "Republican"
       },
-      "reasonDetail": "Incumbent resigned January 20, 2025, to become United States Secretary of State. Successor was appointed to continue the term until a special election is held in 2026.",
+      "reasonDetail": "Incumbent resigned January 20, 2025, to become United States Secretary of State. Successor was appointed January 21, 2025, to continue the term. Appointee was later elected to finish the term ending January 3, 2029.",
       "successor": {
         "name": "Ashley Moody",
         "party": "Republican",
         "installedDate": "2025-01-21",
-        "method": "appointed"
+        "method": "elected"
       },
       "specialElection": {
         "date": null,
@@ -100,12 +100,50 @@
         "name": "Lindsey Graham",
         "party": "Republican"
       },
-      "reasonDetail": "Incumbent died July 11, 2026. Successor was appointed to finish the term.",
+      "reasonDetail": "Incumbent died July 11, 2026. Successor was appointed July 14, 2026, to finish the term.",
       "successor": {
         "name": "Darline Graham",
         "party": "Republican",
         "installedDate": "2026-07-14",
         "method": "appointed"
+      }
+    },
+    {
+      "state": "OK",
+      "chamber": "Senate",
+      "district": null,
+      "senateClass": "2",
+      "vacantSince": null,
+      "reason": "resignation",
+      "previousMember": {
+        "name": "Alan Armstrong",
+        "party": "Republican"
+      },
+      "reasonDetail": "Appointee resigning early following state law determination. Successor will be appointed November 30, 2026, having already been elected to the next term.",
+      "successor": {
+        "name": "Kevin Hern",
+        "party": "Republican",
+        "installedDate": "2026-11-30",
+        "method": "elected"
+      }
+    },
+    {
+      "state": "OH",
+      "chamber": "Senate",
+      "district": null,
+      "senateClass": "3",
+      "vacantSince": null,
+      "reason": "other",
+      "previousMember": {
+        "name": "Jon Husted",
+        "party": "Republican"
+      },
+      "reasonDetail": "data-sort-value=\"TBD 2026\" |Appointee lost election to finish the term. Successor elected November 3, 2026, to finish the term ending January 3, 2029.",
+      "successor": {
+        "name": "Sherrod Brown",
+        "party": "Democrat",
+        "installedDate": "2026-12-15",
+        "method": "elected"
       }
     },
     {
@@ -388,6 +426,32 @@
         "installedDate": "2026-09-01",
         "method": "elected"
       }
+    },
+    {
+      "state": "OK",
+      "chamber": "House",
+      "district": "01",
+      "senateClass": null,
+      "vacantSince": null,
+      "reason": "resignation",
+      "previousMember": {
+        "name": "Kevin Hern",
+        "party": "Republican"
+      },
+      "reasonDetail": "Incumbent resigning on November 30, 2026, to succeed appointed senator Alan Armstrong after winning the 2026 election."
+    },
+    {
+      "state": "CA",
+      "chamber": "House",
+      "district": "34",
+      "senateClass": null,
+      "vacantSince": null,
+      "reason": "resignation",
+      "previousMember": {
+        "name": "Jimmy Gomez",
+        "party": "Democrat"
+      },
+      "reasonDetail": "Incumbent resigning on December 1, 2026, following sexual assault allegations."
     },
     {
       "state": "OK",
