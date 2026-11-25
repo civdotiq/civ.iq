@@ -1,7 +1,7 @@
 {
   "congress": 119,
-  "generatedAt": "2026-11-18T16:01:11.412Z",
-  "staleAfter": "2026-12-09",
+  "generatedAt": "2026-11-25T17:39:33.278Z",
+  "staleAfter": "2026-12-16",
   "sources": [
     "https://www.govinfo.gov/bulkdata/BILLSTATUS/119/hr/BILLSTATUS-119-hr.zip",
     "https://www.govinfo.gov/bulkdata/BILLSTATUS/119/s/BILLSTATUS-119-s.zip",
@@ -35,18 +35,18 @@
       }
     },
     "A000370": {
-      "introduced": 31,
+      "introduced": 32,
       "byType": {
-        "hr": 20,
+        "hr": 21,
         "hres": 9,
         "hconres": 2
       }
     },
     "A000371": {
-      "introduced": 17,
+      "introduced": 18,
       "byType": {
         "hr": 2,
-        "hres": 15
+        "hres": 16
       }
     },
     "A000372": {
@@ -66,9 +66,9 @@
       }
     },
     "A000379": {
-      "introduced": 29,
+      "introduced": 30,
       "byType": {
-        "hr": 22,
+        "hr": 23,
         "hres": 7
       }
     },
@@ -133,11 +133,11 @@
       }
     },
     "B001230": {
-      "introduced": 61,
+      "introduced": 65,
       "byType": {
-        "s": 52,
+        "s": 55,
         "sjres": 2,
-        "sres": 7
+        "sres": 8
       }
     },
     "B001236": {
@@ -169,34 +169,34 @@
       }
     },
     "B001261": {
-      "introduced": 58,
+      "introduced": 59,
       "byType": {
         "s": 49,
-        "sres": 8,
+        "sres": 9,
         "sconres": 1
       }
     },
     "B001267": {
-      "introduced": 84,
+      "introduced": 85,
       "byType": {
-        "s": 72,
+        "s": 73,
         "sjres": 1,
         "sres": 11
       }
     },
     "B001277": {
-      "introduced": 133,
+      "introduced": 134,
       "byType": {
-        "s": 109,
+        "s": 110,
         "sjres": 2,
         "sres": 21,
         "sconres": 1
       }
     },
     "B001278": {
-      "introduced": 71,
+      "introduced": 74,
       "byType": {
-        "hr": 51,
+        "hr": 54,
         "hjres": 2,
         "hres": 17,
         "hconres": 1
@@ -229,25 +229,25 @@
       }
     },
     "B001287": {
-      "introduced": 26,
+      "introduced": 27,
       "byType": {
-        "hr": 17,
+        "hr": 18,
         "hres": 9
       }
     },
     "B001288": {
-      "introduced": 135,
+      "introduced": 147,
       "byType": {
-        "s": 105,
+        "s": 117,
         "sjres": 3,
         "sres": 26,
         "sconres": 1
       }
     },
     "B001291": {
-      "introduced": 17,
+      "introduced": 18,
       "byType": {
-        "hr": 16,
+        "hr": 17,
         "hres": 1
       }
     },
@@ -260,10 +260,10 @@
       }
     },
     "B001295": {
-      "introduced": 25,
+      "introduced": 26,
       "byType": {
         "hr": 22,
-        "hres": 3
+        "hres": 4
       }
     },
     "B001296": {
@@ -283,16 +283,16 @@
       }
     },
     "B001299": {
-      "introduced": 107,
+      "introduced": 112,
       "byType": {
-        "s": 104,
+        "s": 109,
         "sres": 3
       }
     },
     "B001300": {
-      "introduced": 43,
+      "introduced": 44,
       "byType": {
-        "hr": 29,
+        "hr": 30,
         "hres": 14
       }
     },
@@ -312,18 +312,18 @@
       }
     },
     "B001303": {
-      "introduced": 46,
+      "introduced": 47,
       "byType": {
-        "s": 39,
+        "s": 40,
         "sjres": 1,
         "sres": 3,
         "sconres": 3
       }
     },
     "B001305": {
-      "introduced": 62,
+      "introduced": 64,
       "byType": {
-        "s": 58,
+        "s": 60,
         "sres": 4
       }
     },
@@ -336,15 +336,15 @@
       }
     },
     "B001307": {
-      "introduced": 16,
+      "introduced": 19,
       "byType": {
-        "hr": 16
+        "hr": 19
       }
     },
     "B001309": {
-      "introduced": 67,
+      "introduced": 69,
       "byType": {
-        "hr": 64,
+        "hr": 66,
         "hjres": 1,
         "hres": 2
       }
@@ -386,18 +386,18 @@
       }
     },
     "B001318": {
-      "introduced": 26,
+      "introduced": 27,
       "byType": {
-        "hr": 18,
+        "hr": 19,
         "hjres": 1,
         "hres": 6,
         "hconres": 1
       }
     },
     "B001319": {
-      "introduced": 30,
+      "introduced": 31,
       "byType": {
-        "s": 27,
+        "s": 28,
         "sres": 2,
         "sconres": 1
       }
@@ -453,9 +453,9 @@
       }
     },
     "B001328": {
-      "introduced": 7,
+      "introduced": 8,
       "byType": {
-        "hr": 5,
+        "hr": 6,
         "hres": 2
       }
     },
@@ -502,9 +502,9 @@
       }
     },
     "C001047": {
-      "introduced": 30,
+      "introduced": 31,
       "byType": {
-        "s": 22,
+        "s": 23,
         "sjres": 3,
         "sres": 5
       }
@@ -531,9 +531,9 @@
       }
     },
     "C001056": {
-      "introduced": 140,
+      "introduced": 142,
       "byType": {
-        "s": 128,
+        "s": 130,
         "sres": 12
       }
     },
@@ -546,9 +546,9 @@
       }
     },
     "C001061": {
-      "introduced": 23,
+      "introduced": 26,
       "byType": {
-        "hr": 18,
+        "hr": 21,
         "hjres": 1,
         "hres": 4
       }
@@ -615,9 +615,9 @@
       }
     },
     "C001080": {
-      "introduced": 46,
+      "introduced": 49,
       "byType": {
-        "hr": 34,
+        "hr": 37,
         "hres": 12
       }
     },
@@ -651,19 +651,19 @@
       }
     },
     "C001096": {
-      "introduced": 31,
+      "introduced": 32,
       "byType": {
         "s": 27,
         "sjres": 1,
-        "sres": 3
+        "sres": 4
       }
     },
     "C001098": {
-      "introduced": 134,
+      "introduced": 135,
       "byType": {
         "s": 124,
         "sjres": 6,
-        "sres": 4
+        "sres": 5
       }
     },
     "C001101": {
@@ -687,9 +687,9 @@
       }
     },
     "C001110": {
-      "introduced": 29,
+      "introduced": 30,
       "byType": {
-        "hr": 19,
+        "hr": 20,
         "hres": 10
       }
     },
@@ -710,9 +710,9 @@
       }
     },
     "C001114": {
-      "introduced": 55,
+      "introduced": 56,
       "byType": {
-        "s": 50,
+        "s": 51,
         "sjres": 2,
         "sres": 3
       }
@@ -734,9 +734,9 @@
       }
     },
     "C001117": {
-      "introduced": 50,
+      "introduced": 52,
       "byType": {
-        "hr": 47,
+        "hr": 49,
         "hjres": 1,
         "hres": 2
       }
@@ -899,9 +899,9 @@
       }
     },
     "D000563": {
-      "introduced": 140,
+      "introduced": 141,
       "byType": {
-        "s": 109,
+        "s": 110,
         "sjres": 3,
         "sres": 28
       }
@@ -943,17 +943,17 @@
       }
     },
     "D000622": {
-      "introduced": 68,
+      "introduced": 74,
       "byType": {
-        "s": 58,
+        "s": 64,
         "sjres": 2,
         "sres": 8
       }
     },
     "D000623": {
-      "introduced": 32,
+      "introduced": 33,
       "byType": {
-        "hr": 31,
+        "hr": 32,
         "hjres": 1
       }
     },
@@ -974,9 +974,9 @@
       }
     },
     "D000628": {
-      "introduced": 28,
+      "introduced": 29,
       "byType": {
-        "hr": 25,
+        "hr": 26,
         "hjres": 2,
         "hres": 1
       }
@@ -989,9 +989,9 @@
       }
     },
     "D000631": {
-      "introduced": 27,
+      "introduced": 28,
       "byType": {
-        "hr": 23,
+        "hr": 24,
         "hres": 4
       }
     },
@@ -1040,9 +1040,9 @@
       }
     },
     "E000295": {
-      "introduced": 101,
+      "introduced": 102,
       "byType": {
-        "s": 87,
+        "s": 88,
         "sres": 13,
         "sconres": 1
       }
@@ -1140,9 +1140,9 @@
       }
     },
     "F000463": {
-      "introduced": 35,
+      "introduced": 36,
       "byType": {
-        "s": 29,
+        "s": 30,
         "sjres": 1,
         "sres": 5
       }
@@ -1179,11 +1179,11 @@
       }
     },
     "F000471": {
-      "introduced": 32,
+      "introduced": 33,
       "byType": {
         "hr": 30,
         "hjres": 1,
-        "hres": 1
+        "hres": 2
       }
     },
     "F000472": {
@@ -1223,23 +1223,23 @@
       }
     },
     "F000478": {
-      "introduced": 20,
+      "introduced": 21,
       "byType": {
-        "hr": 18,
+        "hr": 19,
         "hres": 2
       }
     },
     "F000479": {
-      "introduced": 28,
+      "introduced": 29,
       "byType": {
         "s": 26,
-        "sres": 2
+        "sres": 3
       }
     },
     "F000480": {
-      "introduced": 17,
+      "introduced": 18,
       "byType": {
-        "hr": 15,
+        "hr": 16,
         "hjres": 1,
         "hres": 1
       }
@@ -1290,9 +1290,9 @@
       }
     },
     "G000386": {
-      "introduced": 97,
+      "introduced": 98,
       "byType": {
-        "s": 67,
+        "s": 68,
         "sres": 30
       }
     },
@@ -1334,9 +1334,9 @@
       }
     },
     "G000559": {
-      "introduced": 15,
+      "introduced": 16,
       "byType": {
-        "hr": 12,
+        "hr": 13,
         "hres": 1,
         "hconres": 2
       }
@@ -1367,10 +1367,11 @@
       }
     },
     "G000576": {
-      "introduced": 37,
+      "introduced": 38,
       "byType": {
         "hr": 36,
-        "hjres": 1
+        "hjres": 1,
+        "hres": 1
       }
     },
     "G000581": {
@@ -1381,9 +1382,9 @@
       }
     },
     "G000583": {
-      "introduced": 105,
+      "introduced": 110,
       "byType": {
-        "hr": 93,
+        "hr": 98,
         "hres": 11,
         "hconres": 1
       }
@@ -1396,17 +1397,17 @@
       }
     },
     "G000586": {
-      "introduced": 9,
+      "introduced": 10,
       "byType": {
-        "hr": 7,
+        "hr": 8,
         "hres": 1,
         "hconres": 1
       }
     },
     "G000587": {
-      "introduced": 20,
+      "introduced": 21,
       "byType": {
-        "hr": 12,
+        "hr": 13,
         "hjres": 2,
         "hres": 6
       }
@@ -1432,9 +1433,9 @@
       }
     },
     "G000592": {
-      "introduced": 15,
+      "introduced": 16,
       "byType": {
-        "hr": 14,
+        "hr": 15,
         "hres": 1
       }
     },
@@ -1502,17 +1503,17 @@
       }
     },
     "G000603": {
-      "introduced": 27,
+      "introduced": 28,
       "byType": {
-        "hr": 24,
+        "hr": 25,
         "hjres": 1,
         "hres": 2
       }
     },
     "G000604": {
-      "introduced": 21,
+      "introduced": 22,
       "byType": {
-        "hr": 20,
+        "hr": 21,
         "hres": 1
       }
     },
@@ -1530,9 +1531,9 @@
       }
     },
     "G000607": {
-      "introduced": 11,
+      "introduced": 12,
       "byType": {
-        "hr": 10,
+        "hr": 11,
         "hjres": 1
       }
     },
@@ -1560,24 +1561,24 @@
       }
     },
     "H000874": {
-      "introduced": 1,
+      "introduced": 2,
       "byType": {
-        "hr": 1
+        "hr": 2
       }
     },
     "H001042": {
-      "introduced": 66,
+      "introduced": 67,
       "byType": {
         "s": 40,
         "sjres": 1,
-        "sres": 21,
+        "sres": 22,
         "sconres": 4
       }
     },
     "H001046": {
-      "introduced": 62,
+      "introduced": 65,
       "byType": {
-        "s": 55,
+        "s": 58,
         "sres": 7
       }
     },
@@ -1646,9 +1647,9 @@
       }
     },
     "H001077": {
-      "introduced": 39,
+      "introduced": 40,
       "byType": {
-        "hr": 36,
+        "hr": 37,
         "hjres": 1,
         "hres": 1,
         "hconres": 1
@@ -1662,9 +1663,9 @@
       }
     },
     "H001081": {
-      "introduced": 41,
+      "introduced": 42,
       "byType": {
-        "hr": 33,
+        "hr": 34,
         "hres": 6,
         "hconres": 2
       }
@@ -1714,9 +1715,9 @@
       }
     },
     "H001093": {
-      "introduced": 50,
+      "introduced": 52,
       "byType": {
-        "hr": 37,
+        "hr": 39,
         "hres": 13
       }
     },
@@ -1764,9 +1765,9 @@
       }
     },
     "H001101": {
-      "introduced": 33,
+      "introduced": 34,
       "byType": {
-        "hr": 31,
+        "hr": 32,
         "hres": 2
       }
     },
@@ -1800,9 +1801,9 @@
       }
     },
     "I000058": {
-      "introduced": 4,
+      "introduced": 5,
       "byType": {
-        "hr": 4
+        "hr": 5
       }
     },
     "J000288": {
@@ -1820,9 +1821,9 @@
       }
     },
     "J000293": {
-      "introduced": 22,
+      "introduced": 23,
       "byType": {
-        "s": 19,
+        "s": 20,
         "sres": 2,
         "sconres": 1
       }
@@ -1834,19 +1835,19 @@
       }
     },
     "J000295": {
-      "introduced": 21,
+      "introduced": 22,
       "byType": {
-        "hr": 18,
+        "hr": 19,
         "hjres": 1,
         "hres": 2
       }
     },
     "J000298": {
-      "introduced": 52,
+      "introduced": 55,
       "byType": {
-        "hr": 35,
+        "hr": 37,
         "hjres": 6,
-        "hres": 10,
+        "hres": 11,
         "hconres": 1
       }
     },
@@ -1960,33 +1961,33 @@
       }
     },
     "K000377": {
-      "introduced": 60,
+      "introduced": 62,
       "byType": {
-        "s": 54,
+        "s": 56,
         "sjres": 1,
         "sres": 5
       }
     },
     "K000383": {
-      "introduced": 40,
+      "introduced": 41,
       "byType": {
-        "s": 36,
+        "s": 37,
         "sjres": 1,
         "sres": 3
       }
     },
     "K000384": {
-      "introduced": 111,
+      "introduced": 112,
       "byType": {
         "s": 58,
         "sjres": 17,
-        "sres": 36
+        "sres": 37
       }
     },
     "K000385": {
-      "introduced": 22,
+      "introduced": 23,
       "byType": {
-        "hr": 19,
+        "hr": 20,
         "hres": 3
       }
     },
@@ -2020,26 +2021,26 @@
       }
     },
     "K000393": {
-      "introduced": 86,
+      "introduced": 87,
       "byType": {
-        "s": 72,
+        "s": 73,
         "sjres": 6,
         "sres": 8
       }
     },
     "K000394": {
-      "introduced": 48,
+      "introduced": 49,
       "byType": {
-        "s": 41,
+        "s": 42,
         "sjres": 3,
         "sres": 3,
         "sconres": 1
       }
     },
     "K000397": {
-      "introduced": 58,
+      "introduced": 59,
       "byType": {
-        "hr": 44,
+        "hr": 45,
         "hres": 14
       }
     },
@@ -2058,9 +2059,9 @@
       }
     },
     "K000400": {
-      "introduced": 40,
+      "introduced": 43,
       "byType": {
-        "hr": 32,
+        "hr": 35,
         "hres": 8
       }
     },
@@ -2169,9 +2170,9 @@
       }
     },
     "L000577": {
-      "introduced": 140,
+      "introduced": 144,
       "byType": {
-        "s": 128,
+        "s": 132,
         "sjres": 5,
         "sres": 7
       }
@@ -2213,9 +2214,9 @@
       }
     },
     "L000593": {
-      "introduced": 26,
+      "introduced": 28,
       "byType": {
-        "hr": 26
+        "hr": 28
       }
     },
     "L000595": {
@@ -2250,9 +2251,9 @@
       }
     },
     "L000599": {
-      "introduced": 131,
+      "introduced": 132,
       "byType": {
-        "hr": 121,
+        "hr": 122,
         "hres": 10
       }
     },
@@ -2272,9 +2273,9 @@
       }
     },
     "L000602": {
-      "introduced": 24,
+      "introduced": 25,
       "byType": {
-        "hr": 19,
+        "hr": 20,
         "hres": 5
       }
     },
@@ -2293,9 +2294,9 @@
       }
     },
     "L000607": {
-      "introduced": 17,
+      "introduced": 18,
       "byType": {
-        "hr": 17
+        "hr": 18
       }
     },
     "M000133": {
@@ -2307,9 +2308,9 @@
       }
     },
     "M000194": {
-      "introduced": 114,
+      "introduced": 116,
       "byType": {
-        "hr": 100,
+        "hr": 102,
         "hjres": 3,
         "hres": 10,
         "hconres": 1
@@ -2325,9 +2326,9 @@
       }
     },
     "M000317": {
-      "introduced": 57,
+      "introduced": 58,
       "byType": {
-        "hr": 53,
+        "hr": 54,
         "hjres": 1,
         "hres": 3
       }
@@ -2341,9 +2342,9 @@
       }
     },
     "M000687": {
-      "introduced": 16,
+      "introduced": 17,
       "byType": {
-        "hr": 12,
+        "hr": 13,
         "hres": 4
       }
     },
@@ -2355,16 +2356,16 @@
       }
     },
     "M000934": {
-      "introduced": 87,
+      "introduced": 88,
       "byType": {
-        "s": 70,
+        "s": 71,
         "sres": 17
       }
     },
     "M001111": {
-      "introduced": 47,
+      "introduced": 48,
       "byType": {
-        "s": 38,
+        "s": 39,
         "sjres": 2,
         "sres": 7
       }
@@ -2393,11 +2394,11 @@
       }
     },
     "M001153": {
-      "introduced": 61,
+      "introduced": 62,
       "byType": {
         "s": 51,
         "sjres": 2,
-        "sres": 8
+        "sres": 9
       }
     },
     "M001157": {
@@ -2473,9 +2474,9 @@
       }
     },
     "M001194": {
-      "introduced": 51,
+      "introduced": 52,
       "byType": {
-        "hr": 40,
+        "hr": 41,
         "hres": 11
       }
     },
@@ -2487,9 +2488,9 @@
       }
     },
     "M001198": {
-      "introduced": 74,
+      "introduced": 75,
       "byType": {
-        "s": 63,
+        "s": 64,
         "sjres": 1,
         "sres": 10
       }
@@ -2503,9 +2504,9 @@
       }
     },
     "M001204": {
-      "introduced": 20,
+      "introduced": 21,
       "byType": {
-        "hr": 17,
+        "hr": 18,
         "hres": 3
       }
     },
@@ -2517,9 +2518,9 @@
       }
     },
     "M001206": {
-      "introduced": 39,
+      "introduced": 40,
       "byType": {
-        "hr": 29,
+        "hr": 30,
         "hjres": 1,
         "hres": 8,
         "hconres": 1
@@ -2556,9 +2557,9 @@
       }
     },
     "M001213": {
-      "introduced": 43,
+      "introduced": 44,
       "byType": {
-        "hr": 41,
+        "hr": 42,
         "hres": 2
       }
     },
@@ -2627,9 +2628,9 @@
       }
     },
     "M001224": {
-      "introduced": 25,
+      "introduced": 27,
       "byType": {
-        "hr": 24,
+        "hr": 26,
         "hjres": 1
       }
     },
@@ -2648,9 +2649,9 @@
       }
     },
     "M001227": {
-      "introduced": 29,
+      "introduced": 30,
       "byType": {
-        "hr": 22,
+        "hr": 23,
         "hres": 7
       }
     },
@@ -2712,9 +2713,9 @@
       }
     },
     "M001236": {
-      "introduced": 32,
+      "introduced": 33,
       "byType": {
-        "hr": 28,
+        "hr": 29,
         "hres": 4
       }
     },
@@ -2745,18 +2746,18 @@
       }
     },
     "M001241": {
-      "introduced": 31,
+      "introduced": 32,
       "byType": {
-        "hr": 30,
+        "hr": 31,
         "hconres": 1
       }
     },
     "M001242": {
-      "introduced": 32,
+      "introduced": 33,
       "byType": {
         "s": 25,
         "sjres": 1,
-        "sres": 6
+        "sres": 7
       }
     },
     "M001243": {
@@ -2768,9 +2769,9 @@
       }
     },
     "M001244": {
-      "introduced": 64,
+      "introduced": 66,
       "byType": {
-        "s": 51,
+        "s": 53,
         "sjres": 2,
         "sres": 11
       }
@@ -2839,9 +2840,9 @@
       }
     },
     "N000191": {
-      "introduced": 95,
+      "introduced": 97,
       "byType": {
-        "hr": 90,
+        "hr": 92,
         "hjres": 1,
         "hres": 4
       }
@@ -2864,9 +2865,9 @@
       }
     },
     "O000086": {
-      "introduced": 28,
+      "introduced": 30,
       "byType": {
-        "hr": 25,
+        "hr": 27,
         "hres": 3
       }
     },
@@ -2892,25 +2893,25 @@
       }
     },
     "O000175": {
-      "introduced": 50,
+      "introduced": 51,
       "byType": {
-        "hr": 42,
+        "hr": 43,
         "hjres": 1,
         "hres": 7
       }
     },
     "O000176": {
-      "introduced": 22,
+      "introduced": 23,
       "byType": {
-        "hr": 17,
+        "hr": 18,
         "hjres": 3,
         "hres": 2
       }
     },
     "O000177": {
-      "introduced": 20,
+      "introduced": 21,
       "byType": {
-        "hr": 20
+        "hr": 21
       }
     },
     "P000034": {
@@ -2921,18 +2922,18 @@
       }
     },
     "P000048": {
-      "introduced": 65,
+      "introduced": 66,
       "byType": {
-        "hr": 59,
+        "hr": 60,
         "hjres": 3,
         "hres": 2,
         "hconres": 1
       }
     },
     "P000145": {
-      "introduced": 117,
+      "introduced": 118,
       "byType": {
-        "s": 104,
+        "s": 105,
         "sjres": 2,
         "sres": 11
       }
@@ -2944,9 +2945,9 @@
       }
     },
     "P000595": {
-      "introduced": 86,
+      "introduced": 88,
       "byType": {
-        "s": 77,
+        "s": 79,
         "sres": 9
       }
     },
@@ -2975,9 +2976,9 @@
       }
     },
     "P000607": {
-      "introduced": 26,
+      "introduced": 28,
       "byType": {
-        "hr": 19,
+        "hr": 21,
         "hres": 7
       }
     },
@@ -3026,9 +3027,9 @@
       }
     },
     "P000620": {
-      "introduced": 49,
+      "introduced": 50,
       "byType": {
-        "hr": 41,
+        "hr": 42,
         "hjres": 2,
         "hres": 6
       }
@@ -3100,9 +3101,9 @@
       }
     },
     "R000599": {
-      "introduced": 39,
+      "introduced": 41,
       "byType": {
-        "hr": 33,
+        "hr": 35,
         "hjres": 1,
         "hres": 5
       }
@@ -3137,11 +3138,11 @@
       }
     },
     "R000608": {
-      "introduced": 83,
+      "introduced": 87,
       "byType": {
-        "s": 68,
+        "s": 70,
         "sjres": 2,
-        "sres": 13
+        "sres": 15
       }
     },
     "R000609": {
@@ -3164,9 +3165,9 @@
       }
     },
     "R000614": {
-      "introduced": 68,
+      "introduced": 69,
       "byType": {
-        "hr": 62,
+        "hr": 63,
         "hres": 6
       }
     },
@@ -3179,11 +3180,11 @@
       }
     },
     "R000618": {
-      "introduced": 67,
+      "introduced": 69,
       "byType": {
-        "s": 52,
+        "s": 53,
         "sjres": 2,
-        "sres": 13
+        "sres": 14
       }
     },
     "R000619": {
@@ -3281,9 +3282,9 @@
       }
     },
     "S001145": {
-      "introduced": 42,
+      "introduced": 43,
       "byType": {
-        "hr": 35,
+        "hr": 36,
         "hres": 6,
         "hconres": 1
       }
@@ -3295,9 +3296,9 @@
       }
     },
     "S001150": {
-      "introduced": 100,
+      "introduced": 103,
       "byType": {
-        "s": 84,
+        "s": 87,
         "sjres": 8,
         "sres": 8
       }
@@ -3318,15 +3319,15 @@
       }
     },
     "S001159": {
-      "introduced": 30,
+      "introduced": 31,
       "byType": {
-        "hr": 30
+        "hr": 31
       }
     },
     "S001172": {
-      "introduced": 29,
+      "introduced": 32,
       "byType": {
-        "hr": 29
+        "hr": 32
       }
     },
     "S001176": {
@@ -3337,11 +3338,11 @@
       }
     },
     "S001181": {
-      "introduced": 102,
+      "introduced": 104,
       "byType": {
-        "s": 77,
+        "s": 78,
         "sjres": 1,
-        "sres": 23,
+        "sres": 24,
         "sconres": 1
       }
     },
@@ -3395,9 +3396,9 @@
       }
     },
     "S001194": {
-      "introduced": 67,
+      "introduced": 68,
       "byType": {
-        "s": 48,
+        "s": 49,
         "sjres": 1,
         "sres": 16,
         "sconres": 2
@@ -3432,9 +3433,9 @@
       }
     },
     "S001200": {
-      "introduced": 19,
+      "introduced": 20,
       "byType": {
-        "hr": 16,
+        "hr": 17,
         "hres": 3
       }
     },
@@ -3447,16 +3448,16 @@
       }
     },
     "S001203": {
-      "introduced": 50,
+      "introduced": 51,
       "byType": {
-        "s": 45,
+        "s": 46,
         "sres": 5
       }
     },
     "S001205": {
-      "introduced": 29,
+      "introduced": 30,
       "byType": {
-        "hr": 26,
+        "hr": 27,
         "hjres": 1,
         "hres": 2
       }
@@ -3490,9 +3491,9 @@
       }
     },
     "S001213": {
-      "introduced": 35,
+      "introduced": 37,
       "byType": {
-        "hr": 22,
+        "hr": 24,
         "hres": 13
       }
     },
@@ -3513,9 +3514,9 @@
       }
     },
     "S001216": {
-      "introduced": 24,
+      "introduced": 25,
       "byType": {
-        "hr": 24
+        "hr": 25
       }
     },
     "S001217": {
@@ -3543,9 +3544,9 @@
       }
     },
     "S001221": {
-      "introduced": 55,
+      "introduced": 56,
       "byType": {
-        "hr": 52,
+        "hr": 53,
         "hjres": 1,
         "hres": 2
       }
@@ -3595,9 +3596,9 @@
       }
     },
     "S001229": {
-      "introduced": 20,
+      "introduced": 21,
       "byType": {
-        "hr": 18,
+        "hr": 19,
         "hres": 2
       }
     },
@@ -3609,9 +3610,9 @@
       }
     },
     "S001231": {
-      "introduced": 14,
+      "introduced": 15,
       "byType": {
-        "hr": 11,
+        "hr": 12,
         "hres": 3
       }
     },
@@ -3631,9 +3632,9 @@
       }
     },
     "T000193": {
-      "introduced": 15,
+      "introduced": 16,
       "byType": {
-        "hr": 10,
+        "hr": 11,
         "hres": 5
       }
     },
@@ -3646,9 +3647,9 @@
       }
     },
     "T000278": {
-      "introduced": 41,
+      "introduced": 44,
       "byType": {
-        "s": 36,
+        "s": 39,
         "sres": 5
       }
     },
@@ -3684,9 +3685,9 @@
       }
     },
     "T000469": {
-      "introduced": 29,
+      "introduced": 30,
       "byType": {
-        "hr": 23,
+        "hr": 24,
         "hres": 6
       }
     },
@@ -3730,11 +3731,11 @@
       }
     },
     "T000481": {
-      "introduced": 52,
+      "introduced": 54,
       "byType": {
-        "hr": 33,
+        "hr": 34,
         "hjres": 5,
-        "hres": 11,
+        "hres": 12,
         "hconres": 3
       }
     },
@@ -3754,16 +3755,16 @@
       }
     },
     "T000487": {
-      "introduced": 44,
+      "introduced": 47,
       "byType": {
-        "hr": 33,
-        "hres": 11
+        "hr": 35,
+        "hres": 12
       }
     },
     "T000488": {
-      "introduced": 42,
+      "introduced": 43,
       "byType": {
-        "hr": 28,
+        "hr": 29,
         "hres": 14
       }
     },
@@ -3789,9 +3790,9 @@
       }
     },
     "U000040": {
-      "introduced": 39,
+      "introduced": 41,
       "byType": {
-        "hr": 38,
+        "hr": 40,
         "hres": 1
       }
     },
@@ -3805,9 +3806,9 @@
       }
     },
     "V000128": {
-      "introduced": 76,
+      "introduced": 77,
       "byType": {
-        "s": 64,
+        "s": 65,
         "sjres": 4,
         "sres": 8
       }
@@ -3820,9 +3821,9 @@
       }
     },
     "V000130": {
-      "introduced": 15,
+      "introduced": 16,
       "byType": {
-        "hr": 10,
+        "hr": 11,
         "hjres": 1,
         "hres": 4
       }
@@ -3863,16 +3864,16 @@
       }
     },
     "V000138": {
-      "introduced": 85,
+      "introduced": 86,
       "byType": {
-        "hr": 83,
+        "hr": 84,
         "hres": 2
       }
     },
     "V000139": {
-      "introduced": 9,
+      "introduced": 10,
       "byType": {
-        "hr": 8,
+        "hr": 9,
         "hres": 1
       }
     },
@@ -3885,17 +3886,17 @@
       }
     },
     "W000437": {
-      "introduced": 47,
+      "introduced": 48,
       "byType": {
-        "s": 35,
+        "s": 36,
         "sres": 10,
         "sconres": 2
       }
     },
     "W000779": {
-      "introduced": 98,
+      "introduced": 99,
       "byType": {
-        "s": 83,
+        "s": 84,
         "sjres": 6,
         "sres": 9
       }
@@ -3910,11 +3911,11 @@
       }
     },
     "W000790": {
-      "introduced": 29,
+      "introduced": 31,
       "byType": {
         "s": 21,
         "sjres": 3,
-        "sres": 5
+        "sres": 7
       }
     },
     "W000795": {
@@ -3948,9 +3949,9 @@
       }
     },
     "W000802": {
-      "introduced": 103,
+      "introduced": 104,
       "byType": {
-        "s": 54,
+        "s": 55,
         "sjres": 23,
         "sres": 26
       }
@@ -3964,9 +3965,9 @@
       }
     },
     "W000805": {
-      "introduced": 62,
+      "introduced": 64,
       "byType": {
-        "s": 60,
+        "s": 62,
         "sjres": 2
       }
     },
@@ -4013,9 +4014,9 @@
       }
     },
     "W000817": {
-      "introduced": 89,
+      "introduced": 92,
       "byType": {
-        "s": 64,
+        "s": 67,
         "sjres": 18,
         "sres": 7
       }
@@ -4042,9 +4043,9 @@
       }
     },
     "W000830": {
-      "introduced": 28,
+      "introduced": 30,
       "byType": {
-        "hr": 26,
+        "hr": 28,
         "hres": 2
       }
     },
@@ -4057,9 +4058,9 @@
       }
     },
     "Y000064": {
-      "introduced": 66,
+      "introduced": 68,
       "byType": {
-        "s": 57,
+        "s": 59,
         "sres": 9
       }
     },
@@ -4080,12 +4081,12 @@
   },
   "meta": {
     "parsed": {
-      "hr": 11044,
-      "s": 5720,
+      "hr": 11158,
+      "s": 5804,
       "hjres": 222,
       "sjres": 221,
-      "hres": 1667,
-      "sres": 959,
+      "hres": 1674,
+      "sres": 974,
       "hconres": 126,
       "sconres": 41
     },
